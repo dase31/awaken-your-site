@@ -125,13 +125,16 @@ const Onboarding = () => {
             What brings you to Thymos?
           </h1>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {intentOptions.map((option, index) => (
               <button
                 key={option.id}
                 onClick={() => handleIntentSelect(option.id)}
-                className="stagger-fade-in w-full bg-card/90 backdrop-blur-sm text-card-foreground py-4 px-8 rounded-full text-lg font-medium shadow-lg transition-all duration-200 hover:scale-[1.02] hover:border-primary hover:shadow-xl border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary/50"
-                style={{ animationDelay: `${0.3 + index * 0.2}s` }}
+                className="stagger-fade-in block w-full text-foreground font-serif text-xl md:text-2xl transition-all duration-300 hover:text-primary hover:scale-[1.02] focus:outline-none focus:text-primary"
+                style={{ 
+                  animationDelay: `${0.3 + index * 0.15}s`,
+                  textShadow: '0 2px 10px rgba(0,0,0,0.15)'
+                }}
               >
                 {option.label}
               </button>
