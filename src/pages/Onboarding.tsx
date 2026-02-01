@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import cloud1 from "@/assets/cloud-1.png";
 import cloud2 from "@/assets/cloud-2.png";
@@ -95,30 +93,27 @@ const Onboarding = () => {
             isTransitioning ? "step-fade-out" : "fade-in-up"
           }`}
         >
-          <h1 className="font-serif text-foreground text-3xl md:text-4xl lg:text-5xl leading-relaxed mb-12">
+          <h1 className="font-serif text-foreground text-3xl md:text-4xl lg:text-5xl leading-relaxed mb-8">
             What should we call you?
           </h1>
 
-          <div className="space-y-6">
-            <Input
+          <div className="space-y-4">
+            <input
               type="text"
-              placeholder="Your first name"
+              placeholder="Your name"
               value={userData.name}
               onChange={(e) =>
                 setUserData((prev) => ({ ...prev, name: e.target.value }))
               }
               onKeyDown={handleNameKeyDown}
-              className="bg-card/90 backdrop-blur-sm border-0 text-card-foreground placeholder:text-card-foreground/50 h-14 rounded-2xl text-center text-lg shadow-lg focus:ring-2 focus:ring-primary/50"
+              className="ethereal-input bg-transparent border-none text-foreground text-2xl md:text-3xl font-serif text-center w-full focus:outline-none placeholder:text-foreground/40"
+              style={{ textShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
               autoFocus
             />
 
-            <Button
-              onClick={handleNameContinue}
-              disabled={!userData.name.trim()}
-              className="btn-gold w-full text-lg disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Continue
-            </Button>
+            <p className="hint-fade-in text-foreground/50 text-sm">
+              press enter ↵
+            </p>
           </div>
         </div>
       )}
