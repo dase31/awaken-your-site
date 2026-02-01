@@ -214,6 +214,28 @@
   .step-fade-in {
     animation: fadeInUp 0.5s ease-out forwards;
   }
+
+  /* Ethereal input styling */
+  .ethereal-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .ethereal-input:focus {
+    outline: none;
+    caret-color: white;
+  }
+
+  /* Delayed hint fade-in */
+  .hint-fade-in {
+    opacity: 0;
+    animation: hintFadeIn 0.5s ease-out 2s forwards;
+  }
+}
+
+@keyframes hintFadeIn {
+  to {
+    opacity: 0.5;
+  }
 }
 
 @keyframes float {
