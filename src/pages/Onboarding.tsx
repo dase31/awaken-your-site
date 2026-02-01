@@ -130,7 +130,7 @@ const Onboarding = () => {
               <button
                 key={option.id}
                 onClick={() => handleIntentSelect(option.id)}
-                className="stagger-fade-in block w-full text-foreground font-serif text-xl md:text-2xl transition-all duration-300 hover:text-primary hover:scale-[1.02] focus:outline-none focus:text-primary"
+                className="stagger-fade-in block w-full text-foreground font-serif text-xl md:text-2xl py-4 px-8 rounded-full border border-white/10 hover:border-white/30 transition-all duration-300 hover:text-primary hover:scale-[1.02] focus:outline-none focus:text-primary"
                 style={{ 
                   animationDelay: `${0.3 + index * 0.15}s`,
                   textShadow: '0 2px 10px rgba(0,0,0,0.15)'
