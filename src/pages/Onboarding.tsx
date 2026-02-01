@@ -15,6 +15,24 @@ const intentOptions = [
   { id: "unsure", label: "I'm not sure yet" },
 ];
 
+const struggleOptions = [
+  { id: "anxiety", label: "Anxiety or worry" },
+  { id: "loneliness", label: "Loneliness" },
+  { id: "grief", label: "Loss or grief" },
+  { id: "direction", label: "Finding direction" },
+  { id: "unheard", label: "Feeling unheard" },
+  { id: "doubt", label: "Self-doubt" },
+];
+
+const strengthOptions = [
+  { id: "listener", label: "I listen deeply" },
+  { id: "calm", label: "I stay calm in storms" },
+  { id: "experienced", label: "I've walked through darkness" },
+  { id: "questions", label: "I ask good questions" },
+  { id: "space", label: "I hold space without judgment" },
+  { id: "share", label: "I share from experience" },
+];
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
@@ -22,6 +40,8 @@ const Onboarding = () => {
   const [userData, setUserData] = useState({
     name: "",
     intent: "",
+    struggles: [] as string[],
+    strengths: [] as string[],
   });
 
   const handleNameContinue = () => {
@@ -42,11 +62,46 @@ const Onboarding = () => {
 
   const handleIntentSelect = (intentId: string) => {
     setUserData((prev) => ({ ...prev, intent: intentId }));
-    // For now, navigate home after selection
+    setIsTransitioning(true);
     setTimeout(() => {
-      console.log("User data:", { ...userData, intent: intentId });
+      setCurrentStep(2);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  const toggleStruggle = (id: string) => {
+    setUserData((prev) => ({
+      ...prev,
+      struggles: prev.struggles.includes(id)
+        ? prev.struggles.filter((s) => s !== id)
+        : [...prev.struggles, id],
+    }));
+  };
+
+  const toggleStrength = (id: string) => {
+    setUserData((prev) => ({
+      ...prev,
+      strengths: prev.strengths.includes(id)
+        ? prev.strengths.filter((s) => s !== id)
+        : [...prev.strengths, id],
+    }));
+  };
+
+  const handleStrugglesNext = () => {
+    if (userData.struggles.length > 0) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep(3);
+        setIsTransitioning(false);
+      }, 300);
+    }
+  };
+
+  const handleStrengthsNext = () => {
+    if (userData.strengths.length > 0) {
+      console.log("User data:", userData);
       navigate("/");
-    }, 400);
+    }
   };
 
   return (
@@ -120,7 +175,11 @@ const Onboarding = () => {
 
       {/* Step 1: What brings you here */}
       {currentStep === 1 && (
-        <div className="relative z-10 text-center px-6 max-w-md w-full">
+        <div
+          className={`relative z-10 text-center px-6 max-w-md w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
           <h1 className="font-serif text-foreground text-3xl md:text-4xl lg:text-5xl leading-relaxed mb-10 stagger-fade-in">
             What brings you to Thymos?
           </h1>
@@ -140,6 +199,98 @@ const Onboarding = () => {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Step 2: Struggles */}
+      {currentStep === 2 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-md w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-3xl md:text-4xl lg:text-5xl leading-relaxed mb-10 stagger-fade-in">
+            What weighs on you?
+          </h1>
+
+          <div className="space-y-4">
+            {struggleOptions.map((option, index) => {
+              const isSelected = userData.struggles.includes(option.id);
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => toggleStruggle(option.id)}
+                  className={`stagger-fade-in block w-full text-foreground font-serif text-xl md:text-2xl py-4 px-8 rounded-full border transition-all duration-300 hover:scale-[1.02] focus:outline-none ${
+                    isSelected
+                      ? "bg-white/10 border-white/40 text-primary"
+                      : "border-white/10 hover:border-white/30"
+                  }`}
+                  style={{
+                    animationDelay: `${0.3 + index * 0.1}s`,
+                    textShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {userData.struggles.length > 0 && (
+            <button
+              onClick={handleStrugglesNext}
+              className="stagger-fade-in mt-8 text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300"
+              style={{ animationDelay: "0.8s" }}
+            >
+              Continue →
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Step 3: Strengths */}
+      {currentStep === 3 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-md w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-3xl md:text-4xl lg:text-5xl leading-relaxed mb-10 stagger-fade-in">
+            What do you bring?
+          </h1>
+
+          <div className="space-y-4">
+            {strengthOptions.map((option, index) => {
+              const isSelected = userData.strengths.includes(option.id);
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => toggleStrength(option.id)}
+                  className={`stagger-fade-in block w-full text-foreground font-serif text-xl md:text-2xl py-4 px-8 rounded-full border transition-all duration-300 hover:scale-[1.02] focus:outline-none ${
+                    isSelected
+                      ? "bg-white/10 border-white/40 text-primary"
+                      : "border-white/10 hover:border-white/30"
+                  }`}
+                  style={{
+                    animationDelay: `${0.3 + index * 0.1}s`,
+                    textShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {userData.strengths.length > 0 && (
+            <button
+              onClick={handleStrengthsNext}
+              className="stagger-fade-in mt-8 text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300"
+              style={{ animationDelay: "0.8s" }}
+            >
+              Continue →
+            </button>
+          )}
         </div>
       )}
     </div>
