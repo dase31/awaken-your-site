@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PricingCard from "./PricingCard";
@@ -12,9 +13,14 @@ import bird3 from "@/assets/bird-3.png";
 import phoneMockup from "@/assets/phone-mockup.png";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly">("annual");
   const [email, setEmail] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
+
+  const handleTryForFree = () => {
+    navigate("/onboarding");
+  };
 
   return (
     <section className="relative min-h-screen pt-24 pb-16 overflow-hidden">
@@ -105,7 +111,7 @@ const HeroSection = () => {
 
             {!showEmailForm ? (
               <Button
-                onClick={() => setShowEmailForm(true)}
+                onClick={handleTryForFree}
                 className="btn-gold w-full mt-6 text-lg"
               >
                 Try for free
