@@ -201,6 +201,19 @@
   .scroll-marquee:hover {
     animation-play-state: paused;
   }
+
+  .stagger-fade-in {
+    opacity: 0;
+    animation: fadeInUpStagger 0.5s ease-out forwards;
+  }
+
+  .step-fade-out {
+    animation: fadeOut 0.3s ease-out forwards;
+  }
+
+  .step-fade-in {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
 }
 
 @keyframes float {
@@ -244,5 +257,27 @@
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes fadeInUpStagger {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
   }
 }
