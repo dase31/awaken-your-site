@@ -16,7 +16,7 @@ const Header = () => {
         </button>
 
         <h1 className="text-foreground text-xl md:text-2xl font-medium tracking-[0.3em] uppercase">
-          Waking Up
+          Thymos
         </h1>
 
         <button className="text-foreground font-medium hover:opacity-80 transition-opacity tracking-wide">

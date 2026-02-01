@@ -1,8 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import PricingCard from "./PricingCard";
 
 import cloud1 from "@/assets/cloud-1.png";
 import cloud2 from "@/assets/cloud-2.png";
@@ -10,20 +7,16 @@ import cloud4 from "@/assets/cloud-4.png";
 import bird1 from "@/assets/bird-1.png";
 import bird2 from "@/assets/bird-2.png";
 import bird3 from "@/assets/bird-3.png";
-import phoneMockup from "@/assets/phone-mockup.png";
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  const [selectedPlan, setSelectedPlan] = useState<"annual" | "monthly">("annual");
-  const [email, setEmail] = useState("");
-  const [showEmailForm, setShowEmailForm] = useState(false);
 
-  const handleTryForFree = () => {
+  const handleBeginJourney = () => {
     navigate("/onboarding");
   };
 
   return (
-    <section className="relative min-h-screen pt-24 pb-16 overflow-hidden">
+    <section className="relative min-h-screen pt-24 pb-16 overflow-hidden flex items-center justify-center">
       {/* Floating clouds */}
       <img
         src={cloud1}
@@ -65,81 +58,25 @@ const HeroSection = () => {
         style={{ animationDelay: "4s" }}
       />
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-4xl mx-auto px-6 text-center">
         {/* Headline */}
-        <h1 className="text-hero text-4xl md:text-5xl lg:text-6xl text-center max-w-4xl mx-auto leading-tight fade-in-up">
-          A new operating system for your mind.
+        <h1 className="text-hero text-4xl md:text-5xl lg:text-6xl leading-tight fade-in-up">
+          It's time to actually re-connect.
         </h1>
 
-        {/* Main content grid */}
-        <div className="mt-12 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
-          {/* Phone mockup */}
-          <div className="relative fade-in-up" style={{ animationDelay: "0.2s" }}>
-            <img
-              src={phoneMockup}
-              alt="Waking Up App"
-              className="w-64 md:w-80 drop-shadow-2xl"
-            />
-          </div>
+        {/* Subtext */}
+        <p className="text-foreground/80 text-lg md:text-xl mt-6 max-w-2xl mx-auto fade-in-up" style={{ animationDelay: "0.2s" }}>
+          Find someone who truly understands. Share what weighs on you. Be the presence someone else needs.
+        </p>
 
-          {/* Pricing section */}
-          <div className="w-full max-w-sm fade-in-up" style={{ animationDelay: "0.4s" }}>
-            <div className="space-y-4">
-              <PricingCard
-                trialDays={14}
-                plan="Annual"
-                price="$129.99"
-                period="year"
-                selected={selectedPlan === "annual"}
-                bestValue
-                onSelect={() => setSelectedPlan("annual")}
-              />
-              <PricingCard
-                trialDays={7}
-                plan="Monthly"
-                price="$19.99"
-                period="month"
-                selected={selectedPlan === "monthly"}
-                onSelect={() => setSelectedPlan("monthly")}
-              />
-            </div>
-
-            <p className="text-foreground/80 text-sm mt-4 leading-relaxed">
-              After your free trial ends, you will be charged $129.99 and your
-              subscription will automatically renew each year. Cancel anytime.
-            </p>
-
-            {!showEmailForm ? (
-              <Button
-                onClick={handleTryForFree}
-                className="btn-gold w-full mt-6 text-lg"
-              >
-                Try for free
-              </Button>
-            ) : (
-              <div className="mt-6 space-y-3">
-                <Input
-                  type="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-card border-0 text-card-foreground placeholder:text-card-foreground/50 h-12 rounded-xl"
-                />
-                <Button className="btn-gold w-full text-lg">
-                  Next
-                </Button>
-              </div>
-            )}
-
-            <div className="mt-6 pt-6 border-t border-foreground/20">
-              <p className="text-foreground/90 text-sm">
-                Waking Up is free for anyone who can't afford it.{" "}
-                <a href="#" className="underline hover:no-underline">
-                  Request a scholarship.
-                </a>
-              </p>
-            </div>
-          </div>
+        {/* CTA Button */}
+        <div className="mt-12 fade-in-up" style={{ animationDelay: "0.4s" }}>
+          <Button
+            onClick={handleBeginJourney}
+            className="btn-gold text-xl px-12 py-6 h-auto"
+          >
+            Begin your journey
+          </Button>
         </div>
       </div>
     </section>
