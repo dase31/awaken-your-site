@@ -1,176 +1,146 @@
 
+# Conversational LLM-Powered Onboarding
 
-# Thymos Backend Setup: Onboarding Data Storage
+Transform the structured checkbox onboarding into a warm, conversational experience where users write freely and the AI extracts meaningful themes for matching - all while keeping the dreamy sky aesthetic.
 
-Set up Supabase backend to store user onboarding data (name, intent, struggles, strengths) for the matching algorithm.
+## What We're Building
 
-## Overview
+Instead of clicking pre-set options, users will have a genuine conversation:
 
-We need to store the onboarding selections users make so we can later match people who need support with those who can provide it. For example, someone struggling with loneliness who listens deeply could be matched with someone who feels unheard.
-
-## Database Design
-
-### Tables
-
-**1. profiles** - Core user data
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Links to auth.users |
-| display_name | text | What they want to be called |
-| intent | text | Why they're here (heard/support/purpose/connect/unsure) |
-| created_at | timestamp | When they joined |
-| updated_at | timestamp | Last profile update |
-
-**2. user_struggles** - What weighs on them (many-to-many)
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Row identifier |
-| user_id | uuid (FK) | Links to profiles |
-| struggle_type | text | anxiety/loneliness/grief/direction/unheard/doubt |
-
-**3. user_strengths** - What they bring (many-to-many)
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Row identifier |
-| user_id | uuid (FK) | Links to profiles |
-| strength_type | text | listener/calm/experienced/questions/space/share |
-
-### Why Separate Tables?
-
-Users can select multiple struggles and strengths. Storing these in separate tables (rather than arrays) makes matching queries much more efficient:
 ```text
-Find users who have strength "listener" 
-AND whose struggles include "loneliness"
-→ Simple JOIN query
+Current Flow:
+"What weighs on you?" → [Checkbox] [Checkbox] [Checkbox]
+
+New Flow:
+"What's been on your mind lately?" → [Open text area]
+→ User writes: "I just moved to a new city and feel so disconnected..."
+→ AI responds: "It sounds like you're experiencing loneliness and seeking connection. Is that right?"
+→ [Yes, that's it] [Let me add more]
 ```
 
-## Security (RLS Policies)
+## New Onboarding Steps
 
-- Users can only read/update their own profile
-- Users can only manage their own struggles/strengths
-- No public access to any data
+| Step | Question | Input Type | What AI Does |
+|------|----------|------------|--------------|
+| 0 | What should we call you? | Text input | (Same as before) |
+| 1 | What brings you here? | Free text | Extracts intent + context |
+| 2 | AI reflects back | Confirmation | Shows extracted themes as gentle tags |
+| 3 | What do you offer others? | Free text | Extracts strengths |
+| 4 | AI confirms strengths | Confirmation | Shows strength tags for approval |
 
-## Implementation Steps
+## Technical Architecture
 
-### Step 1: Enable Supabase
-Connect the project to Supabase (Lovable Cloud preferred for simplicity).
+### Backend: Edge Function for Theme Extraction
 
-### Step 2: Create Database Schema
-Run migration to create the three tables with proper foreign keys and RLS policies.
+Create `supabase/functions/extract-themes/index.ts` that:
+- Takes user's free-text input
+- Uses Lovable AI (Gemini) to extract themes
+- Returns structured data for the database
 
-### Step 3: Create Supabase Client
-Add `src/integrations/supabase/client.ts` for database operations.
+```text
+Input: "I feel like nobody really listens to me. I've been struggling with anxiety since losing my job."
 
-### Step 4: Add Types
-Create TypeScript types for the onboarding data.
-
-### Step 5: Update Onboarding Flow
-Modify `handleStrengthsNext` to save data to Supabase before navigating.
-
-## Technical Details
-
-### Migration SQL
-
-```sql
--- Profiles table
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  display_name TEXT NOT NULL,
-  intent TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- User struggles (multi-select)
-CREATE TABLE user_struggles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  struggle_type TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, struggle_type)
-);
-
--- User strengths (multi-select)
-CREATE TABLE user_strengths (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  strength_type TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, strength_type)
-);
-
--- Enable RLS
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_struggles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_strengths ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies
-CREATE POLICY "Users can view own profile" 
-  ON profiles FOR SELECT 
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile" 
-  ON profiles FOR UPDATE 
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile" 
-  ON profiles FOR INSERT 
-  WITH CHECK (auth.uid() = id);
-
--- Similar policies for struggles and strengths tables
+Output: {
+  themes: ["unheard", "anxiety", "life_transition"],
+  context: "Job loss leading to anxiety and feeling disconnected",
+  suggested_tags: [
+    { id: "unheard", label: "Feeling unheard", confidence: 0.95 },
+    { id: "anxiety", label: "Anxiety", confidence: 0.90 },
+    { id: "direction", label: "Finding direction", confidence: 0.75 }
+  ]
+}
 ```
 
-### Onboarding Save Function
+### Database Changes
+
+Add new columns to store the raw text for richer matching:
+
+| Table | New Column | Purpose |
+|-------|------------|---------|
+| profiles | raw_intent_text | User's original words about why they're here |
+| profiles | raw_offering_text | User's original words about what they bring |
+
+This lets us do semantic matching later, not just tag matching.
+
+### Frontend Flow
+
+```text
+Step 0: Name (unchanged)
+    ↓
+Step 1: "What's been on your heart lately?"
+        [Large textarea with ethereal styling]
+        [Continue →]
+    ↓
+Step 2: AI Processing (brief loading with gentle animation)
+        "I hear you..."
+    ↓
+Step 3: Theme Confirmation
+        "It sounds like you're carrying..."
+        [Tag: Loneliness] [Tag: Seeking purpose] [Tag: Life transition]
+        "Does this feel right?"
+        [Yes, continue] [Let me add more]
+    ↓
+Step 4: "What gifts do you bring to others?"
+        [Large textarea]
+        [Continue →]
+    ↓
+Step 5: Strength Confirmation (same pattern)
+    ↓
+Step 6: Email/Auth (future step)
+```
+
+## File Changes
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/pages/OnboardingStructured.tsx` | Create | Backup of current structured version |
+| `src/pages/Onboarding.tsx` | Replace | New conversational flow |
+| `supabase/functions/extract-themes/index.ts` | Create | LLM theme extraction |
+| Database migration | Add | `raw_intent_text` and `raw_offering_text` columns |
+
+## Visual Design
+
+Keeping the exact same aesthetic:
+- Sky gradient background with floating clouds and birds
+- Libre Baskerville serif for questions
+- Ethereal input styling (no borders, centered)
+- Fade-in animations between steps
+- Ghost pill buttons for tag confirmations
+
+New elements:
+- Larger textarea for free-form input (same ethereal style)
+- Gentle loading state ("I hear you..." with subtle pulse)
+- Tag pills that match the ghost button style
+
+## Edge Function Details
 
 ```typescript
-const saveOnboardingData = async (userData: OnboardingData, userId: string) => {
-  // 1. Upsert profile
-  await supabase.from('profiles').upsert({
-    id: userId,
-    display_name: userData.name,
-    intent: userData.intent,
-  });
+// supabase/functions/extract-themes/index.ts
+// Uses Lovable AI gateway (LOVABLE_API_KEY auto-configured)
 
-  // 2. Insert struggles
-  await supabase.from('user_struggles').insert(
-    userData.struggles.map(s => ({ user_id: userId, struggle_type: s }))
-  );
+const systemPrompt = `You are a compassionate listener helping understand what someone is experiencing.
+Extract themes from their words. Map to these categories when applicable:
+- Struggles: anxiety, loneliness, grief, direction, unheard, doubt
+- Strengths: listener, calm, experienced, questions, space, share
 
-  // 3. Insert strengths
-  await supabase.from('user_strengths').insert(
-    userData.strengths.map(s => ({ user_id: userId, strength_type: s }))
-  );
-};
+Also capture any unique context that doesn't fit categories.
+Respond with JSON only.`;
 ```
 
-## File Changes Summary
+## Why This Approach?
 
-| File | Change |
-|------|--------|
-| Supabase Migration | Create profiles, user_struggles, user_strengths tables with RLS |
-| `src/integrations/supabase/client.ts` | Supabase client setup (auto-generated) |
-| `src/integrations/supabase/types.ts` | TypeScript types (auto-generated) |
-| `src/pages/Onboarding.tsx` | Add save function, call on completion |
+1. **More Personal**: Users express themselves naturally instead of checking boxes
+2. **Richer Data**: We capture context ("just moved to new city") not just labels ("loneliness")
+3. **Better Matching**: "Both of you recently moved cities" vs "Both selected loneliness"
+4. **Validation**: Users confirm the AI understood them correctly
+5. **Hybrid Structure**: Still stores structured tags for efficient database queries
 
-## Auth Consideration
+## Implementation Order
 
-Since we discussed adding email collection after the strengths step, we have two approaches:
+1. Save current Onboarding.tsx as OnboardingStructured.tsx (backup)
+2. Add database columns for raw text
+3. Create extract-themes edge function
+4. Build new conversational Onboarding component
+5. Wire up the API calls and state management
 
-**Option A: Anonymous first, convert later**
-- Let users complete onboarding without auth
-- Store data temporarily (localStorage or anonymous session)
-- Convert to full account when they provide email
-
-**Option B: Auth before save**
-- Add email step after strengths
-- Create account, then save all data
-- Cleaner data model, no temporary storage
-
-I recommend **Option B** since you mentioned adding email collection. We can add that step to the onboarding flow and save everything once they're authenticated.
-
-## Next Steps After This
-
-1. Add email collection step (Step 4) to onboarding
-2. Implement auth (sign up with email)
-3. Build the matching algorithm using the stored data
-
+This keeps your beautiful ethereal design while making the experience feel like a warm conversation rather than a form.
