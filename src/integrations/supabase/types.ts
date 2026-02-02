@@ -20,6 +20,8 @@ export type Database = {
           display_name: string
           id: string
           intent: string | null
+          raw_intent_text: string | null
+          raw_offering_text: string | null
           updated_at: string
         }
         Insert: {
@@ -27,6 +29,8 @@ export type Database = {
           display_name: string
           id: string
           intent?: string | null
+          raw_intent_text?: string | null
+          raw_offering_text?: string | null
           updated_at?: string
         }
         Update: {
@@ -34,6 +38,8 @@ export type Database = {
           display_name?: string
           id?: string
           intent?: string | null
+          raw_intent_text?: string | null
+          raw_offering_text?: string | null
           updated_at?: string
         }
         Relationships: []
