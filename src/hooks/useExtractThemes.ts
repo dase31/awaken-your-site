@@ -18,7 +18,7 @@ export function useExtractThemes() {
 
   const extractThemes = async (
     text: string,
-    type: "struggles" | "strengths"
+    type: "struggles" | "strengths" | "goals" | "connection_intent"
   ): Promise<ExtractThemesResult | null> => {
     setIsLoading(true);
     setError(null);

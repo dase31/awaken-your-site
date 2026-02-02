@@ -20,6 +20,8 @@ export type Database = {
           display_name: string
           id: string
           intent: string | null
+          raw_connection_text: string | null
+          raw_goals_text: string | null
           raw_intent_text: string | null
           raw_offering_text: string | null
           updated_at: string
@@ -29,6 +31,8 @@ export type Database = {
           display_name: string
           id: string
           intent?: string | null
+          raw_connection_text?: string | null
+          raw_goals_text?: string | null
           raw_intent_text?: string | null
           raw_offering_text?: string | null
           updated_at?: string
@@ -38,11 +42,71 @@ export type Database = {
           display_name?: string
           id?: string
           intent?: string | null
+          raw_connection_text?: string | null
+          raw_goals_text?: string | null
           raw_intent_text?: string | null
           raw_offering_text?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      user_connection_intents: {
+        Row: {
+          created_at: string
+          id: string
+          intent_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intent_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intent_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_connection_intents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_goals: {
+        Row: {
+          created_at: string
+          goal_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_strengths: {
         Row: {
