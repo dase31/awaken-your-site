@@ -1,148 +1,103 @@
 
-# Restructured Onboarding: Goals + Connection Intent
 
-Replace the "what gifts do you bring" section with personal goals and add a "hoping to find" screen for a more natural, self-focused journey.
+# Add Email Auth Step After Onboarding
+
+Add email authentication as the final step of onboarding, allowing users to create an account and save all their collected data to the database.
 
 ## New Flow
 
-| Step | Question | Purpose |
-|------|----------|---------|
-| 0 | What should we call you? | Name (unchanged) |
-| 1 | What's been on your heart lately? | Emotional context + struggles |
-| 2 | Loading: "I hear you..." | AI processing |
-| 3 | Theme confirmation | Validate extracted struggles |
-| 4 | What are you hoping to work on? | Personal/mental health goals |
-| 5 | Loading: "I see what you're reaching for..." | AI processing |
-| 6 | Goals confirmation | Validate extracted goals |
-| 7 | What kind of connection are you hoping for? | Connection intent |
-| 8 | Loading: "Finding what resonates..." | AI processing |
-| 9 | Connection confirmation | Validate connection type |
+| Step | Screen | Current/New |
+|------|--------|-------------|
+| 0-9 | Existing onboarding flow | Current |
+| 10 | Email input screen | **New** |
+| 11 | Loading: "Creating your space..." | **New** |
+| 12 | Check your email / Success | **New** |
 
-## Why This Works Better
+## User Experience
 
 ```text
-Before: "What gifts do you bring to others?"
-→ Feels like a job interview, hard to answer, pressure to sound impressive
+Step 10 - Email Input:
+"Last step - let's save your journey"
+[Email input field]
+"We'll send you a magic link to confirm"
 
-After: "What are you hoping to work on in yourself?"
-→ Self-focused, feels safe, actionable
-→ "I want to be more present" / "I'm trying to manage my anxiety better"
+Step 11 - Loading:
+"Creating your space..."
 
-+ "What kind of connection are you hoping for here?"
-→ Clarifies expectations, helps with matching
-→ "Someone who's been through something similar" / "A calm presence to talk to"
+Step 12 - Success/Verify:
+"Check your email"
+"We sent a link to [email] - tap it to complete your profile"
 ```
 
-## Data Model Changes
+## Technical Implementation
 
-### New Database Table: user_goals
+### 1. Authentication Flow
+- Use Supabase magic link (passwordless) for frictionless signup
+- After email submission, call `supabase.auth.signUp()` with the email
+- On successful signup, create profile and related records in the database
+- Show "check your email" screen while waiting for verification
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | uuid | Primary key |
-| user_id | uuid | FK to profiles |
-| goal_type | text | Extracted goal category |
-| created_at | timestamp | When added |
+### 2. Database Operations on Signup
+After user signs up, save all collected onboarding data:
 
-### New Database Table: user_connection_intents
-
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | uuid | Primary key |
-| user_id | uuid | FK to profiles |
-| intent_type | text | Type of connection sought |
-| created_at | timestamp | When added |
-
-### Updated Profiles Table
-
-| New Column | Purpose |
-|------------|---------|
-| raw_goals_text | User's original words about their goals |
-| raw_connection_text | User's original words about what they're seeking |
-
-(Remove `raw_offering_text` since we're replacing strengths with goals)
-
-## Edge Function Updates
-
-Add two new extraction types to the `extract-themes` function:
-
-### Goals Extraction
 ```text
-Categories:
-- presence: Wanting to be more present/mindful
-- anxiety_management: Learning to manage anxiety/stress
-- connection: Building deeper connections with others
-- self_worth: Working on self-esteem/confidence
-- boundaries: Setting healthier boundaries
-- healing: Processing past experiences/trauma
-- purpose: Finding meaning/direction
+1. Create profile record with:
+   - id = user.id
+   - display_name = userData.name
+   - raw_intent_text = userData.intentText
+   - raw_goals_text = userData.goalsText
+   - raw_connection_text = userData.connectionText
+
+2. Insert user_struggles records for each selectedStruggle
+
+3. Insert user_goals records for each selectedGoal
+
+4. Insert user_connection_intents records for each selectedIntent
 ```
 
-### Connection Intent Extraction
+### 3. New State & Handlers
+
 ```text
-Categories:
-- peer: Someone who's been through something similar
-- listener: Someone who will just listen without judgment
-- guide: Someone with wisdom/experience to share
-- accountability: Someone to check in with regularly
-- friend: Just someone to talk to casually
-```
+userData additions:
+- email: string
 
-## UI Flow Details
+New steps:
+- Step 10: Email input
+- Step 11: Loading (auth processing)
+- Step 12: Success/check email screen
 
-### Step 4: Goals Screen
-```text
-"What are you hoping to work on in yourself?"
-[Textarea placeholder: "I'm trying to..."]
-
-Subtext: "There's no wrong answer here"
-```
-
-### Step 7: Connection Intent Screen
-```text
-"What kind of connection are you hoping for here?"
-[Textarea placeholder: "I'm looking for someone who..."]
-
-Subtext: "This helps us find the right match for you"
+New handlers:
+- handleEmailSubmit(): Call supabase.auth.signUp with magic link
+- handleSignupSuccess(): Save all onboarding data to database
 ```
 
 ## File Changes
 
 | File | Action | Description |
 |------|--------|-------------|
-| Database migration | Create | Add `user_goals` and `user_connection_intents` tables |
-| Database migration | Alter | Add `raw_goals_text` and `raw_connection_text` to profiles |
-| `supabase/functions/extract-themes/index.ts` | Update | Add goals and connection_intent extraction types |
-| `src/pages/Onboarding.tsx` | Update | Replace strengths flow with goals + add connection intent flow |
-| `src/hooks/useExtractThemes.ts` | Update | Add new type options |
+| `src/pages/Onboarding.tsx` | Update | Add steps 10-12, email state, auth logic, database saving |
+| `src/hooks/useOnboardingSubmit.ts` | Create | Hook to handle saving all onboarding data to database |
 
-## Matching Benefits
+## UI Design for Step 10
 
-This new structure gives us richer matching data:
+Matches existing ethereal style:
+- Same serif font, fade animations
+- Simple email input centered on screen
+- Subtle subtext explaining the magic link approach
+- Same "press enter" hint pattern
 
-```text
-User A:
-- Struggles: loneliness, anxiety
-- Goals: building deeper connections, being more present
-- Seeking: peer support (someone who's been through it)
+## Edge Cases
 
-User B:
-- Struggles: anxiety, overwhelm
-- Goals: anxiety management, boundaries
-- Seeking: peer support
+| Scenario | Handling |
+|----------|----------|
+| Email already exists | Show "Already have an account? Check your email for a login link" |
+| Auth error | Toast error, stay on email step |
+| Network failure | Toast error with retry option |
+| User closes before verifying | Data not saved - they can re-onboard |
 
-Match score: HIGH
-- Shared struggle: anxiety
-- Compatible goals: both working on anxiety/presence
-- Same connection preference: peer support
-```
+## Security Notes
 
-## Implementation Order
+- RLS policies already exist on all tables requiring `auth.uid() = user_id`
+- Profile ID must match the authenticated user's ID
+- Data only saved after successful authentication
 
-1. Create database migrations (new tables + profile columns)
-2. Update the edge function with goals and connection_intent prompts
-3. Update Onboarding.tsx with new steps (7-9)
-4. Update userData state to track new fields
-5. Remove old strengths logic, replace with goals
-
-This shifts the entire onboarding from "what can you offer?" to "what do you need?" - much more welcoming and personal.
