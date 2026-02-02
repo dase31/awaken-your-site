@@ -4,6 +4,8 @@ import { OnboardingBackground } from "@/components/onboarding/OnboardingBackgrou
 import { ThemeTag } from "@/components/onboarding/ThemeTag";
 import { LoadingState } from "@/components/onboarding/LoadingState";
 import { useExtractThemes } from "@/hooks/useExtractThemes";
+import { useOnboardingSubmit } from "@/hooks/useOnboardingSubmit";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface SuggestedTag {
@@ -15,12 +17,15 @@ interface SuggestedTag {
 const Onboarding = () => {
   const navigate = useNavigate();
   const { extractThemes, isLoading } = useExtractThemes();
+  const { saveOnboardingData } = useOnboardingSubmit();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [userData, setUserData] = useState({
     name: "",
+    email: "",
     intentText: "",
     goalsText: "",
     connectionText: "",
@@ -172,8 +177,51 @@ const Onboarding = () => {
   };
 
   const handleConnectionConfirm = () => {
-    console.log("Final user data:", userData);
-    navigate("/");
+    transitionTo(10); // Email input step
+  };
+
+  const handleEmailSubmit = async () => {
+    if (!userData.email.trim()) return;
+    
+    setIsSubmitting(true);
+    transitionTo(11); // Loading state
+    
+    try {
+      // Use magic link (OTP) for passwordless auth
+      const { error } = await supabase.auth.signInWithOtp({
+        email: userData.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            display_name: userData.name,
+            raw_intent_text: userData.intentText,
+            raw_goals_text: userData.goalsText,
+            raw_connection_text: userData.connectionText,
+            selected_struggles: userData.selectedStruggles,
+            selected_goals: userData.selectedGoals,
+            selected_intents: userData.selectedIntents,
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      transitionTo(12); // Success screen
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      toast.error(error.message || "Something went wrong. Please try again.");
+      transitionTo(10); // Back to email input
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmailKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && userData.email.trim() && !isSubmitting) {
+      handleEmailSubmit();
+    }
   };
 
   const handleAddMore = (returnStep: number) => {
@@ -555,6 +603,99 @@ const Onboarding = () => {
               Let me add more
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Step 10: Email Input */}
+      {currentStep === 10 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-md w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
+            Last step — let's save your journey
+          </h1>
+          <p
+            className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif"
+            style={{ animationDelay: "0.2s" }}
+          >
+            We'll send you a magic link to confirm
+          </p>
+
+          <div className="space-y-4" style={{ animationDelay: "0.3s" }}>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={userData.email}
+              onChange={(e) =>
+                setUserData((prev) => ({ ...prev, email: e.target.value }))
+              }
+              onKeyDown={handleEmailKeyDown}
+              disabled={isSubmitting}
+              className="stagger-fade-in ethereal-input bg-transparent border-none text-foreground text-2xl md:text-3xl font-serif text-center w-full focus:outline-none placeholder:text-foreground/40 disabled:opacity-50"
+              style={{ textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+              autoFocus
+            />
+
+            {userData.email.trim() && (
+              <button
+                onClick={handleEmailSubmit}
+                disabled={isSubmitting}
+                className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300 disabled:opacity-50"
+                style={{ animationDelay: "0.4s" }}
+              >
+                Continue →
+              </button>
+            )}
+
+            <p
+              className="stagger-fade-in text-foreground/40 text-sm"
+              style={{ animationDelay: "0.5s" }}
+            >
+              press enter ↵
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Step 11: Loading - Creating account */}
+      {currentStep === 11 && (
+        <div
+          className={`relative z-10 ${
+            isTransitioning ? "step-fade-out" : ""
+          }`}
+        >
+          <LoadingState message="Creating your space..." />
+        </div>
+      )}
+
+      {/* Step 12: Success - Check your email */}
+      {currentStep === 12 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-md w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
+            Check your email
+          </h1>
+          <p
+            className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif"
+            style={{ animationDelay: "0.2s" }}
+          >
+            We sent a link to <span className="text-foreground">{userData.email}</span>
+            <br />
+            Tap it to complete your profile
+          </p>
+
+          <button
+            onClick={() => navigate("/")}
+            className="stagger-fade-in text-foreground/50 font-serif text-sm hover:text-foreground/70 transition-all duration-300"
+            style={{ animationDelay: "0.4s" }}
+          >
+            I'll check later →
+          </button>
         </div>
       )}
     </div>
