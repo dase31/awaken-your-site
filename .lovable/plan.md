@@ -1,146 +1,148 @@
 
-# Conversational LLM-Powered Onboarding
+# Restructured Onboarding: Goals + Connection Intent
 
-Transform the structured checkbox onboarding into a warm, conversational experience where users write freely and the AI extracts meaningful themes for matching - all while keeping the dreamy sky aesthetic.
+Replace the "what gifts do you bring" section with personal goals and add a "hoping to find" screen for a more natural, self-focused journey.
 
-## What We're Building
+## New Flow
 
-Instead of clicking pre-set options, users will have a genuine conversation:
+| Step | Question | Purpose |
+|------|----------|---------|
+| 0 | What should we call you? | Name (unchanged) |
+| 1 | What's been on your heart lately? | Emotional context + struggles |
+| 2 | Loading: "I hear you..." | AI processing |
+| 3 | Theme confirmation | Validate extracted struggles |
+| 4 | What are you hoping to work on? | Personal/mental health goals |
+| 5 | Loading: "I see what you're reaching for..." | AI processing |
+| 6 | Goals confirmation | Validate extracted goals |
+| 7 | What kind of connection are you hoping for? | Connection intent |
+| 8 | Loading: "Finding what resonates..." | AI processing |
+| 9 | Connection confirmation | Validate connection type |
+
+## Why This Works Better
 
 ```text
-Current Flow:
-"What weighs on you?" → [Checkbox] [Checkbox] [Checkbox]
+Before: "What gifts do you bring to others?"
+→ Feels like a job interview, hard to answer, pressure to sound impressive
 
-New Flow:
-"What's been on your mind lately?" → [Open text area]
-→ User writes: "I just moved to a new city and feel so disconnected..."
-→ AI responds: "It sounds like you're experiencing loneliness and seeking connection. Is that right?"
-→ [Yes, that's it] [Let me add more]
+After: "What are you hoping to work on in yourself?"
+→ Self-focused, feels safe, actionable
+→ "I want to be more present" / "I'm trying to manage my anxiety better"
+
++ "What kind of connection are you hoping for here?"
+→ Clarifies expectations, helps with matching
+→ "Someone who's been through something similar" / "A calm presence to talk to"
 ```
 
-## New Onboarding Steps
+## Data Model Changes
 
-| Step | Question | Input Type | What AI Does |
-|------|----------|------------|--------------|
-| 0 | What should we call you? | Text input | (Same as before) |
-| 1 | What brings you here? | Free text | Extracts intent + context |
-| 2 | AI reflects back | Confirmation | Shows extracted themes as gentle tags |
-| 3 | What do you offer others? | Free text | Extracts strengths |
-| 4 | AI confirms strengths | Confirmation | Shows strength tags for approval |
+### New Database Table: user_goals
 
-## Technical Architecture
+| Column | Type | Purpose |
+|--------|------|---------|
+| id | uuid | Primary key |
+| user_id | uuid | FK to profiles |
+| goal_type | text | Extracted goal category |
+| created_at | timestamp | When added |
 
-### Backend: Edge Function for Theme Extraction
+### New Database Table: user_connection_intents
 
-Create `supabase/functions/extract-themes/index.ts` that:
-- Takes user's free-text input
-- Uses Lovable AI (Gemini) to extract themes
-- Returns structured data for the database
+| Column | Type | Purpose |
+|--------|------|---------|
+| id | uuid | Primary key |
+| user_id | uuid | FK to profiles |
+| intent_type | text | Type of connection sought |
+| created_at | timestamp | When added |
 
+### Updated Profiles Table
+
+| New Column | Purpose |
+|------------|---------|
+| raw_goals_text | User's original words about their goals |
+| raw_connection_text | User's original words about what they're seeking |
+
+(Remove `raw_offering_text` since we're replacing strengths with goals)
+
+## Edge Function Updates
+
+Add two new extraction types to the `extract-themes` function:
+
+### Goals Extraction
 ```text
-Input: "I feel like nobody really listens to me. I've been struggling with anxiety since losing my job."
-
-Output: {
-  themes: ["unheard", "anxiety", "life_transition"],
-  context: "Job loss leading to anxiety and feeling disconnected",
-  suggested_tags: [
-    { id: "unheard", label: "Feeling unheard", confidence: 0.95 },
-    { id: "anxiety", label: "Anxiety", confidence: 0.90 },
-    { id: "direction", label: "Finding direction", confidence: 0.75 }
-  ]
-}
+Categories:
+- presence: Wanting to be more present/mindful
+- anxiety_management: Learning to manage anxiety/stress
+- connection: Building deeper connections with others
+- self_worth: Working on self-esteem/confidence
+- boundaries: Setting healthier boundaries
+- healing: Processing past experiences/trauma
+- purpose: Finding meaning/direction
 ```
 
-### Database Changes
-
-Add new columns to store the raw text for richer matching:
-
-| Table | New Column | Purpose |
-|-------|------------|---------|
-| profiles | raw_intent_text | User's original words about why they're here |
-| profiles | raw_offering_text | User's original words about what they bring |
-
-This lets us do semantic matching later, not just tag matching.
-
-### Frontend Flow
-
+### Connection Intent Extraction
 ```text
-Step 0: Name (unchanged)
-    ↓
-Step 1: "What's been on your heart lately?"
-        [Large textarea with ethereal styling]
-        [Continue →]
-    ↓
-Step 2: AI Processing (brief loading with gentle animation)
-        "I hear you..."
-    ↓
-Step 3: Theme Confirmation
-        "It sounds like you're carrying..."
-        [Tag: Loneliness] [Tag: Seeking purpose] [Tag: Life transition]
-        "Does this feel right?"
-        [Yes, continue] [Let me add more]
-    ↓
-Step 4: "What gifts do you bring to others?"
-        [Large textarea]
-        [Continue →]
-    ↓
-Step 5: Strength Confirmation (same pattern)
-    ↓
-Step 6: Email/Auth (future step)
+Categories:
+- peer: Someone who's been through something similar
+- listener: Someone who will just listen without judgment
+- guide: Someone with wisdom/experience to share
+- accountability: Someone to check in with regularly
+- friend: Just someone to talk to casually
+```
+
+## UI Flow Details
+
+### Step 4: Goals Screen
+```text
+"What are you hoping to work on in yourself?"
+[Textarea placeholder: "I'm trying to..."]
+
+Subtext: "There's no wrong answer here"
+```
+
+### Step 7: Connection Intent Screen
+```text
+"What kind of connection are you hoping for here?"
+[Textarea placeholder: "I'm looking for someone who..."]
+
+Subtext: "This helps us find the right match for you"
 ```
 
 ## File Changes
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/OnboardingStructured.tsx` | Create | Backup of current structured version |
-| `src/pages/Onboarding.tsx` | Replace | New conversational flow |
-| `supabase/functions/extract-themes/index.ts` | Create | LLM theme extraction |
-| Database migration | Add | `raw_intent_text` and `raw_offering_text` columns |
+| Database migration | Create | Add `user_goals` and `user_connection_intents` tables |
+| Database migration | Alter | Add `raw_goals_text` and `raw_connection_text` to profiles |
+| `supabase/functions/extract-themes/index.ts` | Update | Add goals and connection_intent extraction types |
+| `src/pages/Onboarding.tsx` | Update | Replace strengths flow with goals + add connection intent flow |
+| `src/hooks/useExtractThemes.ts` | Update | Add new type options |
 
-## Visual Design
+## Matching Benefits
 
-Keeping the exact same aesthetic:
-- Sky gradient background with floating clouds and birds
-- Libre Baskerville serif for questions
-- Ethereal input styling (no borders, centered)
-- Fade-in animations between steps
-- Ghost pill buttons for tag confirmations
+This new structure gives us richer matching data:
 
-New elements:
-- Larger textarea for free-form input (same ethereal style)
-- Gentle loading state ("I hear you..." with subtle pulse)
-- Tag pills that match the ghost button style
+```text
+User A:
+- Struggles: loneliness, anxiety
+- Goals: building deeper connections, being more present
+- Seeking: peer support (someone who's been through it)
 
-## Edge Function Details
+User B:
+- Struggles: anxiety, overwhelm
+- Goals: anxiety management, boundaries
+- Seeking: peer support
 
-```typescript
-// supabase/functions/extract-themes/index.ts
-// Uses Lovable AI gateway (LOVABLE_API_KEY auto-configured)
-
-const systemPrompt = `You are a compassionate listener helping understand what someone is experiencing.
-Extract themes from their words. Map to these categories when applicable:
-- Struggles: anxiety, loneliness, grief, direction, unheard, doubt
-- Strengths: listener, calm, experienced, questions, space, share
-
-Also capture any unique context that doesn't fit categories.
-Respond with JSON only.`;
+Match score: HIGH
+- Shared struggle: anxiety
+- Compatible goals: both working on anxiety/presence
+- Same connection preference: peer support
 ```
-
-## Why This Approach?
-
-1. **More Personal**: Users express themselves naturally instead of checking boxes
-2. **Richer Data**: We capture context ("just moved to new city") not just labels ("loneliness")
-3. **Better Matching**: "Both of you recently moved cities" vs "Both selected loneliness"
-4. **Validation**: Users confirm the AI understood them correctly
-5. **Hybrid Structure**: Still stores structured tags for efficient database queries
 
 ## Implementation Order
 
-1. Save current Onboarding.tsx as OnboardingStructured.tsx (backup)
-2. Add database columns for raw text
-3. Create extract-themes edge function
-4. Build new conversational Onboarding component
-5. Wire up the API calls and state management
+1. Create database migrations (new tables + profile columns)
+2. Update the edge function with goals and connection_intent prompts
+3. Update Onboarding.tsx with new steps (7-9)
+4. Update userData state to track new fields
+5. Remove old strengths logic, replace with goals
 
-This keeps your beautiful ethereal design while making the experience feel like a warm conversation rather than a form.
+This shifts the entire onboarding from "what can you offer?" to "what do you need?" - much more welcoming and personal.
