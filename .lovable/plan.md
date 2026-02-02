@@ -1,183 +1,176 @@
 
 
-# Onboarding Steps 2 & 3: Struggles and Strengths
+# Thymos Backend Setup: Onboarding Data Storage
 
-Build two new multi-select screens that gather meaningful data for matching users as supporters and seekers.
+Set up Supabase backend to store user onboarding data (name, intent, struggles, strengths) for the matching algorithm.
 
-## The Flow
+## Overview
 
+We need to store the onboarding selections users make so we can later match people who need support with those who can provide it. For example, someone struggling with loneliness who listens deeply could be matched with someone who feels unheard.
+
+## Database Design
+
+### Tables
+
+**1. profiles** - Core user data
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid (PK) | Links to auth.users |
+| display_name | text | What they want to be called |
+| intent | text | Why they're here (heard/support/purpose/connect/unsure) |
+| created_at | timestamp | When they joined |
+| updated_at | timestamp | Last profile update |
+
+**2. user_struggles** - What weighs on them (many-to-many)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid (PK) | Row identifier |
+| user_id | uuid (FK) | Links to profiles |
+| struggle_type | text | anxiety/loneliness/grief/direction/unheard/doubt |
+
+**3. user_strengths** - What they bring (many-to-many)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid (PK) | Row identifier |
+| user_id | uuid (FK) | Links to profiles |
+| strength_type | text | listener/calm/experienced/questions/space/share |
+
+### Why Separate Tables?
+
+Users can select multiple struggles and strengths. Storing these in separate tables (rather than arrays) makes matching queries much more efficient:
 ```text
-Step 0: Name         → "What should we call you?"
-Step 1: Intent       → "What brings you to Thymos?" (single select)
-Step 2: Struggles    → "What weighs on you?" (multi-select)
-Step 3: Strengths    → "What do you bring?" (multi-select)
-→ Navigate home (profile tailoring happens later in-app)
+Find users who have strength "listener" 
+AND whose struggles include "loneliness"
+→ Simple JOIN query
 ```
 
-## Screen Designs
+## Security (RLS Policies)
 
-### Step 2: Struggles
-**Question:** "What weighs on you?"
+- Users can only read/update their own profile
+- Users can only manage their own struggles/strengths
+- No public access to any data
 
-Options (multi-select with ghost pills):
-- Anxiety or worry
-- Loneliness
-- Loss or grief  
-- Finding direction
-- Feeling unheard
-- Self-doubt
+## Implementation Steps
 
-### Step 3: Strengths  
-**Question:** "What do you bring?"
+### Step 1: Enable Supabase
+Connect the project to Supabase (Lovable Cloud preferred for simplicity).
 
-Options (multi-select with ghost pills):
-- I listen deeply
-- I stay calm in storms
-- I've walked through darkness
-- I ask good questions
-- I hold space without judgment
-- I share from experience
+### Step 2: Create Database Schema
+Run migration to create the three tables with proper foreign keys and RLS policies.
 
-## Multi-Select UX
+### Step 3: Create Supabase Client
+Add `src/integrations/supabase/client.ts` for database operations.
 
-- Pills toggle on/off when tapped
-- Selected state: `bg-white/10 border-white/40` (subtle fill + brighter border)
-- Unselected state: `border-white/10` (current ghost pill style)
-- Continue button appears after at least 1 selection
-- Smooth transition between steps
+### Step 4: Add Types
+Create TypeScript types for the onboarding data.
 
-## Technical Changes
+### Step 5: Update Onboarding Flow
+Modify `handleStrengthsNext` to save data to Supabase before navigating.
 
-### 1. Add option arrays
+## Technical Details
 
-```tsx
-const struggleOptions = [
-  { id: "anxiety", label: "Anxiety or worry" },
-  { id: "loneliness", label: "Loneliness" },
-  { id: "grief", label: "Loss or grief" },
-  { id: "direction", label: "Finding direction" },
-  { id: "unheard", label: "Feeling unheard" },
-  { id: "doubt", label: "Self-doubt" },
-];
+### Migration SQL
 
-const strengthOptions = [
-  { id: "listener", label: "I listen deeply" },
-  { id: "calm", label: "I stay calm in storms" },
-  { id: "experienced", label: "I've walked through darkness" },
-  { id: "questions", label: "I ask good questions" },
-  { id: "space", label: "I hold space without judgment" },
-  { id: "share", label: "I share from experience" },
-];
+```sql
+-- Profiles table
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL,
+  intent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User struggles (multi-select)
+CREATE TABLE user_struggles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  struggle_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, struggle_type)
+);
+
+-- User strengths (multi-select)
+CREATE TABLE user_strengths (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  strength_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, strength_type)
+);
+
+-- Enable RLS
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_struggles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_strengths ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view own profile" 
+  ON profiles FOR SELECT 
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" 
+  ON profiles FOR UPDATE 
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile" 
+  ON profiles FOR INSERT 
+  WITH CHECK (auth.uid() = id);
+
+-- Similar policies for struggles and strengths tables
 ```
 
-### 2. Update userData state
+### Onboarding Save Function
 
-```tsx
-const [userData, setUserData] = useState({
-  name: "",
-  intent: "",
-  struggles: [] as string[],
-  strengths: [] as string[],
-});
-```
+```typescript
+const saveOnboardingData = async (userData: OnboardingData, userId: string) => {
+  // 1. Upsert profile
+  await supabase.from('profiles').upsert({
+    id: userId,
+    display_name: userData.name,
+    intent: userData.intent,
+  });
 
-### 3. Add handler functions
+  // 2. Insert struggles
+  await supabase.from('user_struggles').insert(
+    userData.struggles.map(s => ({ user_id: userId, struggle_type: s }))
+  );
 
-```tsx
-const handleIntentSelect = (intentId: string) => {
-  setUserData((prev) => ({ ...prev, intent: intentId }));
-  setIsTransitioning(true);
-  setTimeout(() => {
-    setCurrentStep(2);
-    setIsTransitioning(false);
-  }, 300);
+  // 3. Insert strengths
+  await supabase.from('user_strengths').insert(
+    userData.strengths.map(s => ({ user_id: userId, strength_type: s }))
+  );
 };
-
-const toggleStruggle = (id: string) => {
-  setUserData((prev) => ({
-    ...prev,
-    struggles: prev.struggles.includes(id)
-      ? prev.struggles.filter((s) => s !== id)
-      : [...prev.struggles, id],
-  }));
-};
-
-const toggleStrength = (id: string) => {
-  setUserData((prev) => ({
-    ...prev,
-    strengths: prev.strengths.includes(id)
-      ? prev.strengths.filter((s) => s !== id)
-      : [...prev.strengths, id],
-  }));
-};
-
-const handleStrugglesNext = () => {
-  if (userData.struggles.length > 0) {
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentStep(3);
-      setIsTransitioning(false);
-    }, 300);
-  }
-};
-
-const handleStrengthsNext = () => {
-  if (userData.strengths.length > 0) {
-    console.log("User data:", userData);
-    navigate("/");
-  }
-};
-```
-
-### 4. Add Step 2 UI (Struggles)
-
-Multi-select pills with toggle behavior and a continue button that appears when at least one option is selected.
-
-### 5. Add Step 3 UI (Strengths)
-
-Same pattern as Step 2, but with strength options. On completion, logs user data and navigates home.
-
-## Styling for Multi-Select Pills
-
-```tsx
-// Toggle pill styling
-className={`stagger-fade-in block w-full text-foreground font-serif text-xl md:text-2xl 
-  py-4 px-8 rounded-full border transition-all duration-300 
-  hover:scale-[1.02] focus:outline-none
-  ${isSelected 
-    ? "bg-white/10 border-white/40 text-primary" 
-    : "border-white/10 hover:border-white/30"
-  }`}
-```
-
-## Continue Button
-
-```tsx
-{userData.struggles.length > 0 && (
-  <button
-    onClick={handleStrugglesNext}
-    className="stagger-fade-in mt-8 text-foreground/70 font-serif text-lg 
-               hover:text-primary transition-all duration-300"
-    style={{ animationDelay: "0.8s" }}
-  >
-    Continue →
-  </button>
-)}
 ```
 
 ## File Changes Summary
 
 | File | Change |
 |------|--------|
-| `src/pages/Onboarding.tsx` | Add struggleOptions and strengthOptions arrays, update userData state to include struggles[] and strengths[], add toggle handlers and navigation functions, add Step 2 and Step 3 UI components with multi-select ghost pills |
+| Supabase Migration | Create profiles, user_struggles, user_strengths tables with RLS |
+| `src/integrations/supabase/client.ts` | Supabase client setup (auto-generated) |
+| `src/integrations/supabase/types.ts` | TypeScript types (auto-generated) |
+| `src/pages/Onboarding.tsx` | Add save function, call on completion |
 
-## Result
+## Auth Consideration
 
-Users will:
-1. Enter name → Enter
-2. Select intent → Tap one option → Advances automatically
-3. Select struggles → Tap multiple → Continue button → Advances
-4. Select strengths → Tap multiple → Continue → Navigates home
+Since we discussed adding email collection after the strengths step, we have two approaches:
 
-This gives us rich data for matching: someone struggling with loneliness who listens deeply can be matched with someone who feels unheard. Profile refinement happens later in the app as you mentioned.
+**Option A: Anonymous first, convert later**
+- Let users complete onboarding without auth
+- Store data temporarily (localStorage or anonymous session)
+- Convert to full account when they provide email
+
+**Option B: Auth before save**
+- Add email step after strengths
+- Create account, then save all data
+- Cleaner data model, no temporary storage
+
+I recommend **Option B** since you mentioned adding email collection. We can add that step to the onboarding flow and save everything once they're authenticated.
+
+## Next Steps After This
+
+1. Add email collection step (Step 4) to onboarding
+2. Implement auth (sign up with email)
+3. Build the matching algorithm using the stored data
 
