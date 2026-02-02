@@ -38,10 +38,52 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const isStrengths = type === "strengths";
+    let systemPrompt = "";
     
-    const systemPrompt = isStrengths
-      ? `You are a compassionate listener helping understand what gifts and strengths someone brings to others.
+    if (type === "goals") {
+      systemPrompt = `You are a compassionate listener helping understand someone's personal growth goals.
+Extract themes from their words. Map to these goal categories when applicable:
+- presence: Wanting to be more present/mindful
+- anxiety_management: Learning to manage anxiety/stress
+- connection: Building deeper connections with others
+- self_worth: Working on self-esteem/confidence
+- boundaries: Setting healthier boundaries
+- healing: Processing past experiences/trauma
+- purpose: Finding meaning/direction
+
+Also capture any unique context about their goals that doesn't fit categories.
+Return JSON with this exact structure:
+{
+  "themes": ["presence", "healing"], 
+  "context": "Brief description of what they're working toward",
+  "suggested_tags": [
+    {"id": "presence", "label": "Being more present", "confidence": 0.95},
+    {"id": "healing", "label": "Processing the past", "confidence": 0.85}
+  ]
+}
+Only include tags with confidence > 0.6. Maximum 4 tags.`;
+    } else if (type === "connection_intent") {
+      systemPrompt = `You are a compassionate listener helping understand what kind of connection someone is seeking.
+Extract themes from their words. Map to these connection categories when applicable:
+- peer: Someone who's been through something similar
+- listener: Someone who will just listen without judgment
+- guide: Someone with wisdom/experience to share
+- accountability: Someone to check in with regularly
+- friend: Just someone to talk to casually
+
+Also capture any unique context about what they're looking for.
+Return JSON with this exact structure:
+{
+  "themes": ["peer", "listener"], 
+  "context": "Brief description of the connection they seek",
+  "suggested_tags": [
+    {"id": "peer", "label": "Someone who understands", "confidence": 0.95},
+    {"id": "listener", "label": "A listening ear", "confidence": 0.85}
+  ]
+}
+Only include tags with confidence > 0.6. Maximum 4 tags.`;
+    } else if (type === "strengths") {
+      systemPrompt = `You are a compassionate listener helping understand what gifts and strengths someone brings to others.
 Extract themes from their words. Map to these strength categories when applicable:
 - listener: They listen deeply to others
 - calm: They stay calm in difficult situations
@@ -60,8 +102,10 @@ Return JSON with this exact structure:
     {"id": "calm", "label": "I stay calm in storms", "confidence": 0.85}
   ]
 }
-Only include tags with confidence > 0.6. Maximum 4 tags.`
-      : `You are a compassionate listener helping understand what someone is experiencing or seeking.
+Only include tags with confidence > 0.6. Maximum 4 tags.`;
+    } else {
+      // Default: struggles
+      systemPrompt = `You are a compassionate listener helping understand what someone is experiencing or seeking.
 Extract themes from their words. Map to these categories when applicable:
 - anxiety: Worry, stress, overwhelm, nervousness
 - loneliness: Feeling isolated, disconnected, alone
@@ -81,6 +125,7 @@ Return JSON with this exact structure:
   ]
 }
 Only include tags with confidence > 0.6. Maximum 4 tags.`;
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

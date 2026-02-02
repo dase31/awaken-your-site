@@ -22,13 +22,17 @@ const Onboarding = () => {
   const [userData, setUserData] = useState({
     name: "",
     intentText: "",
-    offeringText: "",
+    goalsText: "",
+    connectionText: "",
     suggestedStruggles: [] as SuggestedTag[],
     selectedStruggles: [] as string[],
-    suggestedStrengths: [] as SuggestedTag[],
-    selectedStrengths: [] as string[],
+    suggestedGoals: [] as SuggestedTag[],
+    selectedGoals: [] as string[],
+    suggestedIntents: [] as SuggestedTag[],
+    selectedIntents: [] as string[],
     intentContext: "",
-    offeringContext: "",
+    goalsContext: "",
+    connectionContext: "",
   });
 
   const transitionTo = (step: number) => {
@@ -88,46 +92,86 @@ const Onboarding = () => {
   };
 
   const handleStrugglesConfirm = () => {
-    transitionTo(4); // Offering input
+    transitionTo(4); // Goals input
   };
 
-  const handleOfferingSubmit = async () => {
-    if (!userData.offeringText.trim()) return;
+  const handleGoalsSubmit = async () => {
+    if (!userData.goalsText.trim()) return;
     
     transitionTo(5); // Show loading state
     
-    const result = await extractThemes(userData.offeringText, "strengths");
+    const result = await extractThemes(userData.goalsText, "goals");
     
     if (result) {
       setUserData((prev) => ({
         ...prev,
-        suggestedStrengths: result.suggested_tags,
-        selectedStrengths: result.suggested_tags.map((t) => t.id),
-        offeringContext: result.context,
+        suggestedGoals: result.suggested_tags,
+        selectedGoals: result.suggested_tags.map((t) => t.id),
+        goalsContext: result.context,
       }));
-      transitionTo(6); // Strength confirmation
+      transitionTo(6); // Goals confirmation
     } else {
       toast.error("Something went wrong. Please try again.");
       transitionTo(4); // Back to input
     }
   };
 
-  const handleOfferingKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.metaKey && userData.offeringText.trim()) {
-      handleOfferingSubmit();
+  const handleGoalsKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && e.metaKey && userData.goalsText.trim()) {
+      handleGoalsSubmit();
     }
   };
 
-  const toggleStrength = (id: string) => {
+  const toggleGoal = (id: string) => {
     setUserData((prev) => ({
       ...prev,
-      selectedStrengths: prev.selectedStrengths.includes(id)
-        ? prev.selectedStrengths.filter((s) => s !== id)
-        : [...prev.selectedStrengths, id],
+      selectedGoals: prev.selectedGoals.includes(id)
+        ? prev.selectedGoals.filter((g) => g !== id)
+        : [...prev.selectedGoals, id],
     }));
   };
 
-  const handleStrengthsConfirm = () => {
+  const handleGoalsConfirm = () => {
+    transitionTo(7); // Connection intent input
+  };
+
+  const handleConnectionSubmit = async () => {
+    if (!userData.connectionText.trim()) return;
+    
+    transitionTo(8); // Show loading state
+    
+    const result = await extractThemes(userData.connectionText, "connection_intent");
+    
+    if (result) {
+      setUserData((prev) => ({
+        ...prev,
+        suggestedIntents: result.suggested_tags,
+        selectedIntents: result.suggested_tags.map((t) => t.id),
+        connectionContext: result.context,
+      }));
+      transitionTo(9); // Connection confirmation
+    } else {
+      toast.error("Something went wrong. Please try again.");
+      transitionTo(7); // Back to input
+    }
+  };
+
+  const handleConnectionKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && e.metaKey && userData.connectionText.trim()) {
+      handleConnectionSubmit();
+    }
+  };
+
+  const toggleIntent = (id: string) => {
+    setUserData((prev) => ({
+      ...prev,
+      selectedIntents: prev.selectedIntents.includes(id)
+        ? prev.selectedIntents.filter((i) => i !== id)
+        : [...prev.selectedIntents, id],
+    }));
+  };
+
+  const handleConnectionConfirm = () => {
     console.log("Final user data:", userData);
     navigate("/");
   };
@@ -286,7 +330,7 @@ const Onboarding = () => {
         </div>
       )}
 
-      {/* Step 4: What do you bring - Free text */}
+      {/* Step 4: Goals Input */}
       {currentStep === 4 && (
         <div
           className={`relative z-10 text-center px-6 max-w-lg w-full ${
@@ -294,22 +338,22 @@ const Onboarding = () => {
           }`}
         >
           <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
-            What gifts do you bring to others?
+            What are you hoping to work on in yourself?
           </h1>
           <p
             className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif"
             style={{ animationDelay: "0.2s" }}
           >
-            What makes you a good friend or listener?
+            There's no wrong answer here
           </p>
 
           <textarea
-            value={userData.offeringText}
+            value={userData.goalsText}
             onChange={(e) =>
-              setUserData((prev) => ({ ...prev, offeringText: e.target.value }))
+              setUserData((prev) => ({ ...prev, goalsText: e.target.value }))
             }
-            onKeyDown={handleOfferingKeyDown}
-            placeholder="I'm good at..."
+            onKeyDown={handleGoalsKeyDown}
+            placeholder="I'm trying to..."
             className="stagger-fade-in ethereal-input w-full min-h-[160px] bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-foreground text-lg font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
             style={{ 
               animationDelay: "0.3s",
@@ -318,9 +362,9 @@ const Onboarding = () => {
             autoFocus
           />
 
-          {userData.offeringText.trim() && (
+          {userData.goalsText.trim() && (
             <button
-              onClick={handleOfferingSubmit}
+              onClick={handleGoalsSubmit}
               className="stagger-fade-in mt-6 text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300"
               style={{ animationDelay: "0.4s" }}
             >
@@ -337,18 +381,18 @@ const Onboarding = () => {
         </div>
       )}
 
-      {/* Step 5: Loading - Processing strengths */}
+      {/* Step 5: Loading - Processing goals */}
       {currentStep === 5 && (
         <div
           className={`relative z-10 ${
             isTransitioning ? "step-fade-out" : ""
           }`}
         >
-          <LoadingState message="I see your gifts..." />
+          <LoadingState message="I see what you're reaching for..." />
         </div>
       )}
 
-      {/* Step 6: Strength Confirmation */}
+      {/* Step 6: Goals Confirmation */}
       {currentStep === 6 && (
         <div
           className={`relative z-10 text-center px-6 max-w-lg w-full ${
@@ -356,7 +400,7 @@ const Onboarding = () => {
           }`}
         >
           <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-2 stagger-fade-in">
-            You bring something special...
+            You're reaching toward...
           </h1>
           <p
             className="stagger-fade-in text-foreground/60 text-base mb-8 font-serif"
@@ -369,12 +413,12 @@ const Onboarding = () => {
             className="flex flex-wrap justify-center gap-3 mb-8"
             style={{ animationDelay: "0.3s" }}
           >
-            {userData.suggestedStrengths.map((tag, index) => (
+            {userData.suggestedGoals.map((tag, index) => (
               <ThemeTag
                 key={tag.id}
                 label={tag.label}
-                isSelected={userData.selectedStrengths.includes(tag.id)}
-                onClick={() => toggleStrength(tag.id)}
+                isSelected={userData.selectedGoals.includes(tag.id)}
+                onClick={() => toggleGoal(tag.id)}
                 animationDelay={0.3 + index * 0.1}
               />
             ))}
@@ -385,13 +429,127 @@ const Onboarding = () => {
             style={{ animationDelay: "0.6s" }}
           >
             <button
-              onClick={handleStrengthsConfirm}
+              onClick={handleGoalsConfirm}
               className="text-foreground font-serif text-lg hover:text-primary transition-all duration-300"
             >
-              That's me →
+              Yes, continue →
             </button>
             <button
               onClick={() => handleAddMore(4)}
+              className="text-foreground/50 font-serif text-sm hover:text-foreground/70 transition-all duration-300"
+            >
+              Let me add more
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 7: Connection Intent Input */}
+      {currentStep === 7 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-lg w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
+            What kind of connection are you hoping for here?
+          </h1>
+          <p
+            className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif"
+            style={{ animationDelay: "0.2s" }}
+          >
+            This helps us find the right match for you
+          </p>
+
+          <textarea
+            value={userData.connectionText}
+            onChange={(e) =>
+              setUserData((prev) => ({ ...prev, connectionText: e.target.value }))
+            }
+            onKeyDown={handleConnectionKeyDown}
+            placeholder="I'm looking for someone who..."
+            className="stagger-fade-in ethereal-input w-full min-h-[160px] bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-foreground text-lg font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
+            style={{ 
+              animationDelay: "0.3s",
+              textShadow: "0 1px 8px rgba(0,0,0,0.1)" 
+            }}
+            autoFocus
+          />
+
+          {userData.connectionText.trim() && (
+            <button
+              onClick={handleConnectionSubmit}
+              className="stagger-fade-in mt-6 text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300"
+              style={{ animationDelay: "0.4s" }}
+            >
+              Continue →
+            </button>
+          )}
+
+          <p
+            className="stagger-fade-in mt-4 text-foreground/40 text-sm"
+            style={{ animationDelay: "0.5s" }}
+          >
+            ⌘ + enter to continue
+          </p>
+        </div>
+      )}
+
+      {/* Step 8: Loading - Processing connection intent */}
+      {currentStep === 8 && (
+        <div
+          className={`relative z-10 ${
+            isTransitioning ? "step-fade-out" : ""
+          }`}
+        >
+          <LoadingState message="Finding what resonates..." />
+        </div>
+      )}
+
+      {/* Step 9: Connection Confirmation */}
+      {currentStep === 9 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-lg w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-2 stagger-fade-in">
+            You're looking for...
+          </h1>
+          <p
+            className="stagger-fade-in text-foreground/60 text-base mb-8 font-serif"
+            style={{ animationDelay: "0.2s" }}
+          >
+            Tap to adjust what feels right
+          </p>
+
+          <div
+            className="flex flex-wrap justify-center gap-3 mb-8"
+            style={{ animationDelay: "0.3s" }}
+          >
+            {userData.suggestedIntents.map((tag, index) => (
+              <ThemeTag
+                key={tag.id}
+                label={tag.label}
+                isSelected={userData.selectedIntents.includes(tag.id)}
+                onClick={() => toggleIntent(tag.id)}
+                animationDelay={0.3 + index * 0.1}
+              />
+            ))}
+          </div>
+
+          <div
+            className="stagger-fade-in flex flex-col items-center gap-3"
+            style={{ animationDelay: "0.6s" }}
+          >
+            <button
+              onClick={handleConnectionConfirm}
+              className="text-foreground font-serif text-lg hover:text-primary transition-all duration-300"
+            >
+              That's what I need →
+            </button>
+            <button
+              onClick={() => handleAddMore(7)}
               className="text-foreground/50 font-serif text-sm hover:text-foreground/70 transition-all duration-300"
             >
               Let me add more
