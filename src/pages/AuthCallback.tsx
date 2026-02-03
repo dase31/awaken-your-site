@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingSubmit } from "@/hooks/useOnboardingSubmit";
 import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
 import { LoadingState } from "@/components/onboarding/LoadingState";
+import ThymosLogo from "@/components/ThymosLogo";
 import { toast } from "sonner";
 
 const AuthCallback = () => {
@@ -65,6 +66,7 @@ const AuthCallback = () => {
 
   return (
     <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
+      <ThymosLogo />
       <OnboardingBackground />
       
       <div className="relative z-10 text-center px-6 max-w-md w-full fade-in-up">

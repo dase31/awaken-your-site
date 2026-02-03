@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
 import { ThemeTag } from "@/components/onboarding/ThemeTag";
 import { LoadingState } from "@/components/onboarding/LoadingState";
+import ThymosLogo from "@/components/ThymosLogo";
 import { useExtractThemes } from "@/hooks/useExtractThemes";
 import { useOnboardingSubmit } from "@/hooks/useOnboardingSubmit";
 import { supabase } from "@/integrations/supabase/client";
@@ -241,6 +242,7 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
+      <ThymosLogo />
       <OnboardingBackground />
 
       {/* Step 0: Name Input */}
