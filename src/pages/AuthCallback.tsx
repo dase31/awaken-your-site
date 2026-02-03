@@ -13,60 +13,83 @@ const AuthCallback = () => {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        // Get the session from the URL hash
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          throw error;
-        }
-
-        if (session?.user) {
+    // Set up auth state listener FIRST - this handles the token exchange from URL hash
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change:", event, session?.user?.id);
+        
+        if (event === "SIGNED_IN" && session?.user) {
           const user = session.user;
           const metadata = user.user_metadata;
 
-          // Check if we have onboarding data to save
-          if (metadata?.display_name) {
-            await saveOnboardingData(user.id, {
-              name: metadata.display_name || "",
-              intentText: metadata.raw_intent_text || "",
-              goalsText: metadata.raw_goals_text || "",
-              connectionText: metadata.raw_connection_text || "",
-              selectedStruggles: metadata.selected_struggles || [],
-              selectedGoals: metadata.selected_goals || [],
-              selectedIntents: metadata.selected_intents || [],
-            });
-          }
+          try {
+            // Check if we have onboarding data to save
+            if (metadata?.display_name) {
+              await saveOnboardingData(user.id, {
+                name: metadata.display_name || "",
+                intentText: metadata.raw_intent_text || "",
+                goalsText: metadata.raw_goals_text || "",
+                connectionText: metadata.raw_connection_text || "",
+                selectedStruggles: metadata.selected_struggles || [],
+                selectedGoals: metadata.selected_goals || [],
+                selectedIntents: metadata.selected_intents || [],
+              });
+            }
 
-          setStatus("success");
-          toast.success("Welcome! Your profile has been created.");
-          
-          // Redirect to match page to find a connection
-          setTimeout(() => {
-            navigate("/match", {
-              state: {
-                userId: user.id,
-                userName: metadata.display_name || "Friend",
-              },
-            });
-          }, 1500);
-        } else {
-          // No session found, redirect to onboarding
-          navigate("/onboarding");
+            setStatus("success");
+            toast.success("Welcome! Your profile has been created.");
+            
+            // Redirect to match page to find a connection
+            setTimeout(() => {
+              navigate("/match", {
+                state: {
+                  userId: user.id,
+                  userName: metadata.display_name || "Friend",
+                },
+              });
+            }, 1500);
+          } catch (error: any) {
+            console.error("Error saving onboarding data:", error);
+            setStatus("error");
+            toast.error("Something went wrong. Please try again.");
+            
+            setTimeout(() => {
+              navigate("/onboarding");
+            }, 2000);
+          }
         }
-      } catch (error: any) {
-        console.error("Auth callback error:", error);
-        setStatus("error");
-        toast.error("Something went wrong. Please try again.");
+      }
+    );
+
+    // Check if there's already a session (user might have refreshed)
+    const checkExistingSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // User already has a session, redirect to match
+        const metadata = session.user.user_metadata;
+        setStatus("success");
         
         setTimeout(() => {
-          navigate("/onboarding");
-        }, 2000);
+          navigate("/match", {
+            state: {
+              userId: session.user.id,
+              userName: metadata?.display_name || "Friend",
+            },
+          });
+        }, 1000);
+      } else if (!window.location.hash && !window.location.search) {
+        // No session and no auth tokens in URL - redirect to onboarding
+        navigate("/onboarding");
       }
+      // If there are tokens in URL, wait for onAuthStateChange to handle them
     };
 
-    handleAuthCallback();
+    checkExistingSession();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate, saveOnboardingData]);
 
   return (
