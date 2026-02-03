@@ -1,137 +1,205 @@
 
 
-# Simple 1-on-1 Matching Flow
+# Mobile App Navigation and Home Page Design
 
-A focused, personal matching experience that introduces users to one compatible peer at a time.
+Add "I'll connect later" option to the match flow, create a mobile-first app shell with bottom navigation, and design the Home and Chat pages.
 
-## User Experience
+## Part 1: Match Page Updates
 
-After email verification, users see a simple introduction:
+Add "I'll connect later" option that navigates to the authenticated home experience.
 
-```text
-┌─────────────────────────────────────┐
-│              THYMOS                 │
-│                                     │
-│     [Name], meet [Match Name]       │
-│                                     │
-│  "You both are carrying anxiety,    │
-│   reaching for inner peace, and     │
-│   looking for someone to listen."   │
-│                                     │
-│        ┌───────────────┐            │
-│        │    Connect    │            │
-│        └───────────────┘            │
-│                                     │
-│      Find another connection        │
-│                                     │
-└─────────────────────────────────────┘
-```
+| Current State | New State |
+|---------------|-----------|
+| Connect button | Connect button |
+| Find another connection | Find another connection |
+| (none) | "I'll connect later" link |
 
-## Flow After Auth
+The "I'll connect later" and empty state will both navigate to `/home` (the authenticated app experience).
 
-| Step | Screen | Description |
-|------|--------|-------------|
-| AuthCallback | Loading | "Finding someone who gets it..." |
-| /match | Match Found | "X, meet Y" with connection sentence |
-| /match | Empty State | "You're among the first" (if no matches) |
+## Part 2: Mobile App Shell Architecture
 
-## Matching Algorithm (Simple v1)
-
-Scores potential matches based on shared tags:
+Create a dedicated app shell for authenticated users with bottom navigation.
 
 ```text
-Score = (shared_struggles × 3) + (shared_goals × 2) + (complementary_intents × 2)
++----------------------------------+
+|            THYMOS                |  <- ThymosLogo (top)
+|                                  |
+|                                  |
+|         [Page Content]           |  <- Scrollable content area
+|                                  |
+|                                  |
+|                                  |
++----------------------------------+
+|  Home   Chat   Connect   Telos   |  <- Bottom nav (fixed)
++----------------------------------+
 ```
 
-Returns the top match, and user can request another if they want.
+### Navigation Tabs
 
-## Connection Sentence Templates
+| Tab | Icon | Route | Status |
+|-----|------|-------|--------|
+| Home | Home icon | /home | To build now |
+| Chat | MessageCircle icon | /chat | To build now (placeholder) |
+| Connect | Users icon | /connect | Future |
+| Telos | Target/Compass icon | /telos | Future |
 
-Based on what's shared between users:
+### Component Structure
 
-| Shared Tags | Sentence Fragment |
-|-------------|-------------------|
-| Struggles only | "You both are carrying [struggles]" |
-| Goals only | "You both are reaching toward [goals]" |
-| Intents match | "You're both looking for [intent]" |
-| Multiple | Combined: "You both are carrying [struggles], reaching toward [goals], and looking for [intents]" |
+```text
+src/
+  components/
+    navigation/
+      BottomNav.tsx        <- Fixed bottom navigation bar
+      NavItem.tsx          <- Individual nav item with icon + label
+    layout/
+      AppShell.tsx         <- Wrapper with logo + bottom nav
+  pages/
+    Home.tsx               <- Authenticated home dashboard
+    Chat.tsx               <- Conversations list
+    Connect.tsx            <- Future: connections page
+    Telos.tsx              <- Future: purpose/goals page
+```
 
-## New Files
+## Part 3: Home Page Design
+
+The home page for authenticated users - a calm, personalized dashboard.
+
+```text
++----------------------------------+
+|            THYMOS                |
++----------------------------------+
+|                                  |
+|     Welcome back, [Name]         |
+|                                  |
+|  +----------------------------+  |
+|  |  Today's Reflection        |  |  <- Daily prompt card
+|  |  "What's weighing on you?" |  |
+|  |  [Tap to reflect]          |  |
+|  +----------------------------+  |
+|                                  |
+|  +----------------------------+  |
+|  |  Your Connections          |  |  <- Pending matches card
+|  |  [Avatar] Sarah wants to   |  |
+|  |  connect with you          |  |
+|  |  [View] [Later]            |  |
+|  +----------------------------+  |
+|                                  |
+|  +----------------------------+  |
+|  |  Find Support              |  |  <- Quick action card
+|  |  Connect with someone who  |  |
+|  |  understands               |  |
+|  |  [Find a match]            |  |
+|  +----------------------------+  |
+|                                  |
++----------------------------------+
+| Home   Chat   Connect   Telos    |
++----------------------------------+
+```
+
+### Home Page Cards
+
+| Card | Purpose | Content |
+|------|---------|---------|
+| Welcome Header | Personalized greeting | "Welcome back, [Name]" with time-based greeting |
+| Daily Reflection | Encourage engagement | Rotating prompts, tap to journal (future) |
+| Pending Connections | Show match requests | List of users who want to connect |
+| Find Support | Quick match action | Navigate to /match page |
+
+Card styling: Frosted glass aesthetic (`bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl`)
+
+## Part 4: Chat Page Design (Placeholder)
+
+Initial chat page showing conversations list (functional messaging comes later).
+
+```text
++----------------------------------+
+|            THYMOS                |
++----------------------------------+
+|  Messages                        |
+|                                  |
+|  +----------------------------+  |
+|  |  [Avatar] Sarah            |  |
+|  |  Last message preview...   |  |
+|  |  2 min ago                 |  |
+|  +----------------------------+  |
+|                                  |
+|  +----------------------------+  |
+|  |  [Avatar] Marcus           |  |
+|  |  Last message preview...   |  |
+|  |  Yesterday                 |  |
+|  +----------------------------+  |
+|                                  |
+|  - - - - - - - - - - - - - - -  |
+|  No conversations yet?          |
+|  [Find a connection]            |
+|  - - - - - - - - - - - - - - -  |
+|                                  |
++----------------------------------+
+| Home   Chat   Connect   Telos    |
++----------------------------------+
+```
+
+For now, this will show an empty state encouraging users to find connections.
+
+## Part 5: Bottom Navigation Styling
+
+Matches the ethereal aesthetic while being functional for mobile.
+
+```text
+Styling:
+- Fixed to bottom: fixed bottom-0 left-0 right-0
+- Background: bg-white/10 backdrop-blur-md border-t border-white/20
+- Safe area padding: pb-safe (for iPhone notch)
+- Height: h-16 (64px) plus safe area
+- Icons: 24px, subtle opacity until active
+- Active state: text-primary (gold), icon filled
+- Inactive state: text-foreground/50
+```
+
+## Technical Implementation
+
+### New Files
 
 | File | Purpose |
 |------|---------|
-| `src/pages/Match.tsx` | Match display page with Connect/Find Another |
-| `src/components/matches/MatchIntro.tsx` | "X, meet Y" introduction UI |
-| `src/hooks/useFindMatch.ts` | Hook to call matching edge function |
-| `supabase/functions/find-match/index.ts` | Server-side matching algorithm |
+| `src/components/navigation/BottomNav.tsx` | Bottom navigation component |
+| `src/components/layout/AppShell.tsx` | App wrapper with nav |
+| `src/pages/Home.tsx` | Authenticated home dashboard |
+| `src/pages/Chat.tsx` | Chat/messages list |
 
-## Edge Function: `find-match`
-
-```text
-Input: { user_id, exclude_ids?: string[] }
-Process:
-  1. Get current user's struggles, goals, intents
-  2. Query other users with overlapping tags
-  3. Calculate match scores
-  4. Exclude any previously shown matches
-  5. Return top match with shared tags
-Output: {
-  match_user_id: string,
-  display_name: string,
-  shared_struggles: string[],
-  shared_goals: string[],
-  shared_intents: string[],
-  score: number
-} | null
-```
-
-## UI Components
-
-### Match Found State
-- Heading: "{Name}, meet {MatchName}"
-- Subtext: Connection sentence built from shared tags
-- Primary button: "Connect" (ghost pill style, matching ThemeTag)
-- Secondary link: "Find another connection" (subtle text link)
-
-### Empty State (No Matches)
-- Heading: "You're among the first"
-- Subtext: "We're building your network. We'll let you know when someone resonates."
-- Optional: "Notify me" button for future
-
-### Loading State
-- Uses existing `LoadingState` component
-- Message: "Finding someone who gets it..."
-
-## Button Styling
-
-Matches the ethereal aesthetic:
-- Connect button: `bg-white/20 border border-white/50 text-primary px-8 py-3 rounded-full font-serif text-lg`
-- Find another: `text-foreground/50 hover:text-foreground/80 font-serif`
-
-## Updated AuthCallback Flow
-
-After saving onboarding data:
-1. Show "Finding someone who gets it..." loading
-2. Call `find-match` edge function
-3. Navigate to `/match` with match data in state
-
-## Route Changes
+### Updated Files
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Add `/match` route |
-| `src/pages/AuthCallback.tsx` | Navigate to `/match` instead of `/` |
+| `src/components/matches/MatchIntro.tsx` | Add "I'll connect later" option |
+| `src/components/matches/EmptyMatchState.tsx` | Add button to go to Home |
+| `src/pages/Match.tsx` | Handle "connect later" navigation |
+| `src/App.tsx` | Add /home and /chat routes |
 
-## Security
+### Route Structure After Changes
 
-- RLS policies already protect user data
-- Edge function only returns display_name and shared tag labels (no raw text)
-- Match scores calculated server-side
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | Index | Public landing page (marketing) |
+| `/onboarding` | Onboarding | User registration flow |
+| `/auth/callback` | AuthCallback | Email verification handler |
+| `/match` | Match | Post-onboarding match introduction |
+| `/home` | Home | Authenticated dashboard (new) |
+| `/chat` | Chat | Messages/conversations (new) |
+| `/connect` | Connect | Future: connections management |
+| `/telos` | Telos | Future: purpose/goals tracking |
 
-## Connect Button Action (Future)
+## Safe Area Handling for Mobile
 
-For now, "Connect" could:
-- Show a success message ("We'll let {name} know you're interested")
-- Store the connection request in a new `connection_requests` table
-- Or simply open a chat/messaging flow (Phase 2)
+Add CSS for iPhone safe areas:
+
+```css
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+```
+
+## Authentication Guard
+
+Pages under the authenticated shell (/home, /chat, etc.) should check for session and redirect to /onboarding if not authenticated.
 
