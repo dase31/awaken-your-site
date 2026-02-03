@@ -85,6 +85,10 @@ const Match = () => {
     }
   };
 
+  const handleConnectLater = () => {
+    navigate("/home");
+  };
+
   const showLoading = initialLoading || (!currentMatch && !userId);
 
   return (
@@ -106,6 +110,7 @@ const Match = () => {
             sharedIntents={currentMatch.shared_intents}
             onConnect={handleConnect}
             onFindAnother={handleFindAnother}
+            onConnectLater={handleConnectLater}
             isLoadingAnother={isLoadingAnother}
           />
         )}

@@ -8,6 +8,7 @@ interface MatchIntroProps {
   sharedIntents: string[];
   onConnect: () => void;
   onFindAnother: () => void;
+  onConnectLater: () => void;
   isLoadingAnother?: boolean;
 }
 
@@ -62,6 +63,7 @@ export function MatchIntro({
   sharedIntents,
   onConnect,
   onFindAnother,
+  onConnectLater,
   isLoadingAnother = false,
 }: MatchIntroProps) {
   const connectionSentence = buildConnectionSentence(
@@ -108,6 +110,13 @@ export function MatchIntro({
         )}
       >
         {isLoadingAnother ? "Finding..." : "Find another connection"}
+      </button>
+
+      <button
+        onClick={onConnectLater}
+        className="block mx-auto mt-4 font-serif text-sm text-foreground/40 hover:text-foreground/60 transition-all duration-300"
+      >
+        I'll connect later
       </button>
     </div>
   );
