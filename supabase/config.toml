@@ -2,3 +2,6 @@ project_id = "zibiiepfkwzztkfeqhwo"
 
 [functions.extract-themes]
 verify_jwt = false
+
+[functions.find-match]
+verify_jwt = false

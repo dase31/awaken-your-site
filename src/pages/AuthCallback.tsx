@@ -42,9 +42,14 @@ const AuthCallback = () => {
           setStatus("success");
           toast.success("Welcome! Your profile has been created.");
           
-          // Redirect to home after a brief moment
+          // Redirect to match page to find a connection
           setTimeout(() => {
-            navigate("/");
+            navigate("/match", {
+              state: {
+                userId: user.id,
+                userName: metadata.display_name || "Friend",
+              },
+            });
           }, 1500);
         } else {
           // No session found, redirect to onboarding
