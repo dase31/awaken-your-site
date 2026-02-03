@@ -1,103 +1,137 @@
 
 
-# Add Email Auth Step After Onboarding
+# Simple 1-on-1 Matching Flow
 
-Add email authentication as the final step of onboarding, allowing users to create an account and save all their collected data to the database.
-
-## New Flow
-
-| Step | Screen | Current/New |
-|------|--------|-------------|
-| 0-9 | Existing onboarding flow | Current |
-| 10 | Email input screen | **New** |
-| 11 | Loading: "Creating your space..." | **New** |
-| 12 | Check your email / Success | **New** |
+A focused, personal matching experience that introduces users to one compatible peer at a time.
 
 ## User Experience
 
-```text
-Step 10 - Email Input:
-"Last step - let's save your journey"
-[Email input field]
-"We'll send you a magic link to confirm"
-
-Step 11 - Loading:
-"Creating your space..."
-
-Step 12 - Success/Verify:
-"Check your email"
-"We sent a link to [email] - tap it to complete your profile"
-```
-
-## Technical Implementation
-
-### 1. Authentication Flow
-- Use Supabase magic link (passwordless) for frictionless signup
-- After email submission, call `supabase.auth.signUp()` with the email
-- On successful signup, create profile and related records in the database
-- Show "check your email" screen while waiting for verification
-
-### 2. Database Operations on Signup
-After user signs up, save all collected onboarding data:
+After email verification, users see a simple introduction:
 
 ```text
-1. Create profile record with:
-   - id = user.id
-   - display_name = userData.name
-   - raw_intent_text = userData.intentText
-   - raw_goals_text = userData.goalsText
-   - raw_connection_text = userData.connectionText
-
-2. Insert user_struggles records for each selectedStruggle
-
-3. Insert user_goals records for each selectedGoal
-
-4. Insert user_connection_intents records for each selectedIntent
+┌─────────────────────────────────────┐
+│              THYMOS                 │
+│                                     │
+│     [Name], meet [Match Name]       │
+│                                     │
+│  "You both are carrying anxiety,    │
+│   reaching for inner peace, and     │
+│   looking for someone to listen."   │
+│                                     │
+│        ┌───────────────┐            │
+│        │    Connect    │            │
+│        └───────────────┘            │
+│                                     │
+│      Find another connection        │
+│                                     │
+└─────────────────────────────────────┘
 ```
 
-### 3. New State & Handlers
+## Flow After Auth
 
-```text
-userData additions:
-- email: string
-
-New steps:
-- Step 10: Email input
-- Step 11: Loading (auth processing)
-- Step 12: Success/check email screen
-
-New handlers:
-- handleEmailSubmit(): Call supabase.auth.signUp with magic link
-- handleSignupSuccess(): Save all onboarding data to database
-```
-
-## File Changes
-
-| File | Action | Description |
+| Step | Screen | Description |
 |------|--------|-------------|
-| `src/pages/Onboarding.tsx` | Update | Add steps 10-12, email state, auth logic, database saving |
-| `src/hooks/useOnboardingSubmit.ts` | Create | Hook to handle saving all onboarding data to database |
+| AuthCallback | Loading | "Finding someone who gets it..." |
+| /match | Match Found | "X, meet Y" with connection sentence |
+| /match | Empty State | "You're among the first" (if no matches) |
 
-## UI Design for Step 10
+## Matching Algorithm (Simple v1)
 
-Matches existing ethereal style:
-- Same serif font, fade animations
-- Simple email input centered on screen
-- Subtle subtext explaining the magic link approach
-- Same "press enter" hint pattern
+Scores potential matches based on shared tags:
 
-## Edge Cases
+```text
+Score = (shared_struggles × 3) + (shared_goals × 2) + (complementary_intents × 2)
+```
 
-| Scenario | Handling |
-|----------|----------|
-| Email already exists | Show "Already have an account? Check your email for a login link" |
-| Auth error | Toast error, stay on email step |
-| Network failure | Toast error with retry option |
-| User closes before verifying | Data not saved - they can re-onboard |
+Returns the top match, and user can request another if they want.
 
-## Security Notes
+## Connection Sentence Templates
 
-- RLS policies already exist on all tables requiring `auth.uid() = user_id`
-- Profile ID must match the authenticated user's ID
-- Data only saved after successful authentication
+Based on what's shared between users:
+
+| Shared Tags | Sentence Fragment |
+|-------------|-------------------|
+| Struggles only | "You both are carrying [struggles]" |
+| Goals only | "You both are reaching toward [goals]" |
+| Intents match | "You're both looking for [intent]" |
+| Multiple | Combined: "You both are carrying [struggles], reaching toward [goals], and looking for [intents]" |
+
+## New Files
+
+| File | Purpose |
+|------|---------|
+| `src/pages/Match.tsx` | Match display page with Connect/Find Another |
+| `src/components/matches/MatchIntro.tsx` | "X, meet Y" introduction UI |
+| `src/hooks/useFindMatch.ts` | Hook to call matching edge function |
+| `supabase/functions/find-match/index.ts` | Server-side matching algorithm |
+
+## Edge Function: `find-match`
+
+```text
+Input: { user_id, exclude_ids?: string[] }
+Process:
+  1. Get current user's struggles, goals, intents
+  2. Query other users with overlapping tags
+  3. Calculate match scores
+  4. Exclude any previously shown matches
+  5. Return top match with shared tags
+Output: {
+  match_user_id: string,
+  display_name: string,
+  shared_struggles: string[],
+  shared_goals: string[],
+  shared_intents: string[],
+  score: number
+} | null
+```
+
+## UI Components
+
+### Match Found State
+- Heading: "{Name}, meet {MatchName}"
+- Subtext: Connection sentence built from shared tags
+- Primary button: "Connect" (ghost pill style, matching ThemeTag)
+- Secondary link: "Find another connection" (subtle text link)
+
+### Empty State (No Matches)
+- Heading: "You're among the first"
+- Subtext: "We're building your network. We'll let you know when someone resonates."
+- Optional: "Notify me" button for future
+
+### Loading State
+- Uses existing `LoadingState` component
+- Message: "Finding someone who gets it..."
+
+## Button Styling
+
+Matches the ethereal aesthetic:
+- Connect button: `bg-white/20 border border-white/50 text-primary px-8 py-3 rounded-full font-serif text-lg`
+- Find another: `text-foreground/50 hover:text-foreground/80 font-serif`
+
+## Updated AuthCallback Flow
+
+After saving onboarding data:
+1. Show "Finding someone who gets it..." loading
+2. Call `find-match` edge function
+3. Navigate to `/match` with match data in state
+
+## Route Changes
+
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Add `/match` route |
+| `src/pages/AuthCallback.tsx` | Navigate to `/match` instead of `/` |
+
+## Security
+
+- RLS policies already protect user data
+- Edge function only returns display_name and shared tag labels (no raw text)
+- Match scores calculated server-side
+
+## Connect Button Action (Future)
+
+For now, "Connect" could:
+- Show a success message ("We'll let {name} know you're interested")
+- Store the connection request in a new `connection_requests` table
+- Or simply open a chat/messaging flow (Phase 2)
 
