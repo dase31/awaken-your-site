@@ -37,9 +37,9 @@ function GlassCard({ children, className, onClick }: GlassCardProps) {
     <div
       onClick={onClick}
       className={cn(
-        "bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5",
+        "bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-5 shadow-lg shadow-black/5",
         "transition-all duration-300",
-        onClick && "cursor-pointer hover:bg-white/15 active:scale-[0.98]",
+        onClick && "cursor-pointer hover:bg-white/25 active:scale-[0.98]",
         className
       )}
     >
@@ -78,8 +78,8 @@ const Home = () => {
         {/* Welcome Header */}
         <div className="text-center mb-8">
           <h1
-            className="font-serif text-foreground text-2xl md:text-3xl"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+            className="font-serif text-white text-2xl md:text-3xl"
+            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
           >
             {greeting}, {userName}
           </h1>
@@ -87,48 +87,42 @@ const Home = () => {
 
         {/* Daily Reflection Card */}
         <GlassCard>
-          <h2 className="font-serif text-foreground/90 text-sm uppercase tracking-wide mb-3">
+          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
             Today's Reflection
           </h2>
           <p
-            className="font-serif text-foreground text-lg italic mb-4"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+            className="font-serif text-white text-lg italic mb-4"
+            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
           >
             "{dailyPrompt}"
           </p>
-          <button className="text-foreground/60 text-sm hover:text-foreground/80 transition-colors">
+          <button className="text-white/70 text-sm hover:text-white font-medium transition-colors">
             Tap to reflect →
           </button>
         </GlassCard>
 
         {/* Pending Connections Card */}
         <GlassCard>
-          <h2 className="font-serif text-foreground/90 text-sm uppercase tracking-wide mb-3">
+          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
             Your Connections
           </h2>
-          <p
-            className="font-serif text-foreground/70 text-base"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-          >
+          <p className="text-white/70 text-base">
             No pending connections yet.
           </p>
-          <p className="text-foreground/50 text-sm mt-2">
+          <p className="text-white/60 text-sm mt-2">
             When someone wants to connect, you'll see them here.
           </p>
         </GlassCard>
 
         {/* Find Support Card */}
         <GlassCard onClick={() => navigate("/match")}>
-          <h2 className="font-serif text-foreground/90 text-sm uppercase tracking-wide mb-3">
+          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
             Find Support
           </h2>
-          <p
-            className="font-serif text-foreground text-base mb-4"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-          >
+          <p className="text-white text-base mb-4">
             Connect with someone who understands what you're going through.
           </p>
-          <span className="inline-flex items-center text-primary font-medium text-sm">
+          <span className="inline-flex items-center text-white font-medium text-sm hover:underline">
             Find a match →
           </span>
         </GlassCard>

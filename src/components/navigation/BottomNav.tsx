@@ -19,9 +19,9 @@ function NavItem({ icon, label, isActive, onClick, disabled }: NavItemProps) {
       className={cn(
         "flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-200",
         isActive
-          ? "text-primary"
-          : "text-foreground/50 hover:text-foreground/80",
-        disabled && "opacity-30 cursor-not-allowed"
+          ? "text-white"
+          : "text-white/60 hover:text-white/80",
+        disabled && "text-white/30 cursor-not-allowed"
       )}
     >
       {icon}
@@ -43,7 +43,7 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-md border-t border-white/20 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[hsl(200,60%,35%)]/90 backdrop-blur-md border-t border-white/10 pb-safe">
       <div className="flex items-center h-16">
         {navItems.map((item) => (
           <NavItem
