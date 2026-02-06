@@ -1,205 +1,212 @@
 
 
-# Mobile App Navigation and Home Page Design
+# Home Page UI/UX Improvements
 
-Add "I'll connect later" option to the match flow, create a mobile-first app shell with bottom navigation, and design the Home and Chat pages.
+Address contrast, hierarchy, and legibility issues across the Home page and bottom navigation.
 
-## Part 1: Match Page Updates
+## Problem Summary
 
-Add "I'll connect later" option that navigates to the authenticated home experience.
+| Issue | Current | Impact |
+|-------|---------|--------|
+| Yellow heading | `text-primary` (gold) on sky blue | Unreadable, low contrast |
+| Grey text | `text-foreground/50-70` | Too faded, hard to read |
+| Bottom nav | White at 50% on light glass | Nearly invisible |
+| Cards | 10% white opacity | Don't stand out enough |
+| CTAs | Same style as regular text | No visual hierarchy |
 
-| Current State | New State |
-|---------------|-----------|
-| Connect button | Connect button |
-| Find another connection | Find another connection |
-| (none) | "I'll connect later" link |
+## Solution Overview
 
-The "I'll connect later" and empty state will both navigate to `/home` (the authenticated app experience).
+```text
+Before:                          After:
++------------------------+       +------------------------+
+| Good evening, (YELLOW) |       | Good evening, (WHITE)  |
+| ┌──────────────────┐   |       | ┌──────────────────┐   |
+| │ (faded text)     │   |       | │ (crisp white)    │   |
+| │ (grey subtext)   │   |       | │ (soft cream)     │   |
+| └──────────────────┘   |       | └──────────────────┘   |
+| (invisible nav)        |       | (solid visible nav)    |
++------------------------+       +------------------------+
+```
 
-## Part 2: Mobile App Shell Architecture
+## Color Token Changes
 
-Create a dedicated app shell for authenticated users with bottom navigation.
+### New CSS Variables (index.css)
+
+Add dedicated text colors for the app shell context:
+
+| Token | Value | Purpose |
+|-------|-------|---------|
+| `--text-on-sky` | Pure white `0 0% 100%` | Primary text on sky gradient |
+| `--text-on-sky-muted` | Cream `45 20% 90%` | Secondary text, warm not grey |
+| `--text-on-sky-subtle` | `200 30% 85%` | Tertiary info, soft blue-white |
+| `--nav-bg` | `200 50% 35%` | Darker, more solid nav background |
+
+## Component Changes
+
+### 1. Home.tsx - Greeting Header
+
+| Before | After |
+|--------|-------|
+| `text-foreground` (gold on white variable) | `text-white` with proper shadow |
+
+```text
+"Good evening, Name"
+- Color: Pure white
+- Text shadow: 0 2px 8px rgba(0,0,0,0.25) for depth
+- Font size: Keep 2xl/3xl
+```
+
+### 2. Home.tsx - Card Updates
+
+#### Card Container (GlassCard)
+| Before | After |
+|--------|-------|
+| `bg-white/10` | `bg-white/20` |
+| `border-white/20` | `border-white/30` |
+| No shadow | Add `shadow-lg shadow-black/5` |
+
+#### Card Headers ("TODAY'S REFLECTION")
+| Before | After |
+|--------|-------|
+| `text-foreground/90` (white at 90%) | `text-white/80` with font-medium |
+
+#### Card Body Text (quotes, descriptions)
+| Before | After |
+|--------|-------|
+| `text-foreground` | `text-white` |
+| `text-foreground/70` | `text-white/70` |
+
+#### Card Secondary Text (hints, helper text)
+| Before | After |
+|--------|-------|
+| `text-foreground/50` (barely visible) | `text-white/60` |
+
+#### Card CTAs ("Tap to reflect →", "Find a match →")
+| Before | After |
+|--------|-------|
+| `text-foreground/60` and `text-primary` | Both use `text-white font-medium` with hover effect |
+
+### 3. BottomNav.tsx - Navigation Bar
+
+#### Nav Container
+| Before | After |
+|--------|-------|
+| `bg-white/10` | `bg-sky-end/80` or `bg-[hsl(200,75%,35%)]/90` |
+| `border-white/20` | `border-white/10` |
+| `backdrop-blur-md` | Keep blur for softness |
+
+This uses a darker shade of the sky gradient bottom color, creating visual grounding.
+
+#### Nav Items - Active State
+| Before | After |
+|--------|-------|
+| `text-primary` (gold) | `text-white` (crisp white) |
+
+#### Nav Items - Inactive State
+| Before | After |
+|--------|-------|
+| `text-foreground/50` (invisible) | `text-white/60` (visible but muted) |
+
+#### Nav Items - Disabled State
+| Before | After |
+|--------|-------|
+| `opacity-30` | `text-white/30` (slightly more visible) |
+
+## Visual Hierarchy After Changes
 
 ```text
 +----------------------------------+
-|            THYMOS                |  <- ThymosLogo (top)
+|            THYMOS                |  <- White, subtle glow
 |                                  |
+|    Good evening, Sarah           |  <- Pure white, bold, shadowed
 |                                  |
-|         [Page Content]           |  <- Scrollable content area
+|  +----------------------------+  |
+|  | TODAY'S REFLECTION         |  |  <- White/80, uppercase, medium
+|  | "What are you grateful     |  |  <- White, italic, shadowed  
+|  |  for?"                     |  |
+|  | Tap to reflect →           |  |  <- White/70, medium weight
+|  +----------------------------+  |
 |                                  |
+|  +----------------------------+  |  <- Cards: 20% white, visible border
+|  | YOUR CONNECTIONS           |  |
+|  | No pending connections     |  |  <- White/70
+|  | When someone wants...      |  |  <- White/60
+|  +----------------------------+  |
 |                                  |
+|  +----------------------------+  |
+|  | FIND SUPPORT               |  |
+|  | Connect with someone...    |  |
+|  | Find a match →             |  |  <- White, medium, underline on hover
+|  +----------------------------+  |
 |                                  |
 +----------------------------------+
-|  Home   Chat   Connect   Telos   |  <- Bottom nav (fixed)
+| ⌂ Home  💬 Chat  👥 Connect  🎯 |  <- Darker bg, white icons
 +----------------------------------+
+     ↑ active        ↑ inactive/disabled
+   (white)          (white/60 or /30)
 ```
 
-### Navigation Tabs
+## File Changes Summary
 
-| Tab | Icon | Route | Status |
-|-----|------|-------|--------|
-| Home | Home icon | /home | To build now |
-| Chat | MessageCircle icon | /chat | To build now (placeholder) |
-| Connect | Users icon | /connect | Future |
-| Telos | Target/Compass icon | /telos | Future |
-
-### Component Structure
-
-```text
-src/
-  components/
-    navigation/
-      BottomNav.tsx        <- Fixed bottom navigation bar
-      NavItem.tsx          <- Individual nav item with icon + label
-    layout/
-      AppShell.tsx         <- Wrapper with logo + bottom nav
-  pages/
-    Home.tsx               <- Authenticated home dashboard
-    Chat.tsx               <- Conversations list
-    Connect.tsx            <- Future: connections page
-    Telos.tsx              <- Future: purpose/goals page
-```
-
-## Part 3: Home Page Design
-
-The home page for authenticated users - a calm, personalized dashboard.
-
-```text
-+----------------------------------+
-|            THYMOS                |
-+----------------------------------+
-|                                  |
-|     Welcome back, [Name]         |
-|                                  |
-|  +----------------------------+  |
-|  |  Today's Reflection        |  |  <- Daily prompt card
-|  |  "What's weighing on you?" |  |
-|  |  [Tap to reflect]          |  |
-|  +----------------------------+  |
-|                                  |
-|  +----------------------------+  |
-|  |  Your Connections          |  |  <- Pending matches card
-|  |  [Avatar] Sarah wants to   |  |
-|  |  connect with you          |  |
-|  |  [View] [Later]            |  |
-|  +----------------------------+  |
-|                                  |
-|  +----------------------------+  |
-|  |  Find Support              |  |  <- Quick action card
-|  |  Connect with someone who  |  |
-|  |  understands               |  |
-|  |  [Find a match]            |  |
-|  +----------------------------+  |
-|                                  |
-+----------------------------------+
-| Home   Chat   Connect   Telos    |
-+----------------------------------+
-```
-
-### Home Page Cards
-
-| Card | Purpose | Content |
-|------|---------|---------|
-| Welcome Header | Personalized greeting | "Welcome back, [Name]" with time-based greeting |
-| Daily Reflection | Encourage engagement | Rotating prompts, tap to journal (future) |
-| Pending Connections | Show match requests | List of users who want to connect |
-| Find Support | Quick match action | Navigate to /match page |
-
-Card styling: Frosted glass aesthetic (`bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl`)
-
-## Part 4: Chat Page Design (Placeholder)
-
-Initial chat page showing conversations list (functional messaging comes later).
-
-```text
-+----------------------------------+
-|            THYMOS                |
-+----------------------------------+
-|  Messages                        |
-|                                  |
-|  +----------------------------+  |
-|  |  [Avatar] Sarah            |  |
-|  |  Last message preview...   |  |
-|  |  2 min ago                 |  |
-|  +----------------------------+  |
-|                                  |
-|  +----------------------------+  |
-|  |  [Avatar] Marcus           |  |
-|  |  Last message preview...   |  |
-|  |  Yesterday                 |  |
-|  +----------------------------+  |
-|                                  |
-|  - - - - - - - - - - - - - - -  |
-|  No conversations yet?          |
-|  [Find a connection]            |
-|  - - - - - - - - - - - - - - -  |
-|                                  |
-+----------------------------------+
-| Home   Chat   Connect   Telos    |
-+----------------------------------+
-```
-
-For now, this will show an empty state encouraging users to find connections.
-
-## Part 5: Bottom Navigation Styling
-
-Matches the ethereal aesthetic while being functional for mobile.
-
-```text
-Styling:
-- Fixed to bottom: fixed bottom-0 left-0 right-0
-- Background: bg-white/10 backdrop-blur-md border-t border-white/20
-- Safe area padding: pb-safe (for iPhone notch)
-- Height: h-16 (64px) plus safe area
-- Icons: 24px, subtle opacity until active
-- Active state: text-primary (gold), icon filled
-- Inactive state: text-foreground/50
-```
+| File | Changes |
+|------|---------|
+| `src/pages/Home.tsx` | Update all color classes for cards and text |
+| `src/components/navigation/BottomNav.tsx` | Darker background, better icon contrast |
+| `src/index.css` | (Optional) Add helper classes for text-on-sky |
 
 ## Technical Implementation
 
-### New Files
+### Home.tsx Updates
 
-| File | Purpose |
-|------|---------|
-| `src/components/navigation/BottomNav.tsx` | Bottom navigation component |
-| `src/components/layout/AppShell.tsx` | App wrapper with nav |
-| `src/pages/Home.tsx` | Authenticated home dashboard |
-| `src/pages/Chat.tsx` | Chat/messages list |
+```text
+GlassCard changes:
+- className: "bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-5 shadow-lg shadow-black/5"
 
-### Updated Files
+Greeting:
+- className: "font-serif text-white text-2xl md:text-3xl"
 
-| File | Change |
-|------|--------|
-| `src/components/matches/MatchIntro.tsx` | Add "I'll connect later" option |
-| `src/components/matches/EmptyMatchState.tsx` | Add button to go to Home |
-| `src/pages/Match.tsx` | Handle "connect later" navigation |
-| `src/App.tsx` | Add /home and /chat routes |
+Card headers:
+- className: "text-white/80 text-sm uppercase tracking-wide mb-3 font-medium"
 
-### Route Structure After Changes
+Card body:
+- className: "text-white text-lg" (primary)
+- className: "text-white/70 text-base" (secondary)
+- className: "text-white/60 text-sm" (tertiary)
 
-| Route | Component | Description |
-|-------|-----------|-------------|
-| `/` | Index | Public landing page (marketing) |
-| `/onboarding` | Onboarding | User registration flow |
-| `/auth/callback` | AuthCallback | Email verification handler |
-| `/match` | Match | Post-onboarding match introduction |
-| `/home` | Home | Authenticated dashboard (new) |
-| `/chat` | Chat | Messages/conversations (new) |
-| `/connect` | Connect | Future: connections management |
-| `/telos` | Telos | Future: purpose/goals tracking |
-
-## Safe Area Handling for Mobile
-
-Add CSS for iPhone safe areas:
-
-```css
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
+CTAs:
+- className: "text-white/80 hover:text-white font-medium text-sm transition-colors"
 ```
 
-## Authentication Guard
+### BottomNav.tsx Updates
 
-Pages under the authenticated shell (/home, /chat, etc.) should check for session and redirect to /onboarding if not authenticated.
+```text
+Nav container:
+- className: "fixed bottom-0 left-0 right-0 z-50 bg-[hsl(200,60%,35%)]/90 backdrop-blur-md border-t border-white/10 pb-safe"
+
+Active item:
+- className: "text-white"
+
+Inactive item:
+- className: "text-white/60 hover:text-white/80"
+
+Disabled item:
+- className: "text-white/30 cursor-not-allowed"
+```
+
+## Accessibility Considerations
+
+| Element | Contrast Ratio Target |
+|---------|----------------------|
+| Primary text (white on cards) | 4.5:1 or higher |
+| Secondary text (white/70) | 3:1 minimum |
+| Interactive elements | 4.5:1 with focus states |
+
+## Result
+
+After these changes:
+- All text will be legible against the sky gradient and glass cards
+- Bottom navigation will be clearly visible and usable
+- Visual hierarchy will guide users to primary actions
+- Gold color reserved only for special emphasis (if needed later)
+- Consistent warm/neutral palette instead of cold greys
 
