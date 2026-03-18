@@ -132,9 +132,9 @@
   }
 
   .btn-gold {
-    @apply bg-gold text-navy font-semibold rounded-full px-8 py-4 
-           hover:bg-gold-hover transition-all duration-200 
-           shadow-lg hover:shadow-xl active:scale-[0.98];
+    @apply bg-white/20 backdrop-blur-sm text-white font-medium rounded-full px-8 py-4 
+           border border-white/40 hover:bg-white/30 transition-all duration-300 
+           shadow-lg shadow-black/10 hover:shadow-xl active:scale-[0.98];
   }
 
   .card-pricing {
