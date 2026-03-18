@@ -47,9 +47,9 @@ const CTASection = () => {
         <div className="mt-12">
           <Button
             onClick={handleBeginJourney}
-            className="btn-gold text-xl px-12 py-6 h-auto"
+            className="btn-gold text-lg px-10 py-5 h-auto tracking-wide"
           >
-            Begin your journey
+            Start
           </Button>
         </div>
       </div>
