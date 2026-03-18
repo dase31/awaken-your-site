@@ -72,6 +72,7 @@ const HeroSection = () => {
         {/* CTA Button */}
         <div className="mt-12 fade-in-up" style={{ animationDelay: "0.4s" }}>
           <Button
+            variant="ghost"
             onClick={handleBeginJourney}
             className="btn-gold text-lg px-10 py-5 h-auto tracking-wide"
           >
