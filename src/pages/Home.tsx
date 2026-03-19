@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout/AppShell";
+import { useConnectionRequests } from "@/hooks/useConnectionRequests";
+import { useReflections } from "@/hooks/useReflections";
+import { ConnectionRequestCard } from "@/components/connections/ConnectionRequestCard";
+import { ReflectionModal } from "@/components/reflections/ReflectionModal";
 import { cn } from "@/lib/utils";
 
 function getGreeting(): string {
@@ -51,8 +55,12 @@ function GlassCard({ children, className, onClick }: GlassCardProps) {
 const Home = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>("");
+  const [showReflectionModal, setShowReflectionModal] = useState(false);
   const greeting = getGreeting();
   const dailyPrompt = getDailyPrompt();
+
+  const { incoming, loading: connectionsLoading, respondToRequest } = useConnectionRequests();
+  const { saveReflection } = useReflections();
 
   useEffect(() => {
     const loadUserName = async () => {
@@ -86,7 +94,7 @@ const Home = () => {
         </div>
 
         {/* Daily Reflection Card */}
-        <GlassCard>
+        <GlassCard onClick={() => setShowReflectionModal(true)}>
           <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
             Today's Reflection
           </h2>
@@ -96,22 +104,60 @@ const Home = () => {
           >
             "{dailyPrompt}"
           </p>
-          <button className="text-white/70 text-sm hover:text-white font-medium transition-colors">
+          <span className="text-white/70 text-sm hover:text-white font-medium transition-colors">
             Tap to reflect →
-          </button>
+          </span>
         </GlassCard>
 
         {/* Pending Connections Card */}
         <GlassCard>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-white/80 text-sm uppercase tracking-wide font-medium">
+              Your Connections
+            </h2>
+            {incoming.length > 0 && (
+              <span className="bg-white/25 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                {incoming.length}
+              </span>
+            )}
+          </div>
+
+          {connectionsLoading ? (
+            <div className="h-16 bg-white/10 rounded-xl animate-pulse" />
+          ) : incoming.length > 0 ? (
+            <div className="space-y-3">
+              {incoming.map(req => (
+                <ConnectionRequestCard
+                  key={req.id}
+                  request={req}
+                  onAccept={(id) => respondToRequest(id, true)}
+                  onReject={(id) => respondToRequest(id, false)}
+                />
+              ))}
+            </div>
+          ) : (
+            <>
+              <p className="text-white/70 text-base">
+                No pending connections yet.
+              </p>
+              <p className="text-white/60 text-sm mt-2">
+                When someone wants to connect, you'll see them here.
+              </p>
+            </>
+          )}
+        </GlassCard>
+
+        {/* Past Reflections Link */}
+        <GlassCard onClick={() => navigate("/reflections")}>
           <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
-            Your Connections
+            Journal
           </h2>
-          <p className="text-white/70 text-base">
-            No pending connections yet.
+          <p className="text-white text-base mb-2">
+            Revisit your past reflections and see how you've grown.
           </p>
-          <p className="text-white/60 text-sm mt-2">
-            When someone wants to connect, you'll see them here.
-          </p>
+          <span className="inline-flex items-center text-white/80 font-medium text-sm">
+            View reflections →
+          </span>
         </GlassCard>
 
         {/* Find Support Card */}
@@ -127,6 +173,15 @@ const Home = () => {
           </span>
         </GlassCard>
       </div>
+
+      {/* Reflection Modal */}
+      {showReflectionModal && (
+        <ReflectionModal
+          prompt={dailyPrompt}
+          onSave={saveReflection}
+          onClose={() => setShowReflectionModal(false)}
+        />
+      )}
     </AppShell>
   );
 };

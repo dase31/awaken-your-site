@@ -70,10 +70,9 @@ const Match = () => {
     loadInitialMatch();
   }, [userId, currentMatch, initialLoading, findMatch]);
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (currentMatch) {
-      toast.success(`We'll let ${currentMatch.display_name} know you're interested!`);
-      // Future: Store connection request in database
+      await sendRequest(currentMatch.match_user_id);
     }
   };
 
