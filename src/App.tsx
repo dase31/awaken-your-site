@@ -10,6 +10,7 @@ import Match from "./pages/Match";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import ChatThread from "./pages/ChatThread";
+import Reflections from "./pages/Reflections";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
