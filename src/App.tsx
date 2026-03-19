@@ -27,6 +27,7 @@ const App = () => (
           <Route path="/match" element={<Match />} />
           <Route path="/home" element={<Home />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/chat/:conversationId" element={<ChatThread />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -22,7 +22,7 @@ export function AppShell({ children, hideNav }: AppShellProps) {
         {children}
       </main>
       
-      <BottomNav />
+      {!hideNav && <BottomNav />}
     </div>
   );
 }
