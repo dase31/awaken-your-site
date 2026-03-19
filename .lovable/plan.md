@@ -1,212 +1,156 @@
 
 
-# Home Page UI/UX Improvements
+# Phase 2A: Real-Time Chat/Messaging System
 
-Address contrast, hierarchy, and legibility issues across the Home page and bottom navigation.
+## Overview
 
-## Problem Summary
+Build a complete messaging system — database tables, real-time subscriptions, conversation list, and chat thread UI — all matching the existing sky-gradient glass-card aesthetic.
 
-| Issue | Current | Impact |
-|-------|---------|--------|
-| Yellow heading | `text-primary` (gold) on sky blue | Unreadable, low contrast |
-| Grey text | `text-foreground/50-70` | Too faded, hard to read |
-| Bottom nav | White at 50% on light glass | Nearly invisible |
-| Cards | 10% white opacity | Don't stand out enough |
-| CTAs | Same style as regular text | No visual hierarchy |
+## Database Changes (2 migrations)
 
-## Solution Overview
+### Migration 1: Tables
 
-```text
-Before:                          After:
-+------------------------+       +------------------------+
-| Good evening, (YELLOW) |       | Good evening, (WHITE)  |
-| ┌──────────────────┐   |       | ┌──────────────────┐   |
-| │ (faded text)     │   |       | │ (crisp white)    │   |
-| │ (grey subtext)   │   |       | │ (soft cream)     │   |
-| └──────────────────┘   |       | └──────────────────┘   |
-| (invisible nav)        |       | (solid visible nav)    |
-+------------------------+       +------------------------+
+```sql
+-- Conversations table (links two users)
+CREATE TABLE public.conversations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_one uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  user_two uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_one, user_two)
+);
+
+-- Messages table
+CREATE TABLE public.messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id uuid NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
+  sender_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+-- Helper function: check if user is participant
+CREATE OR REPLACE FUNCTION public.is_conversation_participant(_user_id uuid, _conversation_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.conversations
+    WHERE id = _conversation_id
+    AND (user_one = _user_id OR user_two = _user_id)
+  )
+$$;
+
+-- Conversations RLS: participants can read
+CREATE POLICY "Participants can view conversations"
+  ON public.conversations FOR SELECT TO authenticated
+  USING (auth.uid() = user_one OR auth.uid() = user_two);
+
+-- Conversations RLS: authenticated users can insert (to start a conversation)
+CREATE POLICY "Users can create conversations"
+  ON public.conversations FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_one OR auth.uid() = user_two);
+
+-- Messages RLS: only participants can read
+CREATE POLICY "Participants can view messages"
+  ON public.messages FOR SELECT TO authenticated
+  USING (public.is_conversation_participant(auth.uid(), conversation_id));
+
+-- Messages RLS: participants can send
+CREATE POLICY "Participants can send messages"
+  ON public.messages FOR INSERT TO authenticated
+  WITH CHECK (
+    auth.uid() = sender_id
+    AND public.is_conversation_participant(auth.uid(), conversation_id)
+  );
+
+-- Enable realtime for messages
+ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+
+-- Trigger to update conversation.updated_at on new message
+CREATE OR REPLACE FUNCTION public.update_conversation_timestamp()
+RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
+BEGIN
+  UPDATE public.conversations SET updated_at = now() WHERE id = NEW.conversation_id;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_new_message_update_conversation
+  AFTER INSERT ON public.messages
+  FOR EACH ROW EXECUTE FUNCTION public.update_conversation_timestamp();
 ```
 
-## Color Token Changes
+## Frontend Components
 
-### New CSS Variables (index.css)
+### 1. Update `src/pages/Chat.tsx` — Conversation List
 
-Add dedicated text colors for the app shell context:
+- Fetch conversations for the current user (join with profiles to get other user's name)
+- Show list of conversations as glass cards with:
+  - Avatar initial circle + display name
+  - Last message preview (truncated)
+  - Timestamp (relative: "2m ago", "Yesterday")
+- Keep the empty state when no conversations exist
+- Tap a conversation → navigate to `/chat/:conversationId`
 
-| Token | Value | Purpose |
-|-------|-------|---------|
-| `--text-on-sky` | Pure white `0 0% 100%` | Primary text on sky gradient |
-| `--text-on-sky-muted` | Cream `45 20% 90%` | Secondary text, warm not grey |
-| `--text-on-sky-subtle` | `200 30% 85%` | Tertiary info, soft blue-white |
-| `--nav-bg` | `200 50% 35%` | Darker, more solid nav background |
+### 2. New `src/pages/ChatThread.tsx` — Message Thread
 
-## Component Changes
+- Full-screen chat view within AppShell (hide BottomNav on this page)
+- Top bar: back arrow + other user's name
+- Scrollable message area with:
+  - Sent messages (right-aligned, slightly brighter glass `bg-white/25`)
+  - Received messages (left-aligned, standard glass `bg-white/15`)
+  - Timestamps between message groups
+- Bottom input bar: glass-style input + send button
+- Real-time subscription on messages for this conversation
+- Auto-scroll to bottom on new messages
 
-### 1. Home.tsx - Greeting Header
+### 3. Update `src/App.tsx` — Add route
 
-| Before | After |
-|--------|-------|
-| `text-foreground` (gold on white variable) | `text-white` with proper shadow |
-
-```text
-"Good evening, Name"
-- Color: Pure white
-- Text shadow: 0 2px 8px rgba(0,0,0,0.25) for depth
-- Font size: Keep 2xl/3xl
+```
+<Route path="/chat/:conversationId" element={<ChatThread />} />
 ```
 
-### 2. Home.tsx - Card Updates
+### 4. Update `src/components/layout/AppShell.tsx`
 
-#### Card Container (GlassCard)
-| Before | After |
-|--------|-------|
-| `bg-white/10` | `bg-white/20` |
-| `border-white/20` | `border-white/30` |
-| No shadow | Add `shadow-lg shadow-black/5` |
+- Accept optional `hideNav` prop to hide BottomNav in chat thread view
 
-#### Card Headers ("TODAY'S REFLECTION")
-| Before | After |
-|--------|-------|
-| `text-foreground/90` (white at 90%) | `text-white/80` with font-medium |
+### 5. New `src/hooks/useConversations.ts`
 
-#### Card Body Text (quotes, descriptions)
-| Before | After |
-|--------|-------|
-| `text-foreground` | `text-white` |
-| `text-foreground/70` | `text-white/70` |
+- Fetch user's conversations with other user's profile info and last message
+- Return sorted by `updated_at` descending
 
-#### Card Secondary Text (hints, helper text)
-| Before | After |
-|--------|-------|
-| `text-foreground/50` (barely visible) | `text-white/60` |
+### 6. New `src/hooks/useChatMessages.ts`
 
-#### Card CTAs ("Tap to reflect →", "Find a match →")
-| Before | After |
-|--------|-------|
-| `text-foreground/60` and `text-primary` | Both use `text-white font-medium` with hover effect |
+- Fetch messages for a conversation
+- Set up Supabase Realtime subscription for new messages
+- Provide `sendMessage` function
 
-### 3. BottomNav.tsx - Navigation Bar
+## UI Design (matching existing aesthetic)
 
-#### Nav Container
-| Before | After |
-|--------|-------|
-| `bg-white/10` | `bg-sky-end/80` or `bg-[hsl(200,75%,35%)]/90` |
-| `border-white/20` | `border-white/10` |
-| `backdrop-blur-md` | Keep blur for softness |
+- All text uses `text-white` / `text-white/70` / `text-white/60` hierarchy
+- Glass cards: `bg-white/20 border-white/30 backdrop-blur-sm rounded-2xl`
+- Message bubbles: rounded-2xl with tail direction indicating sender
+- Input: glass-style `bg-white/15 border-white/20` with white placeholder text
+- Send button: `bg-white/25 hover:bg-white/35` with white arrow icon
+- Serif font for names, sans-serif for message content
 
-This uses a darker shade of the sky gradient bottom color, creating visual grounding.
+## File Summary
 
-#### Nav Items - Active State
-| Before | After |
-|--------|-------|
-| `text-primary` (gold) | `text-white` (crisp white) |
+| File | Action |
+|------|--------|
+| Database migration | Create conversations + messages tables with RLS |
+| `src/pages/Chat.tsx` | Rewrite: conversation list with real data |
+| `src/pages/ChatThread.tsx` | New: message thread UI |
+| `src/hooks/useConversations.ts` | New: fetch & subscribe conversations |
+| `src/hooks/useChatMessages.ts` | New: fetch, subscribe, send messages |
+| `src/App.tsx` | Add `/chat/:conversationId` route |
+| `src/components/layout/AppShell.tsx` | Add `hideNav` prop |
 
-#### Nav Items - Inactive State
-| Before | After |
-|--------|-------|
-| `text-foreground/50` (invisible) | `text-white/60` (visible but muted) |
-
-#### Nav Items - Disabled State
-| Before | After |
-|--------|-------|
-| `opacity-30` | `text-white/30` (slightly more visible) |
-
-## Visual Hierarchy After Changes
-
-```text
-+----------------------------------+
-|            THYMOS                |  <- White, subtle glow
-|                                  |
-|    Good evening, Sarah           |  <- Pure white, bold, shadowed
-|                                  |
-|  +----------------------------+  |
-|  | TODAY'S REFLECTION         |  |  <- White/80, uppercase, medium
-|  | "What are you grateful     |  |  <- White, italic, shadowed  
-|  |  for?"                     |  |
-|  | Tap to reflect →           |  |  <- White/70, medium weight
-|  +----------------------------+  |
-|                                  |
-|  +----------------------------+  |  <- Cards: 20% white, visible border
-|  | YOUR CONNECTIONS           |  |
-|  | No pending connections     |  |  <- White/70
-|  | When someone wants...      |  |  <- White/60
-|  +----------------------------+  |
-|                                  |
-|  +----------------------------+  |
-|  | FIND SUPPORT               |  |
-|  | Connect with someone...    |  |
-|  | Find a match →             |  |  <- White, medium, underline on hover
-|  +----------------------------+  |
-|                                  |
-+----------------------------------+
-| ⌂ Home  💬 Chat  👥 Connect  🎯 |  <- Darker bg, white icons
-+----------------------------------+
-     ↑ active        ↑ inactive/disabled
-   (white)          (white/60 or /30)
-```
-
-## File Changes Summary
-
-| File | Changes |
-|------|---------|
-| `src/pages/Home.tsx` | Update all color classes for cards and text |
-| `src/components/navigation/BottomNav.tsx` | Darker background, better icon contrast |
-| `src/index.css` | (Optional) Add helper classes for text-on-sky |
-
-## Technical Implementation
-
-### Home.tsx Updates
-
-```text
-GlassCard changes:
-- className: "bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-5 shadow-lg shadow-black/5"
-
-Greeting:
-- className: "font-serif text-white text-2xl md:text-3xl"
-
-Card headers:
-- className: "text-white/80 text-sm uppercase tracking-wide mb-3 font-medium"
-
-Card body:
-- className: "text-white text-lg" (primary)
-- className: "text-white/70 text-base" (secondary)
-- className: "text-white/60 text-sm" (tertiary)
-
-CTAs:
-- className: "text-white/80 hover:text-white font-medium text-sm transition-colors"
-```
-
-### BottomNav.tsx Updates
-
-```text
-Nav container:
-- className: "fixed bottom-0 left-0 right-0 z-50 bg-[hsl(200,60%,35%)]/90 backdrop-blur-md border-t border-white/10 pb-safe"
-
-Active item:
-- className: "text-white"
-
-Inactive item:
-- className: "text-white/60 hover:text-white/80"
-
-Disabled item:
-- className: "text-white/30 cursor-not-allowed"
-```
-
-## Accessibility Considerations
-
-| Element | Contrast Ratio Target |
-|---------|----------------------|
-| Primary text (white on cards) | 4.5:1 or higher |
-| Secondary text (white/70) | 3:1 minimum |
-| Interactive elements | 4.5:1 with focus states |
-
-## Result
-
-After these changes:
-- All text will be legible against the sky gradient and glass cards
-- Bottom navigation will be clearly visible and usable
-- Visual hierarchy will guide users to primary actions
-- Gold color reserved only for special emphasis (if needed later)
-- Consistent warm/neutral palette instead of cold greys
+## Estimated Credits: 3-5
 
