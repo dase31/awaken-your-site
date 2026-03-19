@@ -5,9 +5,10 @@ import ThymosLogo from "@/components/ThymosLogo";
 
 interface AppShellProps {
   children: ReactNode;
+  hideNav?: boolean;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, hideNav }: AppShellProps) {
   // TODO: Re-enable auth guard for production
   // Auth check temporarily disabled for development
 
