@@ -87,42 +87,42 @@ const Home = () => {
 
         {/* Daily Reflection Card */}
         <GlassCard>
-          <p className="text-white/50 text-xs uppercase tracking-[0.15em] mb-4 font-sans font-medium">
+          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
             Today's Reflection
-          </p>
+          </h2>
           <p
-            className="font-serif text-white text-xl leading-relaxed mb-5"
+            className="font-serif text-white text-lg italic mb-4"
             style={{ textShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
           >
-            {dailyPrompt}
+            "{dailyPrompt}"
           </p>
-          <button className="text-white/60 text-sm hover:text-white/90 font-sans font-medium tracking-wide transition-colors duration-200">
-            Reflect →
+          <button className="text-white/70 text-sm hover:text-white font-medium transition-colors">
+            Tap to reflect →
           </button>
         </GlassCard>
 
         {/* Pending Connections Card */}
         <GlassCard>
-          <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] mb-4 font-sans">
-            Connections
-          </p>
-          <p className="text-white/75 text-[15px] font-sans leading-relaxed font-light">
+          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+            Your Connections
+          </h2>
+          <p className="text-white/70 text-base">
             No pending connections yet.
           </p>
-          <p className="text-white/35 text-sm mt-2 font-sans leading-relaxed font-light">
+          <p className="text-white/60 text-sm mt-2">
             When someone wants to connect, you'll see them here.
           </p>
         </GlassCard>
 
         {/* Find Support Card */}
         <GlassCard onClick={() => navigate("/match")}>
-          <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] mb-4 font-sans">
+          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
             Find Support
-          </p>
-          <p className="text-white/75 text-[15px] font-sans leading-relaxed font-light mb-4">
+          </h2>
+          <p className="text-white text-base mb-4">
             Connect with someone who understands what you're going through.
           </p>
-          <span className="text-white/50 text-sm font-sans font-light tracking-wide hover:text-white/70 transition-colors duration-200">
+          <span className="inline-flex items-center text-white font-medium text-sm hover:underline">
             Find a match →
           </span>
         </GlassCard>
