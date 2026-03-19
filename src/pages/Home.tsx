@@ -103,26 +103,26 @@ const Home = () => {
 
         {/* Pending Connections Card */}
         <GlassCard>
-          <p className="text-white/50 text-xs uppercase tracking-[0.15em] mb-4 font-sans font-medium">
+          <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] mb-4 font-sans">
             Connections
           </p>
-          <p className="text-white/90 text-base font-sans leading-relaxed">
+          <p className="text-white/75 text-[15px] font-sans leading-relaxed font-light">
             No pending connections yet.
           </p>
-          <p className="text-white/50 text-sm mt-2 font-sans leading-relaxed">
+          <p className="text-white/35 text-sm mt-2 font-sans leading-relaxed font-light">
             When someone wants to connect, you'll see them here.
           </p>
         </GlassCard>
 
         {/* Find Support Card */}
         <GlassCard onClick={() => navigate("/match")}>
-          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+          <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] mb-4 font-sans">
             Find Support
-          </h2>
-          <p className="text-white text-base mb-4">
+          </p>
+          <p className="text-white/75 text-[15px] font-sans leading-relaxed font-light mb-4">
             Connect with someone who understands what you're going through.
           </p>
-          <span className="inline-flex items-center text-white font-medium text-sm hover:underline">
+          <span className="text-white/50 text-sm font-sans font-light tracking-wide hover:text-white/70 transition-colors duration-200">
             Find a match →
           </span>
         </GlassCard>
