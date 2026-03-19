@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useFindMatch, MatchResult } from "@/hooks/useFindMatch";
+import { useConnectionRequests } from "@/hooks/useConnectionRequests";
 import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
 import { LoadingState } from "@/components/onboarding/LoadingState";
 import { MatchIntro } from "@/components/matches/MatchIntro";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import ThymosLogo from "@/components/ThymosLogo";
-import { toast } from "sonner";
 
 interface LocationState {
   userId?: string;
