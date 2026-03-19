@@ -28,6 +28,7 @@ const Match = () => {
   const [initialLoading, setInitialLoading] = useState(!state?.initialMatch);
 
   const { findMatch, findAnotherMatch, isLoading: isLoadingAnother } = useFindMatch();
+  const { sendRequest } = useConnectionRequests();
 
   // Load user session if not passed via state
   useEffect(() => {
