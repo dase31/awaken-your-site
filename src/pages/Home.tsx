@@ -87,29 +87,29 @@ const Home = () => {
 
         {/* Daily Reflection Card */}
         <GlassCard>
-          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+          <p className="text-white/50 text-xs uppercase tracking-[0.15em] mb-4 font-sans font-medium">
             Today's Reflection
-          </h2>
+          </p>
           <p
-            className="font-serif text-white text-lg italic mb-4"
+            className="font-serif text-white text-xl leading-relaxed mb-5"
             style={{ textShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
           >
-            "{dailyPrompt}"
+            {dailyPrompt}
           </p>
-          <button className="text-white/70 text-sm hover:text-white font-medium transition-colors">
-            Tap to reflect →
+          <button className="text-white/60 text-sm hover:text-white/90 font-sans font-medium tracking-wide transition-colors duration-200">
+            Reflect →
           </button>
         </GlassCard>
 
         {/* Pending Connections Card */}
         <GlassCard>
-          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
-            Your Connections
-          </h2>
-          <p className="text-white/70 text-base">
+          <p className="text-white/50 text-xs uppercase tracking-[0.15em] mb-4 font-sans font-medium">
+            Connections
+          </p>
+          <p className="text-white/90 text-base font-sans leading-relaxed">
             No pending connections yet.
           </p>
-          <p className="text-white/60 text-sm mt-2">
+          <p className="text-white/50 text-sm mt-2 font-sans leading-relaxed">
             When someone wants to connect, you'll see them here.
           </p>
         </GlassCard>
