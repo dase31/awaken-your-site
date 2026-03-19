@@ -8,6 +8,7 @@ import { LoadingState } from "@/components/onboarding/LoadingState";
 import { MatchIntro } from "@/components/matches/MatchIntro";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
 import ThymosLogo from "@/components/ThymosLogo";
+import { toast } from "sonner";
 
 interface LocationState {
   userId?: string;
