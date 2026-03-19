@@ -9,6 +9,7 @@ import AuthCallback from "./pages/AuthCallback";
 import Match from "./pages/Match";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
+import ChatThread from "./pages/ChatThread";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
