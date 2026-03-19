@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useFindMatch, MatchResult } from "@/hooks/useFindMatch";
+import { useConnectionRequests } from "@/hooks/useConnectionRequests";
 import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
 import { LoadingState } from "@/components/onboarding/LoadingState";
 import { MatchIntro } from "@/components/matches/MatchIntro";
@@ -28,6 +29,7 @@ const Match = () => {
   const [initialLoading, setInitialLoading] = useState(!state?.initialMatch);
 
   const { findMatch, findAnotherMatch, isLoading: isLoadingAnother } = useFindMatch();
+  const { sendRequest } = useConnectionRequests();
 
   // Load user session if not passed via state
   useEffect(() => {
@@ -69,10 +71,9 @@ const Match = () => {
     loadInitialMatch();
   }, [userId, currentMatch, initialLoading, findMatch]);
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (currentMatch) {
-      toast.success(`We'll let ${currentMatch.display_name} know you're interested!`);
-      // Future: Store connection request in database
+      await sendRequest(currentMatch.match_user_id);
     }
   };
 

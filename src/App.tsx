@@ -10,6 +10,7 @@ import Match from "./pages/Match";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import ChatThread from "./pages/ChatThread";
+import Reflections from "./pages/Reflections";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/home" element={<Home />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/chat/:conversationId" element={<ChatThread />} />
+          <Route path="/reflections" element={<Reflections />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
