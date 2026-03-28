@@ -89,6 +89,7 @@ const Chat = () => {
                 name={convo.otherUserName}
                 lastMessage={convo.lastMessage}
                 timestamp={convo.lastMessageAt}
+                conversationType={convo.conversationType}
                 onClick={() => navigate(`/chat/${convo.id}`)}
               />
             ))}
