@@ -58,6 +58,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          conversation_type: string
           created_at: string
           id: string
           updated_at: string
@@ -65,6 +66,7 @@ export type Database = {
           user_two: string
         }
         Insert: {
+          conversation_type?: string
           created_at?: string
           id?: string
           updated_at?: string
@@ -72,6 +74,7 @@ export type Database = {
           user_two: string
         }
         Update: {
+          conversation_type?: string
           created_at?: string
           id?: string
           updated_at?: string
@@ -201,6 +204,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      telos_posts: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          post_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          post_type?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          post_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      telos_profiles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      telos_specialties: {
+        Row: {
+          created_at: string
+          id: string
+          specialty: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          specialty: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          specialty?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_connection_intents: {
         Row: {
