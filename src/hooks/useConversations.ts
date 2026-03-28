@@ -8,6 +8,7 @@ export interface ConversationWithDetails {
   lastMessage: string | null;
   lastMessageAt: string;
   updatedAt: string;
+  conversationType: string;
 }
 
 export function useConversations() {
