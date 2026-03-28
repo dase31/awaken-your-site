@@ -15,15 +15,44 @@ interface SuggestedTag {
   confidence: number;
 }
 
+// Preset tags for each category
+const PRESET_STRUGGLES = [
+  "Anxiety", "Loneliness", "Self-doubt", "Burnout",
+  "Grief", "Relationship struggles", "Identity", "Depression",
+  "Overwhelm", "Anger",
+];
+
+const PRESET_GOALS = [
+  "Inner peace", "Confidence", "Self-acceptance", "Better boundaries",
+  "Emotional awareness", "Resilience", "Purpose", "Patience",
+  "Letting go", "Vulnerability",
+];
+
+const PRESET_INTENTS = [
+  "A listener", "Mutual support", "Accountability partner",
+  "Someone who gets it", "Honest conversations", "Growth together",
+  "Non-judgmental space", "Shared experiences",
+];
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const { extractThemes } = useExtractThemes();
   const { saveOnboardingData } = useOnboardingSubmit();
-  
+
   const [currentStep, setCurrentStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  // Preset selections (labels)
+  const [selectedPresetStruggles, setSelectedPresetStruggles] = useState<string[]>([]);
+  const [selectedPresetGoals, setSelectedPresetGoals] = useState<string[]>([]);
+  const [selectedPresetIntents, setSelectedPresetIntents] = useState<string[]>([]);
+
+  // Custom text
+  const [customStrugglesText, setCustomStrugglesText] = useState("");
+  const [customGoalsText, setCustomGoalsText] = useState("");
+  const [customIntentsText, setCustomIntentsText] = useState("");
+
   const [userData, setUserData] = useState({
     name: "",
     email: "",
@@ -46,6 +75,36 @@ const Onboarding = () => {
     }, 300);
   };
 
+  const togglePreset = (
+    list: string[],
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    value: string
+  ) => {
+    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+  };
+
+  // Merge preset selections with LLM-extracted tags
+  const mergePresetAndExtracted = (
+    presets: string[],
+    extracted: SuggestedTag[] | null
+  ): { suggested: SuggestedTag[]; selected: string[] } => {
+    const tags: SuggestedTag[] = presets.map((label) => ({
+      id: label.toLowerCase().replace(/\s+/g, "_"),
+      label,
+      confidence: 1,
+    }));
+
+    if (extracted) {
+      for (const tag of extracted) {
+        if (!tags.some((t) => t.id === tag.id)) {
+          tags.push(tag);
+        }
+      }
+    }
+
+    return { suggested: tags, selected: tags.map((t) => t.id) };
+  };
+
   // Step 0: Name
   const handleNameKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && userData.name.trim()) {
@@ -53,78 +112,90 @@ const Onboarding = () => {
     }
   };
 
-  // Step 1: Intent → Step 2 (loading) → Step 3 (goals)
-  const handleIntentSubmit = async () => {
-    if (!userData.intentText.trim()) return;
-    transitionTo(2);
-    
-    const result = await extractThemes(userData.intentText, "struggles");
-    if (result) {
+  // Step 1: Struggles → process
+  const handleStrugglesSubmit = async () => {
+    if (selectedPresetStruggles.length === 0 && !customStrugglesText.trim()) return;
+
+    const hasCustom = customStrugglesText.trim().length > 0;
+
+    if (hasCustom) {
+      transitionTo(2); // loading
+      const result = await extractThemes(customStrugglesText, "struggles");
+      const merged = mergePresetAndExtracted(selectedPresetStruggles, result?.suggested_tags ?? null);
       setUserData((prev) => ({
         ...prev,
-        suggestedStruggles: result.suggested_tags,
-        selectedStruggles: result.suggested_tags.map((t) => t.id),
+        intentText: customStrugglesText,
+        suggestedStruggles: merged.suggested,
+        selectedStruggles: merged.selected,
       }));
       transitionTo(3);
     } else {
-      toast.error("Something went wrong. Please try again.");
-      transitionTo(1);
-    }
-  };
-
-  const handleIntentKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.metaKey && userData.intentText.trim()) {
-      handleIntentSubmit();
-    }
-  };
-
-  // Step 3: Goals → Step 4 (loading) → Step 5 (connection)
-  const handleGoalsSubmit = async () => {
-    if (!userData.goalsText.trim()) return;
-    transitionTo(4);
-    
-    const result = await extractThemes(userData.goalsText, "goals");
-    if (result) {
+      const merged = mergePresetAndExtracted(selectedPresetStruggles, null);
       setUserData((prev) => ({
         ...prev,
-        suggestedGoals: result.suggested_tags,
-        selectedGoals: result.suggested_tags.map((t) => t.id),
+        intentText: selectedPresetStruggles.join(", "),
+        suggestedStruggles: merged.suggested,
+        selectedStruggles: merged.selected,
+      }));
+      transitionTo(3);
+    }
+  };
+
+  // Step 3: Goals → process
+  const handleGoalsSubmit = async () => {
+    if (selectedPresetGoals.length === 0 && !customGoalsText.trim()) return;
+
+    const hasCustom = customGoalsText.trim().length > 0;
+
+    if (hasCustom) {
+      transitionTo(4);
+      const result = await extractThemes(customGoalsText, "goals");
+      const merged = mergePresetAndExtracted(selectedPresetGoals, result?.suggested_tags ?? null);
+      setUserData((prev) => ({
+        ...prev,
+        goalsText: customGoalsText,
+        suggestedGoals: merged.suggested,
+        selectedGoals: merged.selected,
       }));
       transitionTo(5);
     } else {
-      toast.error("Something went wrong. Please try again.");
-      transitionTo(3);
-    }
-  };
-
-  const handleGoalsKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.metaKey && userData.goalsText.trim()) {
-      handleGoalsSubmit();
-    }
-  };
-
-  // Step 5: Connection → Step 6 (loading) → Step 7 (summary)
-  const handleConnectionSubmit = async () => {
-    if (!userData.connectionText.trim()) return;
-    transitionTo(6);
-    
-    const result = await extractThemes(userData.connectionText, "connection_intent");
-    if (result) {
+      const merged = mergePresetAndExtracted(selectedPresetGoals, null);
       setUserData((prev) => ({
         ...prev,
-        suggestedIntents: result.suggested_tags,
-        selectedIntents: result.suggested_tags.map((t) => t.id),
+        goalsText: selectedPresetGoals.join(", "),
+        suggestedGoals: merged.suggested,
+        selectedGoals: merged.selected,
+      }));
+      transitionTo(5);
+    }
+  };
+
+  // Step 5: Connection → process
+  const handleConnectionSubmit = async () => {
+    if (selectedPresetIntents.length === 0 && !customIntentsText.trim()) return;
+
+    const hasCustom = customIntentsText.trim().length > 0;
+
+    if (hasCustom) {
+      transitionTo(6);
+      const result = await extractThemes(customIntentsText, "connection_intent");
+      const merged = mergePresetAndExtracted(selectedPresetIntents, result?.suggested_tags ?? null);
+      setUserData((prev) => ({
+        ...prev,
+        connectionText: customIntentsText,
+        suggestedIntents: merged.suggested,
+        selectedIntents: merged.selected,
       }));
       transitionTo(7);
     } else {
-      toast.error("Something went wrong. Please try again.");
-      transitionTo(5);
-    }
-  };
-
-  const handleConnectionKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.metaKey && userData.connectionText.trim()) {
-      handleConnectionSubmit();
+      const merged = mergePresetAndExtracted(selectedPresetIntents, null);
+      setUserData((prev) => ({
+        ...prev,
+        connectionText: selectedPresetIntents.join(", "),
+        suggestedIntents: merged.suggested,
+        selectedIntents: merged.selected,
+      }));
+      transitionTo(7);
     }
   };
 
@@ -156,18 +227,16 @@ const Onboarding = () => {
     }));
   };
 
-  // Step 7: Summary → Step 8 (email)
   const handleSummaryConfirm = () => {
     transitionTo(8);
   };
 
-  // Step 8: Email → Step 9 (loading) → Step 10 (success)
   const handleEmailSubmit = async () => {
     if (!userData.email.trim()) return;
-    
+
     setIsSubmitting(true);
     transitionTo(9);
-    
+
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: userData.email,
@@ -202,17 +271,10 @@ const Onboarding = () => {
     }
   };
 
-  // Helper to get labels for selected tags
-  const getSelectedLabels = (
-    suggested: SuggestedTag[],
-    selected: string[]
-  ): string[] => {
-    return suggested
-      .filter((t) => selected.includes(t.id))
-      .map((t) => t.label);
+  const getSelectedLabels = (suggested: SuggestedTag[], selected: string[]): string[] => {
+    return suggested.filter((t) => selected.includes(t.id)).map((t) => t.label);
   };
 
-  // Build the flowing summary sentence
   const buildSummarySentence = () => {
     const struggles = getSelectedLabels(userData.suggestedStruggles, userData.selectedStruggles);
     const goals = getSelectedLabels(userData.suggestedGoals, userData.selectedGoals);
@@ -222,30 +284,27 @@ const Onboarding = () => {
       if (items.length === 0) return "";
       if (items.length === 1) return items[0].toLowerCase();
       if (items.length === 2) return `${items[0].toLowerCase()} and ${items[1].toLowerCase()}`;
-      return `${items.slice(0, -1).map(i => i.toLowerCase()).join(", ")}, and ${items[items.length - 1].toLowerCase()}`;
+      return `${items.slice(0, -1).map((i) => i.toLowerCase()).join(", ")}, and ${items[items.length - 1].toLowerCase()}`;
     };
 
     const parts: string[] = [];
-    
-    if (struggles.length > 0) {
-      parts.push(`You're carrying ${formatList(struggles)}`);
-    }
-    if (goals.length > 0) {
-      parts.push(`reaching toward ${formatList(goals)}`);
-    }
-    if (intents.length > 0) {
-      parts.push(`and looking for ${formatList(intents)}`);
-    }
+    if (struggles.length > 0) parts.push(`You're carrying ${formatList(struggles)}`);
+    if (goals.length > 0) parts.push(`reaching toward ${formatList(goals)}`);
+    if (intents.length > 0) parts.push(`and looking for ${formatList(intents)}`);
 
     return parts.join(", ") + ".";
   };
+
+  const canProceedStruggles = selectedPresetStruggles.length > 0 || customStrugglesText.trim().length > 0;
+  const canProceedGoals = selectedPresetGoals.length > 0 || customGoalsText.trim().length > 0;
+  const canProceedIntents = selectedPresetIntents.length > 0 || customIntentsText.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
       <ThymosLogo />
       <OnboardingBackground />
 
-      {/* Step 0: Name Input */}
+      {/* Step 0: Name */}
       {currentStep === 0 && (
         <div
           className={`relative z-10 text-center px-6 max-w-md w-full ${
@@ -255,203 +314,197 @@ const Onboarding = () => {
           <h1 className="font-serif text-foreground text-3xl md:text-4xl lg:text-5xl leading-relaxed mb-8">
             What should we call you?
           </h1>
-
           <div className="space-y-4">
             <input
               type="text"
               placeholder="Your name"
               value={userData.name}
-              onChange={(e) =>
-                setUserData((prev) => ({ ...prev, name: e.target.value }))
-              }
+              onChange={(e) => setUserData((prev) => ({ ...prev, name: e.target.value }))}
               onKeyDown={handleNameKeyDown}
               className="ethereal-input bg-transparent border-none text-foreground text-2xl md:text-3xl font-serif text-center w-full focus:outline-none placeholder:text-foreground/40"
               style={{ textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
               autoFocus
             />
-
-            <p className="hint-fade-in text-foreground/50 text-sm">
-              press enter ↵
-            </p>
+            <p className="hint-fade-in text-foreground/50 text-sm">press enter ↵</p>
           </div>
         </div>
       )}
 
-      {/* Step 1: What's on your heart */}
+      {/* Step 1: Struggles - Hybrid */}
       {currentStep === 1 && (
         <div
           className={`relative z-10 text-center px-6 max-w-lg w-full ${
             isTransitioning ? "step-fade-out" : "fade-in-up"
           }`}
         >
-          <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
-            What's been on your heart lately?
+          <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-3 stagger-fade-in">
+            What's been weighing on you?
           </h1>
           <p
-            className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif"
-            style={{ animationDelay: "0.2s" }}
+            className="stagger-fade-in text-foreground/60 text-base mb-6 font-serif"
+            style={{ animationDelay: "0.15s" }}
           >
-            Share as much or as little as you'd like
+            Select what resonates, or add your own
           </p>
 
+          <div
+            className="stagger-fade-in flex flex-wrap justify-center gap-2 mb-6"
+            style={{ animationDelay: "0.25s" }}
+          >
+            {PRESET_STRUGGLES.map((tag) => (
+              <ThemeTag
+                key={tag}
+                label={tag}
+                isSelected={selectedPresetStruggles.includes(tag)}
+                onClick={() => togglePreset(selectedPresetStruggles, setSelectedPresetStruggles, tag)}
+              />
+            ))}
+          </div>
+
           <textarea
-            value={userData.intentText}
-            onChange={(e) =>
-              setUserData((prev) => ({ ...prev, intentText: e.target.value }))
-            }
-            onKeyDown={handleIntentKeyDown}
-            placeholder="I've been feeling..."
-            className="stagger-fade-in ethereal-input w-full min-h-[160px] bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-foreground text-lg font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
-            style={{ 
-              animationDelay: "0.3s",
-              textShadow: "0 1px 8px rgba(0,0,0,0.1)" 
-            }}
-            autoFocus
+            value={customStrugglesText}
+            onChange={(e) => setCustomStrugglesText(e.target.value)}
+            placeholder="Something else on your mind..."
+            className="stagger-fade-in w-full min-h-[80px] bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-foreground text-base font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
+            style={{ animationDelay: "0.35s", textShadow: "0 1px 8px rgba(0,0,0,0.1)" }}
           />
 
-          {userData.intentText.trim() && (
+          {canProceedStruggles && (
             <button
-              onClick={handleIntentSubmit}
-              className="stagger-fade-in mt-6 text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300"
+              onClick={handleStrugglesSubmit}
+              className="stagger-fade-in mt-5 text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
               style={{ animationDelay: "0.4s" }}
             >
               Continue →
             </button>
           )}
-
-          <p
-            className="stagger-fade-in mt-4 text-foreground/40 text-sm"
-            style={{ animationDelay: "0.5s" }}
-          >
-            ⌘ + enter to continue
-          </p>
         </div>
       )}
 
-      {/* Step 2: Loading - Processing intent */}
+      {/* Step 2: Loading */}
       {currentStep === 2 && (
         <div className={`relative z-10 ${isTransitioning ? "step-fade-out" : ""}`}>
           <LoadingState message="I hear you..." />
         </div>
       )}
 
-      {/* Step 3: Goals Input */}
+      {/* Step 3: Goals - Hybrid */}
       {currentStep === 3 && (
         <div
           className={`relative z-10 text-center px-6 max-w-lg w-full ${
             isTransitioning ? "step-fade-out" : "fade-in-up"
           }`}
         >
-          <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
-            What are you hoping to work on in yourself?
+          <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-3 stagger-fade-in">
+            What are you reaching toward?
           </h1>
           <p
-            className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif"
-            style={{ animationDelay: "0.2s" }}
+            className="stagger-fade-in text-foreground/60 text-base mb-6 font-serif"
+            style={{ animationDelay: "0.15s" }}
           >
             There's no wrong answer here
           </p>
 
+          <div
+            className="stagger-fade-in flex flex-wrap justify-center gap-2 mb-6"
+            style={{ animationDelay: "0.25s" }}
+          >
+            {PRESET_GOALS.map((tag) => (
+              <ThemeTag
+                key={tag}
+                label={tag}
+                isSelected={selectedPresetGoals.includes(tag)}
+                onClick={() => togglePreset(selectedPresetGoals, setSelectedPresetGoals, tag)}
+              />
+            ))}
+          </div>
+
           <textarea
-            value={userData.goalsText}
-            onChange={(e) =>
-              setUserData((prev) => ({ ...prev, goalsText: e.target.value }))
-            }
-            onKeyDown={handleGoalsKeyDown}
-            placeholder="I'm trying to..."
-            className="stagger-fade-in ethereal-input w-full min-h-[160px] bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-foreground text-lg font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
-            style={{ 
-              animationDelay: "0.3s",
-              textShadow: "0 1px 8px rgba(0,0,0,0.1)" 
-            }}
-            autoFocus
+            value={customGoalsText}
+            onChange={(e) => setCustomGoalsText(e.target.value)}
+            placeholder="Something else you're working toward..."
+            className="stagger-fade-in w-full min-h-[80px] bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-foreground text-base font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
+            style={{ animationDelay: "0.35s", textShadow: "0 1px 8px rgba(0,0,0,0.1)" }}
           />
 
-          {userData.goalsText.trim() && (
+          {canProceedGoals && (
             <button
               onClick={handleGoalsSubmit}
-              className="stagger-fade-in mt-6 text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300"
+              className="stagger-fade-in mt-5 text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
               style={{ animationDelay: "0.4s" }}
             >
               Continue →
             </button>
           )}
-
-          <p
-            className="stagger-fade-in mt-4 text-foreground/40 text-sm"
-            style={{ animationDelay: "0.5s" }}
-          >
-            ⌘ + enter to continue
-          </p>
         </div>
       )}
 
-      {/* Step 4: Loading - Processing goals */}
+      {/* Step 4: Loading */}
       {currentStep === 4 && (
         <div className={`relative z-10 ${isTransitioning ? "step-fade-out" : ""}`}>
           <LoadingState message="I see what you're reaching for..." />
         </div>
       )}
 
-      {/* Step 5: Connection Intent Input */}
+      {/* Step 5: Connection Intent - Hybrid */}
       {currentStep === 5 && (
         <div
           className={`relative z-10 text-center px-6 max-w-lg w-full ${
             isTransitioning ? "step-fade-out" : "fade-in-up"
           }`}
         >
-          <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
-            What kind of connection are you hoping for here?
+          <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-3 stagger-fade-in">
+            What kind of connection are you hoping for?
           </h1>
           <p
-            className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif"
-            style={{ animationDelay: "0.2s" }}
+            className="stagger-fade-in text-foreground/60 text-base mb-6 font-serif"
+            style={{ animationDelay: "0.15s" }}
           >
-            This helps us find the right match for you
+            This helps us find the right person for you
           </p>
 
+          <div
+            className="stagger-fade-in flex flex-wrap justify-center gap-2 mb-6"
+            style={{ animationDelay: "0.25s" }}
+          >
+            {PRESET_INTENTS.map((tag) => (
+              <ThemeTag
+                key={tag}
+                label={tag}
+                isSelected={selectedPresetIntents.includes(tag)}
+                onClick={() => togglePreset(selectedPresetIntents, setSelectedPresetIntents, tag)}
+              />
+            ))}
+          </div>
+
           <textarea
-            value={userData.connectionText}
-            onChange={(e) =>
-              setUserData((prev) => ({ ...prev, connectionText: e.target.value }))
-            }
-            onKeyDown={handleConnectionKeyDown}
-            placeholder="I'm looking for someone who..."
-            className="stagger-fade-in ethereal-input w-full min-h-[160px] bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-foreground text-lg font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
-            style={{ 
-              animationDelay: "0.3s",
-              textShadow: "0 1px 8px rgba(0,0,0,0.1)" 
-            }}
-            autoFocus
+            value={customIntentsText}
+            onChange={(e) => setCustomIntentsText(e.target.value)}
+            placeholder="Something else you're looking for..."
+            className="stagger-fade-in w-full min-h-[80px] bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-foreground text-base font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
+            style={{ animationDelay: "0.35s", textShadow: "0 1px 8px rgba(0,0,0,0.1)" }}
           />
 
-          {userData.connectionText.trim() && (
+          {canProceedIntents && (
             <button
               onClick={handleConnectionSubmit}
-              className="stagger-fade-in mt-6 text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300"
+              className="stagger-fade-in mt-5 text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
               style={{ animationDelay: "0.4s" }}
             >
               Continue →
             </button>
           )}
-
-          <p
-            className="stagger-fade-in mt-4 text-foreground/40 text-sm"
-            style={{ animationDelay: "0.5s" }}
-          >
-            ⌘ + enter to continue
-          </p>
         </div>
       )}
 
-      {/* Step 6: Loading - Processing connection */}
+      {/* Step 6: Loading */}
       {currentStep === 6 && (
         <div className={`relative z-10 ${isTransitioning ? "step-fade-out" : ""}`}>
           <LoadingState message="Finding what resonates..." />
         </div>
       )}
 
-      {/* Step 7: Summary Confirmation */}
+      {/* Step 7: Summary */}
       {currentStep === 7 && (
         <div
           className={`relative z-10 text-center px-6 max-w-lg w-full ${
@@ -461,7 +514,7 @@ const Onboarding = () => {
           <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-6 stagger-fade-in">
             Here's what I'm hearing...
           </h1>
-          
+
           <p
             className="stagger-fade-in text-foreground/80 text-lg md:text-xl mb-8 font-serif italic leading-relaxed"
             style={{ animationDelay: "0.2s" }}
@@ -476,10 +529,7 @@ const Onboarding = () => {
             Tap to adjust anything that doesn't feel right
           </p>
 
-          <div
-            className="flex flex-wrap justify-center gap-2 mb-8"
-            style={{ animationDelay: "0.4s" }}
-          >
+          <div className="flex flex-wrap justify-center gap-2 mb-8" style={{ animationDelay: "0.4s" }}>
             {userData.suggestedStruggles.map((tag, index) => (
               <ThemeTag
                 key={`struggle-${tag.id}`}
@@ -511,7 +561,7 @@ const Onboarding = () => {
 
           <button
             onClick={handleSummaryConfirm}
-            className="stagger-fade-in text-foreground font-serif text-lg hover:text-primary transition-all duration-300"
+            className="stagger-fade-in text-foreground font-serif text-lg hover:text-foreground/80 transition-all duration-300"
             style={{ animationDelay: "0.7s" }}
           >
             Yes, that's me →
@@ -519,7 +569,7 @@ const Onboarding = () => {
         </div>
       )}
 
-      {/* Step 8: Email Input */}
+      {/* Step 8: Email */}
       {currentStep === 8 && (
         <div
           className={`relative z-10 text-center px-6 max-w-md w-full ${
@@ -541,9 +591,7 @@ const Onboarding = () => {
               type="email"
               placeholder="your@email.com"
               value={userData.email}
-              onChange={(e) =>
-                setUserData((prev) => ({ ...prev, email: e.target.value }))
-              }
+              onChange={(e) => setUserData((prev) => ({ ...prev, email: e.target.value }))}
               onKeyDown={handleEmailKeyDown}
               disabled={isSubmitting}
               className="stagger-fade-in ethereal-input bg-transparent border-none text-foreground text-2xl md:text-3xl font-serif text-center w-full focus:outline-none placeholder:text-foreground/40 disabled:opacity-50"
@@ -555,31 +603,28 @@ const Onboarding = () => {
               <button
                 onClick={handleEmailSubmit}
                 disabled={isSubmitting}
-                className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-primary transition-all duration-300 disabled:opacity-50"
+                className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300 disabled:opacity-50"
                 style={{ animationDelay: "0.4s" }}
               >
                 Continue →
               </button>
             )}
 
-            <p
-              className="stagger-fade-in text-foreground/40 text-sm"
-              style={{ animationDelay: "0.5s" }}
-            >
+            <p className="stagger-fade-in text-foreground/40 text-sm" style={{ animationDelay: "0.5s" }}>
               press enter ↵
             </p>
           </div>
         </div>
       )}
 
-      {/* Step 9: Loading - Creating account */}
+      {/* Step 9: Loading */}
       {currentStep === 9 && (
         <div className={`relative z-10 ${isTransitioning ? "step-fade-out" : ""}`}>
           <LoadingState message="Creating your space..." />
         </div>
       )}
 
-      {/* Step 10: Success - Check your email */}
+      {/* Step 10: Success */}
       {currentStep === 10 && (
         <div
           className={`relative z-10 text-center px-6 max-w-md w-full ${
