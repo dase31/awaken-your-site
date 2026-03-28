@@ -8,11 +8,13 @@ function ConversationCard({
   name,
   lastMessage,
   timestamp,
+  conversationType,
   onClick,
 }: {
   name: string;
   lastMessage: string | null;
   timestamp: string;
+  conversationType: string;
   onClick: () => void;
 }) {
   const initial = name.charAt(0).toUpperCase();
@@ -36,12 +38,19 @@ function ConversationCard({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <h3
-            className="font-serif text-white text-base truncate"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-          >
-            {name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3
+              className="font-serif text-white text-base truncate"
+              style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+            >
+              {name}
+            </h3>
+            {conversationType === "telos" && (
+              <span className="text-[10px] font-medium uppercase tracking-wide bg-white/15 border border-white/20 text-white/70 px-1.5 py-0.5 rounded-full">
+                Telos
+              </span>
+            )}
+          </div>
           <span className="text-white/50 text-xs shrink-0">{timeAgo}</span>
         </div>
         <p className="text-white/60 text-sm truncate mt-0.5">
@@ -80,6 +89,7 @@ const Chat = () => {
                 name={convo.otherUserName}
                 lastMessage={convo.lastMessage}
                 timestamp={convo.lastMessageAt}
+                conversationType={convo.conversationType}
                 onClick={() => navigate(`/chat/${convo.id}`)}
               />
             ))}

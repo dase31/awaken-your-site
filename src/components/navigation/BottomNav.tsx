@@ -39,7 +39,7 @@ export function BottomNav() {
     { icon: <Home size={24} />, label: "Home", route: "/home", disabled: false },
     { icon: <MessageCircle size={24} />, label: "Chat", route: "/chat", disabled: false },
     { icon: <Users size={24} />, label: "Connect", route: "/connect", disabled: false },
-    { icon: <Target size={24} />, label: "Telos", route: "/telos", disabled: true },
+    { icon: <Target size={24} />, label: "Telos", route: "/telos", disabled: false },
   ];
 
   return (

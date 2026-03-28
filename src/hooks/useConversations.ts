@@ -8,6 +8,7 @@ export interface ConversationWithDetails {
   lastMessage: string | null;
   lastMessageAt: string;
   updatedAt: string;
+  conversationType: string;
 }
 
 export function useConversations() {
@@ -20,7 +21,7 @@ export function useConversations() {
 
     const { data: convos, error } = await supabase
       .from("conversations")
-      .select("id, user_one, user_two, updated_at")
+      .select("id, user_one, user_two, updated_at, conversation_type")
       .or(`user_one.eq.${user.id},user_two.eq.${user.id}`)
       .order("updated_at", { ascending: false });
 
@@ -55,6 +56,7 @@ export function useConversations() {
         lastMessage: lastMsg?.content ?? null,
         lastMessageAt: lastMsg?.created_at ?? convo.updated_at,
         updatedAt: convo.updated_at,
+        conversationType: (convo as any).conversation_type ?? "connection",
       });
     }
 
