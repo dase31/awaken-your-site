@@ -21,7 +21,9 @@ export function useConversations() {
 
     const { data: convos, error } = await supabase
       .from("conversations")
-      .select("id, user_one, user_two, updated_at")
+      .select("id, user_one, user_two, updated_at, conversation_type")
+      .or(`user_one.eq.${user.id},user_two.eq.${user.id}`)
+      .order("updated_at", { ascending: false });
       .or(`user_one.eq.${user.id},user_two.eq.${user.id}`)
       .order("updated_at", { ascending: false });
 
