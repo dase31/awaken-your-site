@@ -12,9 +12,16 @@ export interface ConnectionRequest {
   createdAt: string;
 }
 
+export interface AcceptedConnection {
+  oderId: string; // the other user's id
+  displayName: string;
+  conversationId: string | null;
+}
+
 export function useConnectionRequests() {
   const [incoming, setIncoming] = useState<ConnectionRequest[]>([]);
   const [outgoing, setOutgoing] = useState<ConnectionRequest[]>([]);
+  const [accepted, setAccepted] = useState<AcceptedConnection[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchRequests = useCallback(async () => {
@@ -60,6 +67,30 @@ export function useConnectionRequests() {
 
     setIncoming(mapped.filter(r => r.receiverId === user.id && r.status === "pending"));
     setOutgoing(mapped.filter(r => r.senderId === user.id));
+
+    // Build accepted connections
+    const acceptedRequests = mapped.filter(r => r.status === "accepted");
+    const acceptedConns: AcceptedConnection[] = [];
+
+    for (const r of acceptedRequests) {
+      const otherId = r.senderId === user.id ? r.receiverId : r.senderId;
+      const otherName = r.senderId === user.id ? r.receiverName : r.senderName;
+
+      // Find conversation between these two users
+      const { data: convo } = await supabase
+        .from("conversations")
+        .select("id")
+        .or(`and(user_one.eq.${user.id},user_two.eq.${otherId}),and(user_one.eq.${otherId},user_two.eq.${user.id})`)
+        .maybeSingle();
+
+      acceptedConns.push({
+        oderId: otherId,
+        displayName: otherName === "You" ? "Unknown" : otherName,
+        conversationId: convo?.id ?? null,
+      });
+    }
+
+    setAccepted(acceptedConns);
     setLoading(false);
   }, []);
 
@@ -142,5 +173,5 @@ export function useConnectionRequests() {
     await fetchRequests();
   }, [incoming, fetchRequests]);
 
-  return { incoming, outgoing, loading, sendRequest, respondToRequest, refetch: fetchRequests };
+  return { incoming, outgoing, accepted, loading, sendRequest, respondToRequest, refetch: fetchRequests };
 }
