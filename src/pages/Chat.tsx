@@ -8,11 +8,13 @@ function ConversationCard({
   name,
   lastMessage,
   timestamp,
+  conversationType,
   onClick,
 }: {
   name: string;
   lastMessage: string | null;
   timestamp: string;
+  conversationType: string;
   onClick: () => void;
 }) {
   const initial = name.charAt(0).toUpperCase();
