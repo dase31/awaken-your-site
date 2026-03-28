@@ -12,6 +12,7 @@ import Chat from "./pages/Chat";
 import ChatThread from "./pages/ChatThread";
 import Reflections from "./pages/Reflections";
 import Connect from "./pages/Connect";
+import Telos from "./pages/Telos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/chat/:conversationId" element={<ChatThread />} />
           <Route path="/reflections" element={<Reflections />} />
           <Route path="/connect" element={<Connect />} />
+          <Route path="/telos" element={<Telos />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
