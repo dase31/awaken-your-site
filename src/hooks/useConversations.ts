@@ -56,6 +56,7 @@ export function useConversations() {
         lastMessage: lastMsg?.content ?? null,
         lastMessageAt: lastMsg?.created_at ?? convo.updated_at,
         updatedAt: convo.updated_at,
+        conversationType: (convo as any).conversation_type ?? "connection",
       });
     }
 
