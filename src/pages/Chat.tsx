@@ -108,20 +108,9 @@ const Chat = () => {
 
             <button
               onClick={() => navigate("/match")}
-              className={cn(
-                "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-5",
-                "transition-all duration-300 hover:bg-white/15 active:scale-[0.98]"
-              )}
+              className="bg-white/15 backdrop-blur-sm border border-white/30 text-white font-semibold text-base px-10 py-3.5 rounded-full hover:bg-white/25 active:scale-[0.98] transition-all duration-300"
             >
-              <p
-                className="font-serif text-white text-base mb-2"
-                style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-              >
-                Ready to connect?
-              </p>
-              <span className="inline-flex items-center text-white/80 font-medium text-sm">
-                Find a connection →
-              </span>
+              Find someone to talk to
             </button>
           </div>
         )}

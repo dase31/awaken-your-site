@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
 
 @layer base {
   :root {
@@ -124,17 +124,24 @@
   }
 
   .font-serif-display {
-    font-family: 'Libre Baskerville', Georgia, serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
   }
 
   .text-hero {
-    @apply text-white font-serif-display;
+    @apply text-white font-bold font-serif-display;
+    text-shadow: 0 2px 24px rgba(0, 60, 120, 0.25), 0 1px 4px rgba(0, 40, 80, 0.15);
+  }
+
+  .text-hero-sub {
+    @apply text-white font-serif;
+    text-shadow: 0 1px 12px rgba(0, 60, 120, 0.2);
   }
 
   .btn-gold {
-    @apply bg-white/15 backdrop-blur-sm text-white font-medium rounded-full px-8 py-4 
-           border border-white/30 hover:bg-white/25 transition-all duration-300 
-           shadow-none hover:shadow-lg hover:shadow-black/10 active:scale-[0.98];
+    @apply bg-white/15 backdrop-blur-sm text-white font-semibold rounded-full px-10 py-4
+           border border-white/30 hover:bg-white/25 transition-all duration-300
+           shadow-none hover:shadow-lg hover:shadow-black/10 active:scale-[0.98]
+           text-xl tracking-widest;
   }
 
   .card-pricing {

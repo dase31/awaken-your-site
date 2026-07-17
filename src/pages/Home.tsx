@@ -93,18 +93,21 @@ const Home = () => {
           </h1>
         </div>
 
-        {/* Daily Reflection Card */}
-        <GlassCard onClick={() => setShowReflectionModal(true)}>
-          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+        {/* Daily Reflection Card — hero card */}
+        <GlassCard
+          onClick={() => setShowReflectionModal(true)}
+          className="!bg-white/25 !border-white/40 !p-6"
+        >
+          <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
             Today's Reflection
           </h2>
           <p
-            className="font-serif text-white text-lg italic mb-4"
+            className="font-serif text-white text-2xl leading-snug mb-5"
             style={{ textShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
           >
             "{dailyPrompt}"
           </p>
-          <span className="text-white/70 text-sm hover:text-white font-medium transition-colors">
+          <span className="text-white/70 text-sm font-medium hover:text-white transition-colors">
             Tap to reflect →
           </span>
         </GlassCard>
@@ -112,7 +115,7 @@ const Home = () => {
         {/* Pending Connections Card */}
         <GlassCard>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-white/80 text-sm uppercase tracking-wide font-medium">
+            <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest">
               Your Connections
             </h2>
             {incoming.length > 0 && (
@@ -149,7 +152,7 @@ const Home = () => {
 
         {/* Past Reflections Link */}
         <GlassCard onClick={() => navigate("/reflections")}>
-          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+          <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
             Journal
           </h2>
           <p className="text-white text-base mb-2">
@@ -162,7 +165,7 @@ const Home = () => {
 
         {/* Find Support Card */}
         <GlassCard onClick={() => navigate("/match")}>
-          <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+          <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
             Find Support
           </h2>
           <p className="text-white text-base mb-4">

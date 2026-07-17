@@ -66,7 +66,7 @@ function TelosProfileSetup({ onSave }: { onSave: (desc: string, specs: string[])
       </div>
 
       <GlassCard>
-        <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+        <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
           Your Specialties
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -88,7 +88,7 @@ function TelosProfileSetup({ onSave }: { onSave: (desc: string, specs: string[])
       </GlassCard>
 
       <GlassCard>
-        <h2 className="text-white/80 text-sm uppercase tracking-wide mb-3 font-medium">
+        <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
           Brief Description
         </h2>
         <textarea
@@ -104,10 +104,10 @@ function TelosProfileSetup({ onSave }: { onSave: (desc: string, specs: string[])
         onClick={handleSave}
         disabled={selected.length === 0 || saving}
         className={cn(
-          "w-full py-3 rounded-2xl font-medium text-sm transition-all duration-300",
+          "w-full py-4 rounded-full font-semibold text-base transition-all duration-300",
           selected.length > 0
-            ? "bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/25 active:scale-[0.98]"
-            : "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed"
+            ? "bg-white/20 backdrop-blur-sm border border-white/40 text-white hover:bg-white/30 active:scale-[0.98]"
+            : "bg-white/10 border border-white/15 text-white/30 cursor-not-allowed"
         )}
       >
         {saving ? "Saving…" : "Activate Telos"}

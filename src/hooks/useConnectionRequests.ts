@@ -13,7 +13,7 @@ export interface ConnectionRequest {
 }
 
 export interface AcceptedConnection {
-  oderId: string; // the other user's id
+  otherId: string; // the other user's id
   displayName: string;
   conversationId: string | null;
 }
@@ -84,7 +84,7 @@ export function useConnectionRequests() {
         .maybeSingle();
 
       acceptedConns.push({
-        oderId: otherId,
+        otherId: otherId,
         displayName: otherName === "You" ? "Unknown" : otherName,
         conversationId: convo?.id ?? null,
       });

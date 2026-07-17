@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (contains secrets)
+.env
+.env.local
+.env.*.local
+
+# Vite temp files
+*.timestamp-*.mjs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

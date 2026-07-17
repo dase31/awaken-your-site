@@ -30,23 +30,21 @@ export default function Connect() {
         ) : !hasContent ? (
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-16 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-              <Users size={28} className="text-white/40" />
-            </div>
+            <p className="text-white/20 text-5xl tracking-[0.5em] select-none">◦ ◦ ◦</p>
             <p
-              className="font-serif text-white/70 text-lg text-center"
+              className="font-serif text-white/80 text-xl text-center"
               style={{ textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
             >
               Your circle is empty
             </p>
-            <p className="text-white/50 text-sm text-center max-w-[240px]">
+            <p className="text-white/50 text-sm text-center max-w-[220px] leading-relaxed">
               Find someone who shares what you're going through
             </p>
             <button
               onClick={() => navigate("/match")}
-              className="mt-2 px-6 py-3 rounded-2xl bg-white/20 border border-white/30 backdrop-blur-sm text-white font-medium hover:bg-white/30 transition-all"
+              className="mt-2 bg-white/15 backdrop-blur-sm border border-white/30 text-white font-semibold px-8 py-3 rounded-full hover:bg-white/25 active:scale-[0.98] transition-all duration-300"
             >
-              Find a match →
+              Find a match
             </button>
           </div>
         ) : (
@@ -85,7 +83,7 @@ export default function Connect() {
                   const initial = conn.displayName.charAt(0).toUpperCase();
                   return (
                     <div
-                      key={conn.oderId}
+                      key={conn.otherId}
                       className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl"
                     >
                       <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">

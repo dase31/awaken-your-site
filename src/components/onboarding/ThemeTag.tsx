@@ -21,7 +21,7 @@ export function ThemeTag({
         "stagger-fade-in px-5 py-2 rounded-full font-serif text-lg transition-all duration-300",
         "border hover:scale-[1.02] focus:outline-none",
         isSelected
-          ? "bg-white/20 border-white/50 text-primary"
+          ? "bg-white/25 border-white/70 text-white font-semibold"
           : "border-white/20 text-foreground/80 hover:border-white/40 hover:text-foreground"
       )}
       style={{

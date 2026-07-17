@@ -148,6 +148,7 @@ export type Database = {
           raw_intent_text: string | null
           raw_offering_text: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           created_at?: string
@@ -159,6 +160,7 @@ export type Database = {
           raw_intent_text?: string | null
           raw_offering_text?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           created_at?: string
@@ -170,6 +172,7 @@ export type Database = {
           raw_intent_text?: string | null
           raw_offering_text?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }

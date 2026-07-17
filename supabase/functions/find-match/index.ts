@@ -124,16 +124,31 @@ Deno.serve(async (req) => {
     });
 
     // Intent complementarity map
+    // Covers both preset-derived IDs (e.g. "a_listener" from "A listener")
+    // and LLM-extracted IDs (e.g. "listener", "peer", "guide")
     const intentComplements: Record<string, string[]> = {
-      listener: ["need_to_be_heard", "vent", "seeking_guidance"],
-      need_to_be_heard: ["listener", "peer_support"],
-      vent: ["listener"],
-      peer_support: ["peer_support", "mutual_growth"],
-      mutual_growth: ["peer_support", "mutual_growth"],
-      guide: ["seeking_guidance"],
-      seeking_guidance: ["guide", "listener"],
-      accountability: ["accountability"],
-      just_connect: ["just_connect", "peer_support", "listener", "mutual_growth"],
+      // ── Preset-derived IDs ──
+      a_listener: ["a_listener", "someone_who_gets_it", "mutual_support", "shared_experiences", "peer", "listener", "friend", "non-judgmental_space"],
+      mutual_support: ["mutual_support", "a_listener", "growth_together", "shared_experiences", "peer", "friend"],
+      accountability_partner: ["accountability_partner", "accountability", "growth_together"],
+      someone_who_gets_it: ["someone_who_gets_it", "a_listener", "peer", "mutual_support", "shared_experiences", "listener"],
+      honest_conversations: ["honest_conversations", "non-judgmental_space", "someone_who_gets_it", "peer"],
+      growth_together: ["growth_together", "mutual_support", "accountability_partner", "accountability"],
+      "non-judgmental_space": ["non-judgmental_space", "honest_conversations", "a_listener", "listener", "someone_who_gets_it"],
+      shared_experiences: ["shared_experiences", "someone_who_gets_it", "peer", "mutual_support", "a_listener"],
+      // ── LLM-extracted IDs ──
+      peer: ["peer", "a_listener", "someone_who_gets_it", "mutual_support", "shared_experiences", "friend"],
+      listener: ["listener", "a_listener", "someone_who_gets_it", "non-judgmental_space"],
+      guide: ["guide", "someone_who_gets_it", "seeking_guidance"],
+      accountability: ["accountability", "accountability_partner", "growth_together"],
+      friend: ["friend", "a_listener", "mutual_support", "honest_conversations", "peer"],
+      // ── Legacy IDs (backward compat) ──
+      need_to_be_heard: ["a_listener", "listener", "non-judgmental_space", "someone_who_gets_it"],
+      vent: ["a_listener", "listener"],
+      peer_support: ["peer", "mutual_support", "someone_who_gets_it", "mutual_growth"],
+      mutual_growth: ["growth_together", "mutual_support", "peer_support"],
+      seeking_guidance: ["guide", "a_listener", "listener"],
+      just_connect: ["a_listener", "mutual_support", "peer", "friend", "someone_who_gets_it"],
     };
 
     // Calculate scores for each potential match

@@ -72,8 +72,10 @@ const Match = () => {
   }, [userId, currentMatch, initialLoading, findMatch]);
 
   const handleConnect = async () => {
-    if (currentMatch) {
-      await sendRequest(currentMatch.match_user_id);
+    if (!currentMatch) return;
+    const success = await sendRequest(currentMatch.match_user_id);
+    if (success) {
+      navigate("/connect");
     }
   };
 

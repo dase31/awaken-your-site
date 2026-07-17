@@ -28,7 +28,14 @@ export const useOnboardingSubmit = () => {
       throw new Error("Failed to save profile");
     }
 
-    // 2. Insert struggles
+    // 2. Clear existing tags first to prevent duplicates if auth callback fires twice
+    await Promise.all([
+      supabase.from("user_struggles").delete().eq("user_id", userId),
+      supabase.from("user_goals").delete().eq("user_id", userId),
+      supabase.from("user_connection_intents").delete().eq("user_id", userId),
+    ]);
+
+    // 3. Insert struggles
     if (data.selectedStruggles.length > 0) {
       const struggles = data.selectedStruggles.map((struggle) => ({
         user_id: userId,
@@ -45,7 +52,7 @@ export const useOnboardingSubmit = () => {
       }
     }
 
-    // 3. Insert goals
+    // 4. Insert goals
     if (data.selectedGoals.length > 0) {
       const goals = data.selectedGoals.map((goal) => ({
         user_id: userId,
@@ -62,7 +69,7 @@ export const useOnboardingSubmit = () => {
       }
     }
 
-    // 4. Insert connection intents
+    // 5. Insert connection intents
     if (data.selectedIntents.length > 0) {
       const intents = data.selectedIntents.map((intent) => ({
         user_id: userId,

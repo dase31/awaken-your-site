@@ -60,24 +60,30 @@ const HeroSection = () => {
 
       <div className="max-w-4xl mx-auto px-6 text-center">
         {/* Headline */}
-        <h1 className="text-hero text-4xl md:text-5xl lg:text-6xl leading-tight fade-in-up">
+        <h1 className="text-hero text-5xl md:text-6xl lg:text-7xl leading-[1.05] fade-in-up">
           It's time to actually re-connect.
         </h1>
 
         {/* Subtext */}
-        <p className="text-foreground/80 text-lg md:text-xl mt-6 max-w-2xl mx-auto fade-in-up" style={{ animationDelay: "0.2s" }}>
+        <p className="text-hero-sub text-xl md:text-2xl mt-8 max-w-2xl mx-auto fade-in-up leading-relaxed" style={{ animationDelay: "0.2s" }}>
           Find someone who truly understands. Share what weighs on you. Be the presence someone else needs.
         </p>
 
         {/* CTA Button */}
-        <div className="mt-12 fade-in-up" style={{ animationDelay: "0.4s" }}>
+        <div className="mt-14 flex flex-col items-center gap-5 fade-in-up" style={{ animationDelay: "0.4s" }}>
           <Button
             variant="ghost"
             onClick={handleBeginJourney}
-            className="btn-gold text-lg px-10 py-5 h-auto tracking-wide"
+            className="btn-gold h-auto"
           >
-            Start
+            Begin
           </Button>
+          <button
+            onClick={() => navigate("/login")}
+            className="text-white/50 text-sm hover:text-white/80 transition-colors tracking-wide"
+          >
+            Sign in with your email
+          </button>
         </div>
       </div>
     </section>

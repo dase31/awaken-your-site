@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingSubmit } from "@/hooks/useOnboardingSubmit";
@@ -11,20 +11,26 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const { saveOnboardingData } = useOnboardingSubmit();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const hasSaved = useRef(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST - this handles the token exchange from URL hash
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state change:", event, session?.user?.id);
-        
+
         if (event === "SIGNED_IN" && session?.user) {
+          // Guard against double-fire (onAuthStateChange + checkExistingSession race)
+          if (hasSaved.current) return;
+          hasSaved.current = true;
+
           const user = session.user;
           const metadata = user.user_metadata;
+          const isNewUser = !!metadata?.display_name;
 
           try {
-            // Check if we have onboarding data to save
-            if (metadata?.display_name) {
+            if (isNewUser) {
+              // New user coming through onboarding — save their data
               await saveOnboardingData(user.id, {
                 name: metadata.display_name || "",
                 intentText: metadata.raw_intent_text || "",
@@ -34,20 +40,15 @@ const AuthCallback = () => {
                 selectedGoals: metadata.selected_goals || [],
                 selectedIntents: metadata.selected_intents || [],
               });
+              setStatus("success");
+              toast.success("Welcome! Your profile has been created.");
+              setTimeout(() => navigate("/username-setup"), 1200);
+            } else {
+              // Returning user — go straight home
+              setStatus("success");
+              toast.success("Welcome back.");
+              setTimeout(() => navigate("/home"), 1000);
             }
-
-            setStatus("success");
-            toast.success("Welcome! Your profile has been created.");
-            
-            // Redirect to match page to find a connection
-            setTimeout(() => {
-              navigate("/match", {
-                state: {
-                  userId: user.id,
-                  userName: metadata.display_name || "Friend",
-                },
-              });
-            }, 1500);
           } catch (error: any) {
             console.error("Error saving onboarding data:", error);
             setStatus("error");
@@ -66,18 +67,18 @@ const AuthCallback = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // User already has a session, redirect to match
         const metadata = session.user.user_metadata;
         setStatus("success");
-        
-        setTimeout(() => {
-          navigate("/match", {
-            state: {
-              userId: session.user.id,
-              userName: metadata?.display_name || "Friend",
-            },
-          });
-        }, 1000);
+        // If they have display_name metadata they came from onboarding; otherwise returning login
+        if (metadata?.display_name) {
+          setTimeout(() => {
+            navigate("/match", {
+              state: { userId: session.user.id, userName: metadata.display_name || "Friend" },
+            });
+          }, 1000);
+        } else {
+          setTimeout(() => navigate("/home"), 800);
+        }
       } else if (!window.location.hash && !window.location.search) {
         // No session and no auth tokens in URL - redirect to onboarding
         navigate("/onboarding");

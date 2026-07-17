@@ -17,15 +17,20 @@ function NavItem({ icon, label, isActive, onClick, disabled }: NavItemProps) {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-200",
-        isActive
-          ? "text-white"
-          : "text-white/60 hover:text-white/80",
-        disabled && "text-white/30 cursor-not-allowed"
+        "flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-200 relative",
+        isActive ? "text-white" : "text-white/45 hover:text-white/70",
+        disabled && "text-white/25 cursor-not-allowed"
       )}
     >
-      {icon}
-      <span className="text-xs font-medium">{label}</span>
+      {isActive && (
+        <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full" />
+      )}
+      <span className={cn("transition-transform duration-200", isActive && "scale-110")}>
+        {icon}
+      </span>
+      <span className={cn("text-xs transition-all duration-200", isActive ? "font-semibold" : "font-medium")}>
+        {label}
+      </span>
     </button>
   );
 }

@@ -9,13 +9,33 @@ export interface Reflection {
   createdAt: string;
 }
 
+const LOCAL_KEY = "thymos_reflections";
+
+function loadLocal(): Reflection[] {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveLocal(reflections: Reflection[]) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(reflections));
+}
+
 export function useReflections() {
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchReflections = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+
+    if (!user) {
+      // No auth — use localStorage
+      setReflections(loadLocal());
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("reflections")
@@ -46,7 +66,22 @@ export function useReflections() {
 
   const saveReflection = useCallback(async (prompt: string, response: string) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+
+    if (!user) {
+      // No auth — persist to localStorage
+      const existing = loadLocal();
+      const newReflection: Reflection = {
+        id: crypto.randomUUID(),
+        prompt,
+        response,
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [newReflection, ...existing];
+      saveLocal(updated);
+      setReflections(updated);
+      toast.success("Reflection saved");
+      return true;
+    }
 
     const { error } = await supabase
       .from("reflections")
