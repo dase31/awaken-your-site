@@ -116,7 +116,7 @@ const Home = () => {
         <GlassCard>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest">
-              Your Connections
+              Pending Requests
             </h2>
             {incoming.length > 0 && (
               <span className="bg-white/25 text-white text-xs font-medium px-2 py-0.5 rounded-full">

@@ -14,12 +14,20 @@ export function AppShell({ children, hideNav }: AppShellProps) {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
 
-  // TODO: Re-enable auth guard before production
-  useEffect(() => { setChecking(false); }, []);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) navigate("/");
+      else setChecking(false);
+    });
+  }, [navigate]);
+
+  if (checking) return (
+    <div className="min-h-screen bg-sky-gradient" />
+  );
 
   return (
     <div className="min-h-screen bg-sky-gradient relative overflow-hidden">
-      <ThymosLogo />
+      <ThymosLogo showSettings />
       <OnboardingBackground />
 
       <main className="relative z-10 pt-20 pb-24 px-4 min-h-screen">

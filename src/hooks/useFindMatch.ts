@@ -8,6 +8,7 @@ export interface MatchResult {
   shared_goals: string[];
   shared_intents: string[];
   score: number;
+  quote_text?: string | null;
 }
 
 interface UseFindMatchReturn {

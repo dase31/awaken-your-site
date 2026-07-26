@@ -14,6 +14,7 @@ import Reflections from "./pages/Reflections";
 import Connect from "./pages/Connect";
 import Telos from "./pages/Telos";
 import Login from "./pages/Login";
+import Settings from "./pages/Settings";
 import UsernameSetup from "./pages/UsernameSetup";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/connect" element={<Connect />} />
           <Route path="/telos" element={<Telos />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/username-setup" element={<UsernameSetup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -13,6 +13,7 @@ interface MatchResult {
   shared_goals: string[];
   shared_intents: string[];
   score: number;
+  quote_text: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -34,8 +35,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get current user's tags
-    const [userStruggles, userGoals, userIntents] = await Promise.all([
+    // Get current user's tags and capacity
+    const [userStruggles, userGoals, userIntents, userProfile] = await Promise.all([
       supabase
         .from("user_struggles")
         .select("struggle_type")
@@ -48,11 +49,17 @@ Deno.serve(async (req) => {
         .from("user_connection_intents")
         .select("intent_type")
         .eq("user_id", user_id),
+      supabase
+        .from("profiles")
+        .select("capacity_level")
+        .eq("id", user_id)
+        .maybeSingle(),
     ]);
 
     const myStruggles = (userStruggles.data || []).map((s) => s.struggle_type);
     const myGoals = (userGoals.data || []).map((g) => g.goal_type);
     const myIntents = (userIntents.data || []).map((i) => i.intent_type);
+    const myCapacity = userProfile.data?.capacity_level || null;
 
     // If user has no tags, return null
     if (myStruggles.length === 0 && myGoals.length === 0 && myIntents.length === 0) {
@@ -66,7 +73,7 @@ Deno.serve(async (req) => {
     const excludeList = [user_id, ...exclude_ids];
     const { data: otherProfiles } = await supabase
       .from("profiles")
-      .select("id, display_name")
+      .select("id, display_name, capacity_level, quote_text")
       .not("id", "in", `(${excludeList.join(",")})`);
 
     if (!otherProfiles || otherProfiles.length === 0) {
@@ -176,13 +183,28 @@ Deno.serve(async (req) => {
       }
 
       // Score calculation: struggles x3, goals x2, intents x2
-      const score =
+      const baseScore =
         sharedStruggles.length * 3 +
         sharedGoals.length * 2 +
         sharedIntents.length * 2;
 
       // Only include if there's some connection
-      if (score > 0) {
+      if (baseScore > 0) {
+        // Capacity/reciprocity modifier — a gate, not a scoring axis.
+        // Two people who both have very little to give risk co-rumination.
+        // One person with room to give paired with someone low on capacity is a healthy fit.
+        const theirCapacity = profile.capacity_level;
+        let score = baseScore;
+
+        if (myCapacity === "very_little" && theirCapacity === "very_little") {
+          score = score * 0.5;
+        } else if (
+          (myCapacity === "good_amount" && theirCapacity === "very_little") ||
+          (myCapacity === "very_little" && theirCapacity === "good_amount")
+        ) {
+          score = score + 1;
+        }
+
         matches.push({
           match_user_id: profile.id,
           display_name: profile.display_name,
@@ -190,6 +212,7 @@ Deno.serve(async (req) => {
           shared_goals: sharedGoals,
           shared_intents: sharedIntents,
           score,
+          quote_text: profile.quote_text || null,
         });
       }
     }

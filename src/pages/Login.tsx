@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
 import ThymosLogo from "@/components/ThymosLogo";
 
-type Step = "email" | "sent" | "error";
+type Step = "email" | "sent" | "error" | "rate_limited";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,15 +22,14 @@ const Login = () => {
       email: trimmed,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        shouldCreateUser: false, // login only — don't create new accounts
       },
     });
 
     setLoading(false);
 
     if (error) {
-      // Supabase returns an error if email not found when shouldCreateUser=false
-      setStep("error");
+      if (error.status === 429) setStep("rate_limited");
+      else setStep("error");
     } else {
       setStep("sent");
     }
@@ -87,6 +86,23 @@ const Login = () => {
               We sent a sign-in link to <span className="text-white/80">{email}</span>.
               It expires in 60 minutes.
             </p>
+          </div>
+        )}
+
+        {step === "rate_limited" && (
+          <div className="fade-in-up">
+            <h1 className="font-serif text-white text-3xl mb-3" style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}>
+              Slow down a moment.
+            </h1>
+            <p className="text-white/55 text-sm mb-8 leading-relaxed">
+              Too many attempts. Wait a minute and try again.
+            </p>
+            <button
+              onClick={() => setStep("email")}
+              className="text-white/70 text-sm hover:text-white transition-colors"
+            >
+              Try again
+            </button>
           </div>
         )}
 

@@ -6,6 +6,7 @@ interface MatchIntroProps {
   sharedStruggles: string[];
   sharedGoals: string[];
   sharedIntents: string[];
+  matchQuote?: string | null;
   onConnect: () => void;
   onFindAnother: () => void;
   onConnectLater: () => void;
@@ -61,6 +62,7 @@ export function MatchIntro({
   sharedStruggles,
   sharedGoals,
   sharedIntents,
+  matchQuote,
   onConnect,
   onFindAnother,
   onConnectLater,
@@ -81,12 +83,26 @@ export function MatchIntro({
         {userName}, meet {matchName}
       </h1>
 
-      <p
-        className="font-serif text-foreground/80 text-lg md:text-xl leading-relaxed mb-10"
-        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-      >
-        "{connectionSentence}"
-      </p>
+      {matchQuote ? (
+        <>
+          <p
+            className="font-serif italic text-foreground text-xl md:text-2xl leading-relaxed mb-2"
+            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+          >
+            "{matchQuote}"
+          </p>
+          <p className="font-serif text-foreground/50 text-sm mb-8">
+            — in {matchName}'s words
+          </p>
+        </>
+      ) : (
+        <p
+          className="font-serif text-foreground/80 text-lg md:text-xl leading-relaxed mb-10"
+          style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+        >
+          "{connectionSentence}"
+        </p>
+      )}
 
       <button
         onClick={onConnect}

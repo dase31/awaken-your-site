@@ -111,6 +111,7 @@ const Match = () => {
             sharedStruggles={currentMatch.shared_struggles}
             sharedGoals={currentMatch.shared_goals}
             sharedIntents={currentMatch.shared_intents}
+            matchQuote={currentMatch.quote_text}
             onConnect={handleConnect}
             onFindAnother={handleFindAnother}
             onConnectLater={handleConnectLater}

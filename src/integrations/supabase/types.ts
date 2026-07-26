@@ -139,10 +139,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          capacity_level: string | null
           created_at: string
           display_name: string
           id: string
           intent: string | null
+          quote_text: string | null
           raw_connection_text: string | null
           raw_goals_text: string | null
           raw_intent_text: string | null
@@ -151,10 +153,12 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          capacity_level?: string | null
           created_at?: string
           display_name: string
           id: string
           intent?: string | null
+          quote_text?: string | null
           raw_connection_text?: string | null
           raw_goals_text?: string | null
           raw_intent_text?: string | null
@@ -163,10 +167,12 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          capacity_level?: string | null
           created_at?: string
           display_name?: string
           id?: string
           intent?: string | null
+          quote_text?: string | null
           raw_connection_text?: string | null
           raw_goals_text?: string | null
           raw_intent_text?: string | null
@@ -340,6 +346,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_offers: {
+        Row: {
+          created_at: string
+          id: string
+          offer_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offer_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offer_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_offers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

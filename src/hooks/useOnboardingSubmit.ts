@@ -8,6 +8,9 @@ interface OnboardingData {
   selectedStruggles: string[];
   selectedGoals: string[];
   selectedIntents: string[];
+  offerTags: string[];
+  capacityLevel: string;
+  quoteText: string;
 }
 
 export const useOnboardingSubmit = () => {
@@ -21,6 +24,8 @@ export const useOnboardingSubmit = () => {
         raw_intent_text: data.intentText,
         raw_goals_text: data.goalsText,
         raw_connection_text: data.connectionText,
+        capacity_level: data.capacityLevel || null,
+        quote_text: data.quoteText || null,
       });
 
     if (profileError) {
@@ -33,6 +38,7 @@ export const useOnboardingSubmit = () => {
       supabase.from("user_struggles").delete().eq("user_id", userId),
       supabase.from("user_goals").delete().eq("user_id", userId),
       supabase.from("user_connection_intents").delete().eq("user_id", userId),
+      supabase.from("user_offers").delete().eq("user_id", userId),
     ]);
 
     // 3. Insert struggles
@@ -83,6 +89,23 @@ export const useOnboardingSubmit = () => {
       if (intentsError) {
         console.error("Error saving intents:", intentsError);
         throw new Error("Failed to save connection intents");
+      }
+    }
+
+    // 6. Insert offers
+    if (data.offerTags.length > 0) {
+      const offers = data.offerTags.map((offer) => ({
+        user_id: userId,
+        offer_type: offer,
+      }));
+
+      const { error: offersError } = await supabase
+        .from("user_offers")
+        .insert(offers);
+
+      if (offersError) {
+        console.error("Error saving offers:", offersError);
+        throw new Error("Failed to save offers");
       }
     }
 

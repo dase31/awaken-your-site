@@ -34,6 +34,19 @@ const PRESET_INTENTS = [
   "Non-judgmental space", "Shared experiences",
 ];
 
+const PRESET_OFFERS = [
+  "Listening", "Empathy", "Shared experience",
+  "Encouragement", "Accountability", "I mostly need support right now",
+];
+
+const CAPACITY_LEVELS = [
+  { value: "very_little", label: "Very little" },
+  { value: "some", label: "Some" },
+  { value: "good_amount", label: "A good amount" },
+];
+
+const QUOTE_MAX_LENGTH = 300;
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const { extractThemes } = useExtractThemes();
@@ -47,6 +60,9 @@ const Onboarding = () => {
   const [selectedPresetStruggles, setSelectedPresetStruggles] = useState<string[]>([]);
   const [selectedPresetGoals, setSelectedPresetGoals] = useState<string[]>([]);
   const [selectedPresetIntents, setSelectedPresetIntents] = useState<string[]>([]);
+  const [selectedOffers, setSelectedOffers] = useState<string[]>([]);
+  const [capacityLevel, setCapacityLevel] = useState<string>("");
+  const [quoteText, setQuoteText] = useState("");
 
   // Custom text
   const [customStrugglesText, setCustomStrugglesText] = useState("");
@@ -199,6 +215,22 @@ const Onboarding = () => {
     }
   };
 
+  // Step 7: Capacity/offers → process
+  const handleCapacitySubmit = () => {
+    if (!capacityLevel) return;
+    transitionTo(8);
+  };
+
+  // Step 8: Quote → process
+  const handleQuoteContinue = () => {
+    transitionTo(9);
+  };
+
+  const handleQuoteSkip = () => {
+    setQuoteText("");
+    transitionTo(9);
+  };
+
   // Toggle functions for summary
   const toggleStruggle = (id: string) => {
     setUserData((prev) => ({
@@ -228,14 +260,14 @@ const Onboarding = () => {
   };
 
   const handleSummaryConfirm = () => {
-    transitionTo(8);
+    transitionTo(10);
   };
 
   const handleEmailSubmit = async () => {
     if (!userData.email.trim()) return;
 
     setIsSubmitting(true);
-    transitionTo(9);
+    transitionTo(11);
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -250,16 +282,19 @@ const Onboarding = () => {
             selected_struggles: userData.selectedStruggles,
             selected_goals: userData.selectedGoals,
             selected_intents: userData.selectedIntents,
+            offer_tags: selectedOffers,
+            capacity_level: capacityLevel,
+            quote_text: quoteText.trim(),
           },
         },
       });
 
       if (error) throw error;
-      transitionTo(10);
+      transitionTo(12);
     } catch (error: any) {
       console.error("Auth error:", error);
       toast.error(error.message || "Something went wrong. Please try again.");
-      transitionTo(8);
+      transitionTo(10);
     } finally {
       setIsSubmitting(false);
     }
@@ -504,8 +539,125 @@ const Onboarding = () => {
         </div>
       )}
 
-      {/* Step 7: Summary */}
+      {/* Step 7: Capacity / What you can offer */}
       {currentStep === 7 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-lg w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-3 stagger-fade-in">
+            What can you offer someone else right now?
+          </h1>
+          <p
+            className="stagger-fade-in text-foreground/60 text-base mb-6 font-serif"
+            style={{ animationDelay: "0.15s" }}
+          >
+            Select what feels true
+          </p>
+
+          <div
+            className="stagger-fade-in flex flex-wrap justify-center gap-2 mb-10"
+            style={{ animationDelay: "0.25s" }}
+          >
+            {PRESET_OFFERS.map((tag) => (
+              <ThemeTag
+                key={tag}
+                label={tag}
+                isSelected={selectedOffers.includes(tag)}
+                onClick={() => togglePreset(selectedOffers, setSelectedOffers, tag)}
+              />
+            ))}
+          </div>
+
+          <p
+            className="stagger-fade-in text-foreground/60 text-base mb-4 font-serif"
+            style={{ animationDelay: "0.3s" }}
+          >
+            How much room do you have for someone else right now?
+          </p>
+
+          <div
+            className="stagger-fade-in flex flex-wrap justify-center gap-2 mb-6"
+            style={{ animationDelay: "0.35s" }}
+          >
+            {CAPACITY_LEVELS.map((level) => (
+              <ThemeTag
+                key={level.value}
+                label={level.label}
+                isSelected={capacityLevel === level.value}
+                onClick={() => setCapacityLevel(level.value)}
+              />
+            ))}
+          </div>
+
+          {capacityLevel && (
+            <button
+              onClick={handleCapacitySubmit}
+              className="stagger-fade-in mt-5 text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+              style={{ animationDelay: "0.4s" }}
+            >
+              Continue →
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Step 8: Quote for the match reveal */}
+      {currentStep === 8 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-lg w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-3 stagger-fade-in">
+            What's one thing you wish someone understood about where you are right now?
+          </h1>
+          <p
+            className="stagger-fade-in text-foreground/60 text-base mb-6 font-serif"
+            style={{ animationDelay: "0.15s" }}
+          >
+            Optional — this is shown to whoever you're matched with
+          </p>
+
+          <textarea
+            value={quoteText}
+            onChange={(e) => setQuoteText(e.target.value.slice(0, QUOTE_MAX_LENGTH))}
+            placeholder="I'm surrounded by people, but I still feel like nobody really knows what I'm going through..."
+            maxLength={QUOTE_MAX_LENGTH}
+            className="stagger-fade-in w-full min-h-[100px] bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-foreground text-base font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
+            style={{ animationDelay: "0.25s", textShadow: "0 1px 8px rgba(0,0,0,0.1)" }}
+          />
+          <p
+            className="stagger-fade-in text-foreground/30 text-xs mt-2 text-right"
+            style={{ animationDelay: "0.3s" }}
+          >
+            {quoteText.length}/{QUOTE_MAX_LENGTH}
+          </p>
+
+          <div className="flex items-center justify-center gap-6 mt-5">
+            {quoteText.trim().length > 0 && (
+              <button
+                onClick={handleQuoteContinue}
+                className="stagger-fade-in font-serif text-lg text-foreground/70 hover:text-foreground transition-all duration-300"
+                style={{ animationDelay: "0.4s" }}
+              >
+                Continue →
+              </button>
+            )}
+            <button
+              onClick={handleQuoteSkip}
+              className="stagger-fade-in font-serif text-base text-foreground/40 hover:text-foreground/60 transition-all duration-300"
+              style={{ animationDelay: "0.4s" }}
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 9: Summary */}
+      {currentStep === 9 && (
         <div
           className={`relative z-10 text-center px-6 max-w-lg w-full ${
             isTransitioning ? "step-fade-out" : "fade-in-up"
@@ -569,8 +721,8 @@ const Onboarding = () => {
         </div>
       )}
 
-      {/* Step 8: Email */}
-      {currentStep === 8 && (
+      {/* Step 10: Email */}
+      {currentStep === 10 && (
         <div
           className={`relative z-10 text-center px-6 max-w-md w-full ${
             isTransitioning ? "step-fade-out" : "fade-in-up"
@@ -617,15 +769,15 @@ const Onboarding = () => {
         </div>
       )}
 
-      {/* Step 9: Loading */}
-      {currentStep === 9 && (
+      {/* Step 11: Loading */}
+      {currentStep === 11 && (
         <div className={`relative z-10 ${isTransitioning ? "step-fade-out" : ""}`}>
           <LoadingState message="Creating your space..." />
         </div>
       )}
 
-      {/* Step 10: Success */}
-      {currentStep === 10 && (
+      {/* Step 12: Success */}
+      {currentStep === 12 && (
         <div
           className={`relative z-10 text-center px-6 max-w-md w-full ${
             isTransitioning ? "step-fade-out" : "fade-in-up"

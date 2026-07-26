@@ -26,10 +26,21 @@ const AuthCallback = () => {
 
           const user = session.user;
           const metadata = user.user_metadata;
-          const isNewUser = !!metadata?.display_name;
 
           try {
-            if (isNewUser) {
+            // Check if profile already exists in the DB — reliable returning user signal
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("id, username")
+              .eq("id", user.id)
+              .maybeSingle();
+
+            if (profile) {
+              // Returning user — go home
+              setStatus("success");
+              toast.success("Welcome back.");
+              setTimeout(() => navigate("/home"), 1000);
+            } else if (metadata?.display_name) {
               // New user coming through onboarding — save their data
               await saveOnboardingData(user.id, {
                 name: metadata.display_name || "",
@@ -39,15 +50,17 @@ const AuthCallback = () => {
                 selectedStruggles: metadata.selected_struggles || [],
                 selectedGoals: metadata.selected_goals || [],
                 selectedIntents: metadata.selected_intents || [],
+                offerTags: metadata.offer_tags || [],
+                capacityLevel: metadata.capacity_level || "",
+                quoteText: metadata.quote_text || "",
               });
               setStatus("success");
               toast.success("Welcome! Your profile has been created.");
               setTimeout(() => navigate("/username-setup"), 1200);
             } else {
-              // Returning user — go straight home
+              // No profile, no onboarding metadata — send to onboarding
               setStatus("success");
-              toast.success("Welcome back.");
-              setTimeout(() => navigate("/home"), 1000);
+              setTimeout(() => navigate("/onboarding"), 1000);
             }
           } catch (error: any) {
             console.error("Error saving onboarding data:", error);

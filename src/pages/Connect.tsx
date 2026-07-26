@@ -2,16 +2,17 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useConnectionRequests } from "@/hooks/useConnectionRequests";
 import { ConnectionRequestCard } from "@/components/connections/ConnectionRequestCard";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, MessageCircle, Users, Sparkles } from "lucide-react";
+import { ChevronDown, MessageCircle, Users, Sparkles, Clock } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 
 export default function Connect() {
-  const { incoming, accepted, loading, respondToRequest } = useConnectionRequests();
+  const { incoming, outgoing, accepted, loading, respondToRequest } = useConnectionRequests();
   const navigate = useNavigate();
   const [pendingOpen, setPendingOpen] = useState(true);
 
-  const hasContent = incoming.length > 0 || accepted.length > 0;
+  const sentPending = outgoing.filter((r) => r.status === "pending");
+  const hasContent = incoming.length > 0 || accepted.length > 0 || sentPending.length > 0;
 
   return (
     <AppShell>
@@ -73,6 +74,36 @@ export default function Connect() {
                   ))}
                 </CollapsibleContent>
               </Collapsible>
+            )}
+
+            {/* Sent Requests */}
+            {sentPending.length > 0 && (
+              <div className="space-y-3">
+                <span className="text-white/80 text-sm font-medium">Sent Requests</span>
+                {sentPending.map((req) => {
+                  const initial = req.receiverName.charAt(0).toUpperCase();
+                  return (
+                    <div
+                      key={req.id}
+                      className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl"
+                    >
+                      <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+                        <span className="font-serif text-white text-lg">{initial}</span>
+                      </div>
+                      <p
+                        className="font-serif text-white text-base flex-1 truncate"
+                        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+                      >
+                        {req.receiverName}
+                      </p>
+                      <span className="flex items-center gap-1.5 text-white/40 text-xs">
+                        <Clock size={12} />
+                        Waiting
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
 
             {/* Active Connections */}
