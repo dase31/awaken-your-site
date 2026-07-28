@@ -64,11 +64,6 @@ const HeroSection = () => {
           It's time to actually re-connect.
         </h1>
 
-        {/* Subtext */}
-        <p className="text-hero-sub text-xl md:text-2xl mt-8 max-w-2xl mx-auto fade-in-up leading-relaxed" style={{ animationDelay: "0.2s" }}>
-          Find someone who truly understands. Share what weighs on you. Be the presence someone else needs.
-        </p>
-
         {/* CTA Button */}
         <div className="mt-14 flex flex-col items-center gap-5 fade-in-up" style={{ animationDelay: "0.4s" }}>
           <Button
