@@ -36,20 +36,26 @@ export function useConversations() {
 
     const profileMap = new Map(profiles?.map(p => [p.id, p.display_name]) ?? []);
 
-    // Get last message for each conversation
-    const results: ConversationWithDetails[] = [];
-    for (const convo of convos) {
-      const otherId = convo.user_one === user.id ? convo.user_two : convo.user_one;
-      
-      const { data: lastMsg } = await supabase
-        .from("messages")
-        .select("content, created_at")
-        .eq("conversation_id", convo.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    // Fetch all messages for these conversations at once, newest first, then
+    // keep the first (latest) seen per conversation.
+    const { data: messages } = await supabase
+      .from("messages")
+      .select("conversation_id, content, created_at")
+      .in("conversation_id", convos.map(c => c.id))
+      .order("created_at", { ascending: false });
 
-      results.push({
+    const lastMessageMap = new Map<string, { content: string; created_at: string }>();
+    for (const msg of messages ?? []) {
+      if (!lastMessageMap.has(msg.conversation_id)) {
+        lastMessageMap.set(msg.conversation_id, { content: msg.content, created_at: msg.created_at });
+      }
+    }
+
+    const results: ConversationWithDetails[] = convos.map(convo => {
+      const otherId = convo.user_one === user.id ? convo.user_two : convo.user_one;
+      const lastMsg = lastMessageMap.get(convo.id);
+
+      return {
         id: convo.id,
         otherUserId: otherId,
         otherUserName: profileMap.get(otherId) ?? "Unknown",
@@ -57,8 +63,8 @@ export function useConversations() {
         lastMessageAt: lastMsg?.created_at ?? convo.updated_at,
         updatedAt: convo.updated_at,
         conversationType: (convo as any).conversation_type ?? "connection",
-      });
-    }
+      };
+    });
 
     setConversations(results);
     setLoading(false);

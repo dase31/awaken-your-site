@@ -70,25 +70,29 @@ export function useConnectionRequests() {
 
     // Build accepted connections
     const acceptedRequests = mapped.filter(r => r.status === "accepted");
-    const acceptedConns: AcceptedConnection[] = [];
 
-    for (const r of acceptedRequests) {
+    // Fetch every conversation this user is in once, then look each up locally
+    const { data: convos } = await supabase
+      .from("conversations")
+      .select("id, user_one, user_two")
+      .or(`user_one.eq.${user.id},user_two.eq.${user.id}`);
+
+    const convoByOtherId = new Map<string, string>();
+    for (const c of convos ?? []) {
+      const otherId = c.user_one === user.id ? c.user_two : c.user_one;
+      convoByOtherId.set(otherId, c.id);
+    }
+
+    const acceptedConns: AcceptedConnection[] = acceptedRequests.map(r => {
       const otherId = r.senderId === user.id ? r.receiverId : r.senderId;
       const otherName = r.senderId === user.id ? r.receiverName : r.senderName;
 
-      // Find conversation between these two users
-      const { data: convo } = await supabase
-        .from("conversations")
-        .select("id")
-        .or(`and(user_one.eq.${user.id},user_two.eq.${otherId}),and(user_one.eq.${otherId},user_two.eq.${user.id})`)
-        .maybeSingle();
-
-      acceptedConns.push({
-        otherId: otherId,
+      return {
+        otherId,
         displayName: otherName === "You" ? "Unknown" : otherName,
-        conversationId: convo?.id ?? null,
-      });
-    }
+        conversationId: convoByOtherId.get(otherId) ?? null,
+      };
+    });
 
     setAccepted(acceptedConns);
     setLoading(false);

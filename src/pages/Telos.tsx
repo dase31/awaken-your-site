@@ -35,6 +35,61 @@ function GlassCard({ children, className, onClick }: { children: React.ReactNode
   );
 }
 
+// ── First-visit Intro ──
+const TELOS_STEPS = [
+  {
+    title: "Share what you're good at",
+    body: "Pick the areas you know something about.",
+  },
+  {
+    title: "Offer help, or ask for it",
+    body: "Post what you can give — or what you need.",
+  },
+  {
+    title: "Someone responds",
+    body: "A reply opens a conversation between you.",
+  },
+];
+
+function TelosIntro({ onContinue }: { onContinue: () => void }) {
+  return (
+    <div className="space-y-8 fade-in-up">
+      <div className="text-center">
+        <h1
+          className="font-serif text-white text-3xl mb-3"
+          style={{ textShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
+        >
+          Telos
+        </h1>
+        <p className="text-white/70 text-sm leading-relaxed max-w-[260px] mx-auto">
+          The part of Thymos where you give, not just receive.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {TELOS_STEPS.map((step, i) => (
+          <GlassCard key={step.title} className="flex gap-4 items-start">
+            <span className="font-serif text-white/50 text-lg leading-none pt-0.5 shrink-0">
+              {i + 1}
+            </span>
+            <div>
+              <p className="text-white text-base font-medium mb-1">{step.title}</p>
+              <p className="text-white/60 text-sm leading-relaxed">{step.body}</p>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+
+      <button
+        onClick={onContinue}
+        className="w-full py-4 rounded-full font-semibold text-base bg-white/20 backdrop-blur-sm border border-white/40 text-white hover:bg-white/30 active:scale-[0.98] transition-all duration-300"
+      >
+        Set up my Telos →
+      </button>
+    </div>
+  );
+}
+
 // ── Profile Setup ──
 function TelosProfileSetup({ onSave }: { onSave: (desc: string, specs: string[]) => void }) {
   const [description, setDescription] = useState("");
@@ -282,6 +337,7 @@ const Telos = () => {
   const { posts, loading: postsLoading, userId, createPost, startTelosChat } = useTelosPosts();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filter, setFilter] = useState<"all" | "offer" | "need">("all");
+  const [introDone, setIntroDone] = useState(false);
 
   const filteredPosts = filter === "all" ? posts : posts.filter(p => p.post_type === filter);
 
@@ -300,12 +356,16 @@ const Telos = () => {
     );
   }
 
-  // No telos profile yet — show setup
+  // No telos profile yet — explain Telos first, then show setup
   if (!profile) {
     return (
       <AppShell>
         <div className="max-w-md mx-auto">
-          <TelosProfileSetup onSave={saveProfile} />
+          {introDone ? (
+            <TelosProfileSetup onSave={saveProfile} />
+          ) : (
+            <TelosIntro onContinue={() => setIntroDone(true)} />
+          )}
         </div>
       </AppShell>
     );
