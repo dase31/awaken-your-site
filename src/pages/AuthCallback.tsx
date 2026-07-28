@@ -6,97 +6,83 @@ import { OnboardingBackground } from "@/components/onboarding/OnboardingBackgrou
 import { LoadingState } from "@/components/onboarding/LoadingState";
 import ThymosLogo from "@/components/ThymosLogo";
 import { toast } from "sonner";
+import type { User } from "@supabase/supabase-js";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { saveOnboardingData } = useOnboardingSubmit();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const hasSaved = useRef(false);
+  const hasResolved = useRef(false);
 
   useEffect(() => {
-    // Set up auth state listener FIRST - this handles the token exchange from URL hash
+    // Single source of truth for "where should this signed-in user land."
+    // Always checks the real profiles table — never trusts metadata alone,
+    // since display_name stays on the user forever after their first signup.
+    const resolveDestination = async (user: User) => {
+      if (hasResolved.current) return;
+      hasResolved.current = true;
+
+      const metadata = user.user_metadata;
+
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile) {
+          setStatus("success");
+          toast.success("Welcome back.");
+          setTimeout(() => navigate("/home"), 1000);
+        } else if (metadata?.display_name) {
+          await saveOnboardingData(user.id, {
+            name: metadata.display_name || "",
+            intentText: metadata.raw_intent_text || "",
+            goalsText: metadata.raw_goals_text || "",
+            connectionText: metadata.raw_connection_text || "",
+            selectedStruggles: metadata.selected_struggles || [],
+            selectedGoals: metadata.selected_goals || [],
+            selectedIntents: metadata.selected_intents || [],
+            offerTags: metadata.offer_tags || [],
+            capacityLevel: metadata.capacity_level || "",
+            quoteText: metadata.quote_text || "",
+          });
+          setStatus("success");
+          toast.success("Welcome! Your profile has been created.");
+          setTimeout(() => navigate("/username-setup"), 1200);
+        } else {
+          setStatus("success");
+          setTimeout(() => navigate("/onboarding"), 1000);
+        }
+      } catch (error: any) {
+        console.error("Error saving onboarding data:", error);
+        setStatus("error");
+        toast.error("Something went wrong. Please try again.");
+        setTimeout(() => navigate("/onboarding"), 2000);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state change:", event, session?.user?.id);
-
+      (event, session) => {
         if (event === "SIGNED_IN" && session?.user) {
-          // Guard against double-fire (onAuthStateChange + checkExistingSession race)
-          if (hasSaved.current) return;
-          hasSaved.current = true;
-
-          const user = session.user;
-          const metadata = user.user_metadata;
-
-          try {
-            // Check if profile already exists in the DB — reliable returning user signal
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("id, username")
-              .eq("id", user.id)
-              .maybeSingle();
-
-            if (profile) {
-              // Returning user — go home
-              setStatus("success");
-              toast.success("Welcome back.");
-              setTimeout(() => navigate("/home"), 1000);
-            } else if (metadata?.display_name) {
-              // New user coming through onboarding — save their data
-              await saveOnboardingData(user.id, {
-                name: metadata.display_name || "",
-                intentText: metadata.raw_intent_text || "",
-                goalsText: metadata.raw_goals_text || "",
-                connectionText: metadata.raw_connection_text || "",
-                selectedStruggles: metadata.selected_struggles || [],
-                selectedGoals: metadata.selected_goals || [],
-                selectedIntents: metadata.selected_intents || [],
-                offerTags: metadata.offer_tags || [],
-                capacityLevel: metadata.capacity_level || "",
-                quoteText: metadata.quote_text || "",
-              });
-              setStatus("success");
-              toast.success("Welcome! Your profile has been created.");
-              setTimeout(() => navigate("/username-setup"), 1200);
-            } else {
-              // No profile, no onboarding metadata — send to onboarding
-              setStatus("success");
-              setTimeout(() => navigate("/onboarding"), 1000);
-            }
-          } catch (error: any) {
-            console.error("Error saving onboarding data:", error);
-            setStatus("error");
-            toast.error("Something went wrong. Please try again.");
-            
-            setTimeout(() => {
-              navigate("/onboarding");
-            }, 2000);
-          }
+          resolveDestination(session.user);
         }
       }
     );
 
-    // Check if there's already a session (user might have refreshed)
+    // Covers the page-refresh case: a session already exists before this
+    // component's listener attaches, so SIGNED_IN never fires again.
     const checkExistingSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session?.user) {
-        const metadata = session.user.user_metadata;
-        setStatus("success");
-        // If they have display_name metadata they came from onboarding; otherwise returning login
-        if (metadata?.display_name) {
-          setTimeout(() => {
-            navigate("/match", {
-              state: { userId: session.user.id, userName: metadata.display_name || "Friend" },
-            });
-          }, 1000);
-        } else {
-          setTimeout(() => navigate("/home"), 800);
-        }
+        resolveDestination(session.user);
       } else if (!window.location.hash && !window.location.search) {
-        // No session and no auth tokens in URL - redirect to onboarding
+        // No session and no auth tokens in the URL — nothing to resolve.
         navigate("/onboarding");
       }
-      // If there are tokens in URL, wait for onAuthStateChange to handle them
+      // If tokens ARE in the URL, wait for onAuthStateChange to fire.
     };
 
     checkExistingSession();
@@ -110,12 +96,12 @@ const AuthCallback = () => {
     <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
       <ThymosLogo />
       <OnboardingBackground />
-      
+
       <div className="relative z-10 text-center px-6 max-w-md w-full fade-in-up">
         {status === "loading" && (
           <LoadingState message="Setting up your space..." />
         )}
-        
+
         {status === "success" && (
           <>
             <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4">
@@ -126,7 +112,7 @@ const AuthCallback = () => {
             </p>
           </>
         )}
-        
+
         {status === "error" && (
           <>
             <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4">
