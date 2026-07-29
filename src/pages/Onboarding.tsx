@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
 import { ThemeTag } from "@/components/onboarding/ThemeTag";
@@ -82,6 +82,13 @@ const Onboarding = () => {
     suggestedIntents: [] as SuggestedTag[],
     selectedIntents: [] as string[],
   });
+
+  // Already signed in — no reason to onboard again.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/home", { replace: true });
+    });
+  }, [navigate]);
 
   const transitionTo = (step: number) => {
     setIsTransitioning(true);
@@ -270,6 +277,33 @@ const Onboarding = () => {
     transitionTo(11);
 
     try {
+      // Probe first with shouldCreateUser:false. If it succeeds this email
+      // already has an account (and Supabase has just sent them a sign-in
+      // link), so send them down the sign-in path instead of creating a
+      // duplicate. Only one email goes out either way.
+      const probe = await supabase.auth.signInWithOtp({
+        email: userData.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          shouldCreateUser: false,
+        },
+      });
+
+      if (!probe.error) {
+        setIsSubmitting(false);
+        transitionTo(13);
+        return;
+      }
+
+      if (probe.error.status === 429) {
+        toast.error("Too many attempts. Wait a minute and try again.");
+        transitionTo(10);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Probe failed for any other reason — treat as "no account yet" and
+      // create it, carrying the onboarding answers in user metadata.
       const { error } = await supabase.auth.signInWithOtp({
         email: userData.email,
         options: {
@@ -801,6 +835,34 @@ const Onboarding = () => {
             style={{ animationDelay: "0.4s" }}
           >
             I'll check later →
+          </button>
+        </div>
+      )}
+
+      {/* Step 13: Email already has an account */}
+      {currentStep === 13 && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-md w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4 stagger-fade-in">
+            You're already with us
+          </h1>
+          <p
+            className="stagger-fade-in text-foreground/60 text-lg mb-8 font-serif leading-relaxed"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <span className="text-foreground">{userData.email}</span> already has
+            an account, so we sent a sign-in link instead.
+          </p>
+
+          <button
+            onClick={() => navigate("/login")}
+            className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+            style={{ animationDelay: "0.35s" }}
+          >
+            Use a different email →
           </button>
         </div>
       )}

@@ -22,6 +22,9 @@ const Login = () => {
       email: trimmed,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // Sign-in only — an unregistered email must not silently create
+        // an account, it should be told to sign up instead.
+        shouldCreateUser: false,
       },
     });
 
