@@ -47,12 +47,15 @@ const CAPACITY_LEVELS = [
 
 const QUOTE_MAX_LENGTH = 300;
 
+// Sits before the name question (step 0) so the flow doesn't need renumbering.
+const STEP_WHY = -1;
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const { extractThemes } = useExtractThemes();
   const { saveOnboardingData } = useOnboardingSubmit();
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(STEP_WHY);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -370,8 +373,71 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
-      <ThymosLogo />
+      {/* Hidden on the Why step so the wordmark's reveal isn't pre-empted */}
+      {currentStep !== STEP_WHY && <ThymosLogo />}
       <OnboardingBackground />
+
+      {/* Step -1: Why Thymos */}
+      {currentStep === STEP_WHY && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-lg w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <p
+            className="stagger-fade-in font-serif text-foreground/80 text-xl md:text-2xl leading-relaxed"
+            style={{ animationDelay: "0.3s", textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+          >
+            The ancient Greeks believed the soul was divided into three parts:
+          </p>
+
+          <div className="my-10 space-y-4">
+            <p
+              className="stagger-fade-in font-serif text-foreground text-2xl md:text-3xl"
+              style={{ animationDelay: "1.4s", textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+            >
+              Reason — <span className="tracking-[0.15em]">LOGOS</span>
+            </p>
+            <p
+              className="stagger-fade-in font-serif text-foreground text-2xl md:text-3xl"
+              style={{ animationDelay: "2.3s", textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+            >
+              Desire — <span className="tracking-[0.15em]">EROS</span>
+            </p>
+          </div>
+
+          <p
+            className="stagger-fade-in font-serif text-foreground/70 text-lg md:text-xl leading-relaxed"
+            style={{ animationDelay: "3.4s", textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+          >
+            Today, rationality and pleasure are put on a pedestal, while the third
+            part of the soul: the core of our spirit, pride, and dignity has been
+            forgotten.
+          </p>
+
+          <p
+            className="stagger-fade-in text-foreground text-3xl md:text-4xl font-medium tracking-[0.3em] uppercase mt-14"
+            style={{ animationDelay: "4.8s", textShadow: "0 2px 12px rgba(0,0,0,0.15)" }}
+          >
+            Thymos
+          </p>
+
+          <button
+            type="button"
+            onClick={() => transitionTo(0)}
+            aria-label="Continue"
+            className="stagger-fade-in group relative mx-auto mt-16 flex h-16 w-16 items-center justify-center"
+            style={{ animationDelay: "6s" }}
+          >
+            {/* Radiating ring — the "magic" pulse */}
+            <span className="absolute inset-0 rounded-full border border-white/40 animate-ping opacity-40 motion-reduce:animate-none" />
+            <span className="absolute inset-0 rounded-full bg-white/15 backdrop-blur-sm border border-white/30 transition-all duration-300 group-hover:bg-white/25 group-active:scale-95" />
+            <span className="relative font-serif text-foreground text-xl leading-none">
+              →
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Step 0: Name */}
       {currentStep === 0 && (
