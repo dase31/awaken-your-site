@@ -469,8 +469,8 @@ const Onboarding = () => {
                 setEntryPath("support");
                 transitionTo(0);
               }}
-              className="stagger-fade-in w-full text-left bg-white/10 backdrop-blur-sm border border-white/25 rounded-2xl px-6 py-5 hover:bg-white/15 active:scale-[0.98] transition-all duration-300"
-              style={{ animationDelay: "0.15s" }}
+              className="stagger-fade-in w-full text-left backdrop-blur-sm border border-white/20 rounded-2xl px-6 py-5 active:scale-[0.98] transition-all duration-300 hover:brightness-110"
+              style={{ animationDelay: "0.15s", background: "hsl(200, 60%, 40%)" }}
             >
               <p className="font-serif text-foreground text-xl mb-1.5">Thymos</p>
               <p className="text-foreground/60 text-sm leading-relaxed">
@@ -484,8 +484,8 @@ const Onboarding = () => {
                 setEntryPath("help");
                 transitionTo(0);
               }}
-              className="stagger-fade-in w-full text-left bg-white/10 backdrop-blur-sm border border-white/25 rounded-2xl px-6 py-5 hover:bg-white/15 active:scale-[0.98] transition-all duration-300"
-              style={{ animationDelay: "0.3s" }}
+              className="stagger-fade-in w-full text-left backdrop-blur-sm border border-white/20 rounded-2xl px-6 py-5 active:scale-[0.98] transition-all duration-300 hover:brightness-110"
+              style={{ animationDelay: "0.3s", background: "hsl(200, 60%, 40%)" }}
             >
               <p className="font-serif text-foreground text-xl mb-1.5">Telos</p>
               <p className="text-foreground/60 text-sm leading-relaxed">
