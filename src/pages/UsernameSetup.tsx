@@ -117,7 +117,7 @@ const UsernameSetup = () => {
       return;
     }
 
-    navigate("/match");
+    navigate(session.user.user_metadata?.telos_first ? "/telos" : "/match");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

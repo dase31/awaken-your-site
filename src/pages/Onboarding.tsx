@@ -47,8 +47,10 @@ const CAPACITY_LEVELS = [
 
 const QUOTE_MAX_LENGTH = 300;
 
-// Sits before the name question (step 0) so the flow doesn't need renumbering.
-const STEP_WHY = -1;
+// Sit before the name question (step 0) so the rest of the flow doesn't
+// need renumbering.
+const STEP_WHY = -2;
+const STEP_FORK = -1;
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -66,6 +68,10 @@ const Onboarding = () => {
   const [selectedOffers, setSelectedOffers] = useState<string[]>([]);
   const [capacityLevel, setCapacityLevel] = useState<string>("");
   const [quoteText, setQuoteText] = useState("");
+
+  // Which fork card was tapped. "support" (or unset) is the full flow;
+  // "help" skips straight from name to email and lands in Telos setup.
+  const [entryPath, setEntryPath] = useState<"support" | "help" | null>(null);
 
   // Custom text
   const [customStrugglesText, setCustomStrugglesText] = useState("");
@@ -134,7 +140,9 @@ const Onboarding = () => {
   // Step 0: Name
   const handleNameKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && userData.name.trim()) {
-      transitionTo(1);
+      // The "help" door skips straight to email — no struggles/goals/
+      // intents/capacity/quote. Telos setup handles the rest post-signup.
+      transitionTo(entryPath === "help" ? 10 : 1);
     }
   };
 
@@ -322,6 +330,7 @@ const Onboarding = () => {
             offer_tags: selectedOffers,
             capacity_level: capacityLevel,
             quote_text: quoteText.trim(),
+            telos_first: entryPath === "help",
           },
         },
       });
@@ -424,7 +433,7 @@ const Onboarding = () => {
 
           <button
             type="button"
-            onClick={() => transitionTo(0)}
+            onClick={() => transitionTo(STEP_FORK)}
             aria-label="Continue"
             className="stagger-fade-in group relative mx-auto mt-16 flex h-16 w-16 items-center justify-center"
             style={{ animationDelay: "6s" }}
@@ -436,6 +445,54 @@ const Onboarding = () => {
               →
             </span>
           </button>
+        </div>
+      )}
+
+      {/* Step -1: Fork — which door are you here for */}
+      {currentStep === STEP_FORK && (
+        <div
+          className={`relative z-10 text-center px-6 max-w-md w-full ${
+            isTransitioning ? "step-fade-out" : "fade-in-up"
+          }`}
+        >
+          <h1
+            className="stagger-fade-in font-serif text-foreground text-2xl md:text-3xl leading-relaxed mb-10"
+            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+          >
+            What brings you here?
+          </h1>
+
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => {
+                setEntryPath("support");
+                transitionTo(0);
+              }}
+              className="stagger-fade-in w-full text-left bg-white/10 backdrop-blur-sm border border-white/25 rounded-2xl px-6 py-5 hover:bg-white/15 active:scale-[0.98] transition-all duration-300"
+              style={{ animationDelay: "0.15s" }}
+            >
+              <p className="font-serif text-foreground text-xl mb-1.5">Thymos</p>
+              <p className="text-foreground/60 text-sm leading-relaxed">
+                Connect with someone — to be heard, or to listen.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEntryPath("help");
+                transitionTo(0);
+              }}
+              className="stagger-fade-in w-full text-left bg-white/10 backdrop-blur-sm border border-white/25 rounded-2xl px-6 py-5 hover:bg-white/15 active:scale-[0.98] transition-all duration-300"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <p className="font-serif text-foreground text-xl mb-1.5">Telos</p>
+              <p className="text-foreground/60 text-sm leading-relaxed">
+                Offer a skill, or ask for real help with something real.
+              </p>
+            </button>
+          </div>
         </div>
       )}
 
