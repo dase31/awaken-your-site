@@ -7,6 +7,7 @@ import { useReflections } from "@/hooks/useReflections";
 import { ConnectionRequestCard } from "@/components/connections/ConnectionRequestCard";
 import { ReflectionModal } from "@/components/reflections/ReflectionModal";
 import { cn } from "@/lib/utils";
+import { Users, BookOpen, HeartHandshake, ChevronRight } from "lucide-react";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -41,14 +42,40 @@ function GlassCard({ children, className, onClick }: GlassCardProps) {
     <div
       onClick={onClick}
       className={cn(
-        "bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-5 shadow-lg shadow-black/5",
+        "bg-white/12 backdrop-blur-xl border border-white/20 rounded-2xl p-5",
         "transition-all duration-300",
-        onClick && "cursor-pointer hover:bg-white/25 active:scale-[0.98]",
+        onClick && "cursor-pointer hover:bg-white/16 active:scale-[0.98]",
         className
       )}
     >
       {children}
     </div>
+  );
+}
+
+// A much lighter alternative to GlassCard — icon, one line, an arrow.
+// For actions that don't need to compete visually with the reflection card.
+function ActionRow({
+  icon,
+  label,
+  trailing,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  trailing?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 py-1 text-left group"
+    >
+      <span className="text-white/50">{icon}</span>
+      <span className="text-white/85 text-base font-medium flex-1">{label}</span>
+      {trailing && <span className="text-white/40 text-sm">{trailing}</span>}
+      <ChevronRight size={16} className="text-white/30 group-hover:text-white/50 transition-colors" />
+    </button>
   );
 }
 
@@ -112,69 +139,43 @@ const Home = () => {
           </span>
         </GlassCard>
 
-        {/* Pending Connections Card */}
-        <GlassCard>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest">
-              Pending Requests
-            </h2>
-            {incoming.length > 0 && (
-              <span className="bg-white/25 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                {incoming.length}
-              </span>
-            )}
-          </div>
-
+        {/* Secondary actions — light rows, not competing with the reflection card */}
+        <div className="space-y-1 px-1">
           {connectionsLoading ? (
-            <div className="h-16 bg-white/10 rounded-xl animate-pulse" />
-          ) : incoming.length > 0 ? (
-            <div className="space-y-3">
-              {incoming.map(req => (
-                <ConnectionRequestCard
-                  key={req.id}
-                  request={req}
-                  onAccept={(id) => respondToRequest(id, true)}
-                  onReject={(id) => respondToRequest(id, false)}
-                />
-              ))}
-            </div>
+            <div className="h-6 bg-white/10 rounded-md animate-pulse" />
           ) : (
-            <>
-              <p className="text-white/70 text-base">
-                No pending connections yet.
-              </p>
-              <p className="text-white/60 text-sm mt-2">
-                When someone wants to connect, you'll see them here.
-              </p>
-            </>
+            <ActionRow
+              icon={<Users size={18} />}
+              label="Connections"
+              trailing={incoming.length > 0 ? `${incoming.length} new` : "No new requests"}
+              onClick={() => navigate("/connect")}
+            />
           )}
-        </GlassCard>
+          <ActionRow
+            icon={<BookOpen size={18} />}
+            label="Journal"
+            onClick={() => navigate("/reflections")}
+          />
+          <ActionRow
+            icon={<HeartHandshake size={18} />}
+            label="Find support"
+            onClick={() => navigate("/match")}
+          />
+        </div>
 
-        {/* Past Reflections Link */}
-        <GlassCard onClick={() => navigate("/reflections")}>
-          <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
-            Journal
-          </h2>
-          <p className="text-white text-base mb-2">
-            Revisit your past reflections and see how you've grown.
-          </p>
-          <span className="inline-flex items-center text-white/80 font-medium text-sm">
-            View reflections →
-          </span>
-        </GlassCard>
-
-        {/* Find Support Card */}
-        <GlassCard onClick={() => navigate("/match")}>
-          <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
-            Find Support
-          </h2>
-          <p className="text-white text-base mb-4">
-            Connect with someone who understands what you're going through.
-          </p>
-          <span className="inline-flex items-center text-white font-medium text-sm hover:underline">
-            Find a match →
-          </span>
-        </GlassCard>
+        {/* Incoming requests still need real estate to actually act on */}
+        {!connectionsLoading && incoming.length > 0 && (
+          <div className="space-y-3">
+            {incoming.map(req => (
+              <ConnectionRequestCard
+                key={req.id}
+                request={req}
+                onAccept={(id) => respondToRequest(id, true)}
+                onReject={(id) => respondToRequest(id, false)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Reflection Modal */}

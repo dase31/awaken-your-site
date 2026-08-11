@@ -30,7 +30,7 @@ export function AppShell({ children, hideNav }: AppShellProps) {
       <ThymosLogo showSettings />
       <OnboardingBackground />
 
-      <main className="relative z-10 pt-20 pb-24 px-4 min-h-screen">
+      <main className="relative z-10 pt-20 pb-32 px-4 min-h-screen">
         {children}
       </main>
 

@@ -17,7 +17,7 @@ function NavItem({ icon, label, isActive, onClick, disabled }: NavItemProps) {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-200 relative",
+        "flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-all duration-200 relative",
         isActive ? "text-white" : "text-white/45 hover:text-white/70",
         disabled && "text-white/25 cursor-not-allowed"
       )}
@@ -41,15 +41,18 @@ export function BottomNav() {
   const currentPath = location.pathname;
 
   const navItems = [
-    { icon: <Home size={24} />, label: "Home", route: "/home", disabled: false },
-    { icon: <MessageCircle size={24} />, label: "Chat", route: "/chat", disabled: false },
-    { icon: <Users size={24} />, label: "Connect", route: "/connect", disabled: false },
-    { icon: <Target size={24} />, label: "Telos", route: "/telos", disabled: false },
+    { icon: <Home size={20} />, label: "Home", route: "/home", disabled: false },
+    { icon: <MessageCircle size={20} />, label: "Chat", route: "/chat", disabled: false },
+    { icon: <Users size={20} />, label: "Connect", route: "/connect", disabled: false },
+    { icon: <Target size={20} />, label: "Telos", route: "/telos", disabled: false },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[hsl(200,60%,35%)]/90 backdrop-blur-md border-t border-white/10 pb-safe">
-      <div className="flex items-center h-16">
+    <nav
+      className="fixed left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm bg-white/12 backdrop-blur-xl border border-white/20 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.15)]"
+      style={{ bottom: "max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))" }}
+    >
+      <div className="flex items-center h-14 px-1">
         {navItems.map((item) => (
           <NavItem
             key={item.route}
