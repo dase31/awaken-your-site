@@ -214,6 +214,48 @@ export type Database = {
           },
         ]
       }
+      reports: {
+        Row: {
+          context: string | null
+          conversation_id: string | null
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_name: string | null
+          reported_user_id: string | null
+          reporter_id: string | null
+          status: string
+          telos_post_id: string | null
+        }
+        Insert: {
+          context?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_name?: string | null
+          reported_user_id?: string | null
+          reporter_id?: string | null
+          status?: string
+          telos_post_id?: string | null
+        }
+        Update: {
+          context?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_name?: string | null
+          reported_user_id?: string | null
+          reporter_id?: string | null
+          status?: string
+          telos_post_id?: string | null
+        }
+        Relationships: []
+      }
       telos_posts: {
         Row: {
           category: string
@@ -292,6 +334,24 @@ export type Database = {
           id?: string
           specialty?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -382,6 +442,24 @@ export type Database = {
           },
         ]
       }
+      user_safety: {
+        Row: {
+          answer: string
+          checked_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          checked_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          checked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_strengths: {
         Row: {
           created_at: string
@@ -445,9 +523,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      conversation_has_block: {
+        Args: { _conversation_id: string }
+        Returns: boolean
+      }
+      delete_my_account: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      is_blocked_between: {
+        Args: { _a: string; _b: string }
+        Returns: boolean
+      }
       is_conversation_participant: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
+      }
+      my_block_exclusions: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
       }
     }
     Enums: {
