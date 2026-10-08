@@ -7,6 +7,7 @@ import { LoadingState } from "@/components/onboarding/LoadingState";
 import ThymosLogo from "@/components/ThymosLogo";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
+import { needsSafetyCheck } from "@/lib/safety";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -32,9 +33,12 @@ const AuthCallback = () => {
           .maybeSingle();
 
         if (profile) {
+          // Anyone who hasn't answered the private safety question yet is
+          // asked once, then lands home.
+          const ask = await needsSafetyCheck(user.id);
           setStatus("success");
           toast.success("Welcome back.");
-          setTimeout(() => navigate("/home"), 1000);
+          setTimeout(() => navigate(ask ? "/safety-check?next=/home" : "/home"), 1000);
         } else if (metadata?.display_name) {
           await saveOnboardingData(user.id, {
             name: metadata.display_name || "",

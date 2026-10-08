@@ -8,6 +8,17 @@ import { useExtractThemes } from "@/hooks/useExtractThemes";
 import { useOnboardingSubmit } from "@/hooks/useOnboardingSubmit";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { CodeEntry } from "@/components/auth/CodeEntry";
+import { TermsContent, PrivacyContent } from "@/components/legal/LegalContent";
+import { authRedirectUrl } from "@/lib/platform";
+import {
+  PRESET_STRUGGLES,
+  PRESET_GOALS,
+  PRESET_INTENTS,
+  PRESET_OFFERS,
+  CAPACITY_LEVELS,
+  QUOTE_MAX_LENGTH,
+} from "@/lib/onboardingOptions";
 
 interface SuggestedTag {
   id: string;
@@ -15,37 +26,7 @@ interface SuggestedTag {
   confidence: number;
 }
 
-// Preset tags for each category
-const PRESET_STRUGGLES = [
-  "Anxiety", "Loneliness", "Self-doubt", "Burnout",
-  "Grief", "Relationship struggles", "Identity", "Depression",
-  "Overwhelm", "Anger",
-];
 
-const PRESET_GOALS = [
-  "Inner peace", "Confidence", "Self-acceptance", "Better boundaries",
-  "Emotional awareness", "Resilience", "Purpose", "Patience",
-  "Letting go", "Vulnerability",
-];
-
-const PRESET_INTENTS = [
-  "A listener", "Mutual support", "Accountability partner",
-  "Someone who gets it", "Honest conversations", "Growth together",
-  "Non-judgmental space", "Shared experiences",
-];
-
-const PRESET_OFFERS = [
-  "Listening", "Empathy", "Shared experience",
-  "Encouragement", "Accountability", "I mostly need support right now",
-];
-
-const CAPACITY_LEVELS = [
-  { value: "very_little", label: "Very little" },
-  { value: "some", label: "Some" },
-  { value: "good_amount", label: "A good amount" },
-];
-
-const QUOTE_MAX_LENGTH = 300;
 
 // Sit before the name question (step 0) so the rest of the flow doesn't
 // need renumbering.
@@ -72,6 +53,10 @@ const Onboarding = () => {
   // Which fork card was tapped. "support" (or unset) is the full flow;
   // "help" skips straight from name to email and lands in Telos setup.
   const [entryPath, setEntryPath] = useState<"support" | "help" | null>(null);
+
+  // Terms/Privacy open over onboarding rather than navigating away, so
+  // nobody loses their answers by checking what they're agreeing to.
+  const [legalOpen, setLegalOpen] = useState<"terms" | "privacy" | null>(null);
 
   // Custom text
   const [customStrugglesText, setCustomStrugglesText] = useState("");
@@ -233,6 +218,23 @@ const Onboarding = () => {
     }
   };
 
+  // Skips: goals/intents/capacity are optional. Struggles stays required —
+  // it's the one signal matching can't work without.
+  const handleGoalsSkip = () => {
+    setUserData((prev) => ({ ...prev, goalsText: "", suggestedGoals: [], selectedGoals: [] }));
+    transitionTo(5);
+  };
+
+  const handleIntentsSkip = () => {
+    setUserData((prev) => ({ ...prev, connectionText: "", suggestedIntents: [], selectedIntents: [] }));
+    transitionTo(7);
+  };
+
+  const handleCapacitySkip = () => {
+    setCapacityLevel("");
+    transitionTo(8);
+  };
+
   // Step 7: Capacity/offers → process
   const handleCapacitySubmit = () => {
     if (!capacityLevel) return;
@@ -295,7 +297,7 @@ const Onboarding = () => {
       const probe = await supabase.auth.signInWithOtp({
         email: userData.email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: authRedirectUrl(),
           shouldCreateUser: false,
         },
       });
@@ -318,7 +320,7 @@ const Onboarding = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email: userData.email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: authRedirectUrl(),
           data: {
             display_name: userData.name,
             raw_intent_text: userData.intentText,
@@ -331,6 +333,8 @@ const Onboarding = () => {
             capacity_level: capacityLevel,
             quote_text: quoteText.trim(),
             telos_first: entryPath === "help",
+            terms_accepted_at: new Date().toISOString(),
+            age_confirmed: true,
           },
         },
       });
@@ -376,7 +380,7 @@ const Onboarding = () => {
     return parts.join(", ") + ".";
   };
 
-  const canProceedStruggles = selectedPresetStruggles.length > 0 || customStrugglesText.trim().length > 0;
+  const canProceedStruggles = selectedPresetStruggles.length > 0;
   const canProceedGoals = selectedPresetGoals.length > 0 || customGoalsText.trim().length > 0;
   const canProceedIntents = selectedPresetIntents.length > 0 || customIntentsText.trim().length > 0;
 
@@ -536,7 +540,7 @@ const Onboarding = () => {
             className="stagger-fade-in text-foreground/60 text-base mb-6 font-serif"
             style={{ animationDelay: "0.15s" }}
           >
-            Select what resonates, or add your own
+            Select what resonates, then add more if you like
           </p>
 
           <div
@@ -556,7 +560,7 @@ const Onboarding = () => {
           <textarea
             value={customStrugglesText}
             onChange={(e) => setCustomStrugglesText(e.target.value)}
-            placeholder="Something else on your mind..."
+            placeholder="Anything else on your mind..."
             className="stagger-fade-in w-full min-h-[80px] bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-foreground text-base font-serif placeholder:text-foreground/30 focus:outline-none focus:border-white/20 resize-none"
             style={{ animationDelay: "0.35s", textShadow: "0 1px 8px rgba(0,0,0,0.1)" }}
           />
@@ -619,15 +623,24 @@ const Onboarding = () => {
             style={{ animationDelay: "0.35s", textShadow: "0 1px 8px rgba(0,0,0,0.1)" }}
           />
 
-          {canProceedGoals && (
+          <div className="mt-5 flex items-center justify-center gap-6">
+            {canProceedGoals && (
+              <button
+                onClick={handleGoalsSubmit}
+                className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+                style={{ animationDelay: "0.4s" }}
+              >
+                Continue →
+              </button>
+            )}
             <button
-              onClick={handleGoalsSubmit}
-              className="stagger-fade-in mt-5 text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+              onClick={handleGoalsSkip}
+              className="stagger-fade-in font-serif text-base text-foreground/40 hover:text-foreground/60 transition-all duration-300"
               style={{ animationDelay: "0.4s" }}
             >
-              Continue →
+              Skip for now
             </button>
-          )}
+          </div>
         </div>
       )}
 
@@ -677,15 +690,24 @@ const Onboarding = () => {
             style={{ animationDelay: "0.35s", textShadow: "0 1px 8px rgba(0,0,0,0.1)" }}
           />
 
-          {canProceedIntents && (
+          <div className="mt-5 flex items-center justify-center gap-6">
+            {canProceedIntents && (
+              <button
+                onClick={handleConnectionSubmit}
+                className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+                style={{ animationDelay: "0.4s" }}
+              >
+                Continue →
+              </button>
+            )}
             <button
-              onClick={handleConnectionSubmit}
-              className="stagger-fade-in mt-5 text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+              onClick={handleIntentsSkip}
+              className="stagger-fade-in font-serif text-base text-foreground/40 hover:text-foreground/60 transition-all duration-300"
               style={{ animationDelay: "0.4s" }}
             >
-              Continue →
+              Skip for now
             </button>
-          )}
+          </div>
         </div>
       )}
 
@@ -748,15 +770,24 @@ const Onboarding = () => {
             ))}
           </div>
 
-          {capacityLevel && (
+          <div className="mt-5 flex items-center justify-center gap-6">
+            {capacityLevel && (
+              <button
+                onClick={handleCapacitySubmit}
+                className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+                style={{ animationDelay: "0.4s" }}
+              >
+                Continue →
+              </button>
+            )}
             <button
-              onClick={handleCapacitySubmit}
-              className="stagger-fade-in mt-5 text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
+              onClick={handleCapacitySkip}
+              className="stagger-fade-in font-serif text-base text-foreground/40 hover:text-foreground/60 transition-all duration-300"
               style={{ animationDelay: "0.4s" }}
             >
-              Continue →
+              Skip for now
             </button>
-          )}
+          </div>
         </div>
       )}
 
@@ -922,6 +953,20 @@ const Onboarding = () => {
             <p className="stagger-fade-in text-foreground/40 text-sm" style={{ animationDelay: "0.5s" }}>
               press enter ↵
             </p>
+
+            <p
+              className="stagger-fade-in text-foreground/45 text-xs leading-relaxed max-w-xs mx-auto pt-4"
+              style={{ animationDelay: "0.6s" }}
+            >
+              By continuing you confirm you're 18 or older and agree to our{" "}
+              <button type="button" onClick={() => setLegalOpen("terms")} className="underline underline-offset-2 hover:text-foreground/70">
+                Terms
+              </button>{" "}
+              and{" "}
+              <button type="button" onClick={() => setLegalOpen("privacy")} className="underline underline-offset-2 hover:text-foreground/70">
+                Privacy Policy
+              </button>.
+            </p>
           </div>
         </div>
       )}
@@ -952,6 +997,10 @@ const Onboarding = () => {
             Tap it to complete your profile
           </p>
 
+          <div className="stagger-fade-in" style={{ animationDelay: "0.3s" }}>
+            <CodeEntry email={userData.email.trim()} />
+          </div>
+
           <button
             onClick={() => navigate("/")}
             className="stagger-fade-in text-foreground/50 font-serif text-sm hover:text-foreground/70 transition-all duration-300"
@@ -980,6 +1029,10 @@ const Onboarding = () => {
             an account, so we sent a sign-in link instead.
           </p>
 
+          <div className="stagger-fade-in" style={{ animationDelay: "0.3s" }}>
+            <CodeEntry email={userData.email.trim()} />
+          </div>
+
           <button
             onClick={() => navigate("/login")}
             className="stagger-fade-in text-foreground/70 font-serif text-lg hover:text-foreground transition-all duration-300"
@@ -987,6 +1040,22 @@ const Onboarding = () => {
           >
             Use a different email →
           </button>
+        </div>
+      )}
+
+      {legalOpen && (
+        <div className="fixed inset-0 z-50 bg-sky-gradient overflow-y-auto" role="dialog" aria-modal="true">
+          <div className="max-w-xl mx-auto px-6 pt-16 pb-24">
+            <button
+              onClick={() => setLegalOpen(null)}
+              className="mb-8 text-white/70 text-sm hover:text-white transition-colors"
+            >
+              ← Back to sign up
+            </button>
+            <div className="bg-[hsl(205,55%,28%)]/55 backdrop-blur-xl border border-white/15 rounded-3xl px-6 py-8">
+              {legalOpen === "terms" ? <TermsContent /> : <PrivacyContent />}
+            </div>
+          </div>
         </div>
       )}
     </div>

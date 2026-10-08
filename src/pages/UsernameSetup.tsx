@@ -69,7 +69,7 @@ const UsernameSetup = () => {
     if (!raw) { setStatus("idle"); setMessage(""); return; }
 
     const fmt = validateFormat(raw);
-    if (!fmt.ok) {
+    if (fmt.ok === false) {
       setStatus("invalid");
       setMessage(fmt.message);
       return;
@@ -117,7 +117,8 @@ const UsernameSetup = () => {
       return;
     }
 
-    navigate(session.user.user_metadata?.telos_first ? "/telos" : "/match");
+    const next = session.user.user_metadata?.telos_first ? "/telos" : "/match";
+    navigate(`/safety-check?next=${next}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

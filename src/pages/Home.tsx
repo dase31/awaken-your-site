@@ -109,7 +109,7 @@ const Home = () => {
 
   return (
     <AppShell>
-      <div className="max-w-md mx-auto space-y-6">
+      <div className="max-w-md mx-auto space-y-6 min-h-[calc(100dvh-14rem)] flex flex-col justify-center">
         {/* Welcome Header */}
         <div className="text-center mb-8">
           <h1

@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
-
 @layer base {
   :root {
     --background: 200 70% 55%;
@@ -104,6 +102,13 @@
 
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* No rubber-banding past the edges; it makes the app feel like a web page. */
+  html, body {
+    overscroll-behavior: none;
   }
 
   body {

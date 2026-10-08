@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchMyBlockedIds } from "@/lib/blocks";
 
 export interface ConnectionRequest {
   id: string;
@@ -65,11 +66,17 @@ export function useConnectionRequests() {
       createdAt: r.created_at,
     }));
 
-    setIncoming(mapped.filter(r => r.receiverId === user.id && r.status === "pending"));
-    setOutgoing(mapped.filter(r => r.senderId === user.id));
+    const blocked = new Set(await fetchMyBlockedIds());
+    const visible = mapped.filter(r => {
+      const other = r.senderId === user.id ? r.receiverId : r.senderId;
+      return !blocked.has(other);
+    });
+
+    setIncoming(visible.filter(r => r.receiverId === user.id && r.status === "pending"));
+    setOutgoing(visible.filter(r => r.senderId === user.id));
 
     // Build accepted connections
-    const acceptedRequests = mapped.filter(r => r.status === "accepted");
+    const acceptedRequests = visible.filter(r => r.status === "accepted");
 
     // Fetch every conversation this user is in once, then look each up locally
     const { data: convos } = await supabase

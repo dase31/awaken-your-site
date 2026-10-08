@@ -3,14 +3,34 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
 import ThymosLogo from "@/components/ThymosLogo";
+import { CodeEntry } from "@/components/auth/CodeEntry";
+import { authRedirectUrl } from "@/lib/platform";
+import { toast } from "sonner";
 
-type Step = "email" | "sent" | "error" | "rate_limited";
+type Step = "email" | "sent" | "error" | "rate_limited" | "password";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<Step>("email");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Password sign-in exists for App Review's demo account. Everyone else
+  // signs in with an emailed code or link and never sets a password.
+  const handlePasswordSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const trimmed = email.trim();
+    if (!trimmed || !password || loading) return;
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: trimmed, password });
+    setLoading(false);
+    if (error) {
+      toast.error("That email and password don't match.");
+      return;
+    }
+    navigate("/auth/callback", { replace: true });
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -21,7 +41,7 @@ const Login = () => {
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: authRedirectUrl(),
         // Sign-in only — an unregistered email must not silently create
         // an account, it should be told to sign up instead.
         shouldCreateUser: false,
@@ -73,6 +93,12 @@ const Login = () => {
               />
               <p className="hint-fade-in text-white/40 text-xs pt-1">press enter ↵</p>
             </form>
+            <button
+              onClick={() => setStep("password")}
+              className="mt-10 text-white/40 text-xs hover:text-white/60 transition-colors"
+            >
+              Use a password instead
+            </button>
           </>
         )}
 
@@ -89,7 +115,50 @@ const Login = () => {
               We sent a sign-in link to <span className="text-white/80">{email}</span>.
               It expires in 60 minutes.
             </p>
+            <CodeEntry email={email.trim()} />
           </div>
+        )}
+
+        {step === "password" && (
+          <>
+            <h1
+              className="font-serif text-white text-3xl mb-8"
+              style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
+            >
+              Sign in with a password
+            </h1>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Email"
+                autoComplete="username"
+                className="w-full bg-transparent border-b border-white/30 text-white text-lg text-center placeholder:text-white/30 py-2 focus:outline-none focus:border-white/70 transition-colors caret-white"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete="current-password"
+                className="w-full bg-transparent border-b border-white/30 text-white text-lg text-center placeholder:text-white/30 py-2 focus:outline-none focus:border-white/70 transition-colors caret-white"
+              />
+              <button
+                type="submit"
+                disabled={loading || !email.trim() || !password}
+                className="mt-4 bg-white/15 backdrop-blur-sm border border-white/30 text-white font-semibold px-10 py-3 rounded-full hover:bg-white/25 active:scale-[0.98] transition-all disabled:opacity-40"
+              >
+                {loading ? "Signing in…" : "Sign in"}
+              </button>
+            </form>
+            <button
+              onClick={() => setStep("email")}
+              className="mt-8 text-white/40 text-xs hover:text-white/60 transition-colors"
+            >
+              ← Back
+            </button>
+          </>
         )}
 
         {step === "rate_limited" && (
@@ -138,12 +207,20 @@ const Login = () => {
         )}
 
         {step === "email" && (
-          <button
-            onClick={() => navigate("/")}
-            className="mt-12 text-white/30 text-xs hover:text-white/50 transition-colors"
-          >
-            ← Back
-          </button>
+          <div className="mt-12 flex flex-col items-center gap-3">
+            <button
+              onClick={() => setStep("password")}
+              className="text-white/30 text-xs hover:text-white/50 transition-colors"
+            >
+              Have a password? Sign in
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="text-white/30 text-xs hover:text-white/50 transition-colors"
+            >
+              ← Back
+            </button>
+          </div>
         )}
       </div>
     </div>

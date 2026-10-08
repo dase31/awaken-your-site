@@ -1,52 +1,19 @@
 import { useState } from "react";
+import { extractLocalThemes, type LocalThemes, type ThemeKind } from "@/lib/localThemes";
 
-interface ThemeTag {
-  id: string;
-  label: string;
-  confidence: number;
-}
-
-interface ExtractThemesResult {
-  themes: string[];
-  context: string;
-  suggested_tags: ThemeTag[];
-}
-
+// Same shape the onboarding screens always used, but the work now happens on
+// the device (see lib/localThemes.ts) — free text never leaves the phone.
 export function useExtractThemes() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   const extractThemes = async (
     text: string,
-    type: "struggles" | "strengths" | "goals" | "connection_intent"
-  ): Promise<ExtractThemesResult | null> => {
+    type: ThemeKind
+  ): Promise<LocalThemes | null> => {
     setIsLoading(true);
-    setError(null);
-
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-themes`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ text, type }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to understand your response");
-      }
-
-      const data: ExtractThemesResult = await response.json();
-      return data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
-      setError(message);
-      return null;
+      return extractLocalThemes(text, type);
     } finally {
       setIsLoading(false);
     }

@@ -3,6 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout/AppShell";
 import { toast } from "sonner";
+import { ChevronRight } from "lucide-react";
+import { SUPPORT_EMAIL } from "@/lib/config";
+
+function SettingsRow({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center justify-between px-5 py-4 text-left text-white text-base hover:bg-white/10 transition-colors"
+    >
+      {label}
+      <ChevronRight size={16} className="text-white/35" />
+    </button>
+  );
+}
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -56,15 +70,19 @@ const Settings = () => {
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    const { error } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", session.user.id);
-    if (error) { toast.error("Couldn't delete account. Contact support."); setDeleting(false); return; }
-    await supabase.auth.signOut();
-    navigate("/");
+    // Removes the login itself, not just the profile row; everything that
+    // belongs to the account goes with it.
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) {
+      console.error("Error deleting account:", error);
+      toast.error(`Couldn't delete your account. Please email ${SUPPORT_EMAIL}.`);
+      setDeleting(false);
+      return;
+    }
+    try { localStorage.removeItem("thymos_reflections"); } catch { /* ignore */ }
+    // The account no longer exists server-side, so only clear this device.
+    await supabase.auth.signOut({ scope: "local" });
+    navigate("/", { replace: true });
   };
 
   return (
@@ -122,6 +140,20 @@ const Settings = () => {
               {username ? `@${username}` : <span className="text-white/30 italic">not set</span>}
             </p>
           </div>
+        </div>
+
+        {/* Your profile and safety */}
+        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden mb-4 divide-y divide-white/10">
+          <SettingsRow label="Edit what you've shared" onClick={() => navigate("/settings/profile")} />
+          <SettingsRow label="Blocked people" onClick={() => navigate("/settings/blocked")} />
+        </div>
+
+        {/* Help and policies */}
+        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden mb-4 divide-y divide-white/10">
+          <SettingsRow label="Need support right now?" onClick={() => navigate("/crisis")} />
+          <SettingsRow label="Help and contact" onClick={() => navigate("/support")} />
+          <SettingsRow label="Terms of Use" onClick={() => navigate("/terms")} />
+          <SettingsRow label="Privacy Policy" onClick={() => navigate("/privacy")} />
         </div>
 
         {/* Logout */}

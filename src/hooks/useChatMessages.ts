@@ -9,6 +9,10 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export type SendResult =
+  | { ok: true }
+  | { ok: false; reason: "objectionable" | "error" };
+
 export function useChatMessages(conversationId: string | undefined) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,16 +76,22 @@ export function useChatMessages(conversationId: string | undefined) {
     };
   }, [conversationId]);
 
-  const sendMessage = useCallback(async (content: string) => {
-    if (!conversationId) return;
+  // "blocked" is deliberately vague in the UI: the sender isn't told whether
+  // they were blocked or something else went wrong.
+  const sendMessage = useCallback(async (content: string): Promise<SendResult> => {
+    if (!conversationId) return { ok: false, reason: "error" };
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return { ok: false, reason: "error" };
 
-    await supabase.from("messages").insert({
+    const { error } = await supabase.from("messages").insert({
       conversation_id: conversationId,
       sender_id: user.id,
       content,
     });
+
+    if (!error) return { ok: true };
+    if (error.message?.includes("objectionable_content")) return { ok: false, reason: "objectionable" };
+    return { ok: false, reason: "error" };
   }, [conversationId]);
 
   return { messages, loading, sendMessage };

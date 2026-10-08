@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchBlockExclusions } from "@/lib/blocks";
 
 export interface TelosPost {
   id: string;
@@ -31,8 +32,11 @@ export function useTelosPosts() {
 
     if (!postsData) { setLoading(false); return; }
 
+    const hidden = new Set(await fetchBlockExclusions());
+    const visiblePosts = postsData.filter(p => !hidden.has(p.user_id));
+
     // Fetch author names and specialties
-    const userIds = [...new Set(postsData.map(p => p.user_id))];
+    const userIds = [...new Set(visiblePosts.map(p => p.user_id))];
     const [{ data: profiles }, { data: specs }] = await Promise.all([
       supabase.from("profiles").select("id, display_name").in("id", userIds),
       supabase.from("telos_specialties").select("user_id, specialty").in("user_id", userIds),
@@ -45,7 +49,7 @@ export function useTelosPosts() {
       specMap[s.user_id].push(s.specialty);
     });
 
-    setPosts(postsData.map(p => ({
+    setPosts(visiblePosts.map(p => ({
       ...p,
       author_name: nameMap[p.user_id] || "Someone",
       author_specialties: specMap[p.user_id] || [],

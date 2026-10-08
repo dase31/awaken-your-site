@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchBlockExclusions } from "@/lib/blocks";
 
 export interface MatchResult {
   match_user_id: string;
@@ -32,8 +33,9 @@ export function useFindMatch(): UseFindMatchReturn {
     setCurrentUserId(userId);
 
     try {
+      const blocked = await fetchBlockExclusions();
       const { data, error: fnError } = await supabase.functions.invoke("find-match", {
-        body: { user_id: userId, exclude_ids: excludeIds },
+        body: { user_id: userId, exclude_ids: [...new Set([...excludeIds, ...blocked])] },
       });
 
       if (fnError) {

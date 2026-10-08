@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchMyBlockedIds } from "@/lib/blocks";
 
 export interface ConversationWithDetails {
   id: string;
@@ -27,7 +28,12 @@ export function useConversations() {
 
     if (error || !convos) { setLoading(false); return; }
 
-    const otherUserIds = convos.map(c => c.user_one === user.id ? c.user_two : c.user_one);
+    const blocked = new Set(await fetchMyBlockedIds());
+    const visible = convos.filter(
+      c => !blocked.has(c.user_one === user.id ? c.user_two : c.user_one)
+    );
+
+    const otherUserIds = visible.map(c => c.user_one === user.id ? c.user_two : c.user_one);
     
     const { data: profiles } = await supabase
       .from("profiles")
@@ -41,7 +47,7 @@ export function useConversations() {
     const { data: messages } = await supabase
       .from("messages")
       .select("conversation_id, content, created_at")
-      .in("conversation_id", convos.map(c => c.id))
+      .in("conversation_id", visible.map(c => c.id))
       .order("created_at", { ascending: false });
 
     const lastMessageMap = new Map<string, { content: string; created_at: string }>();
@@ -51,7 +57,7 @@ export function useConversations() {
       }
     }
 
-    const results: ConversationWithDetails[] = convos.map(convo => {
+    const results: ConversationWithDetails[] = visible.map(convo => {
       const otherId = convo.user_one === user.id ? convo.user_two : convo.user_one;
       const lastMsg = lastMessageMap.get(convo.id);
 

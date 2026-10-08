@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
+import { SafetyMenu } from "@/components/safety/SafetyMenu";
+import { toast } from "sonner";
 
 function formatMessageTime(dateStr: string) {
   const date = new Date(dateStr);
@@ -26,6 +28,7 @@ const ChatThread = () => {
   const [input, setInput] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUserName, setOtherUserName] = useState("");
+  const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,6 +46,7 @@ const ChatThread = () => {
 
       if (!convo) return;
       const otherId = convo.user_one === user.id ? convo.user_two : convo.user_one;
+      setOtherUserId(otherId);
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -65,8 +69,25 @@ const ChatThread = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
     setInput("");
-    await sendMessage(trimmed);
+    const result = await sendMessage(trimmed);
+    if (result?.ok !== true) {
+      // Give them their words back so nothing is lost.
+      setInput(trimmed);
+      toast.error(
+        result?.ok === false && result.reason === "objectionable"
+          ? "That message includes language we don't allow."
+          : "That message couldn't be sent. Please try again."
+      );
+    }
   };
+
+  // Snapshot of the recent conversation, attached to a report so a
+  // moderator can see what was said even if it's later deleted.
+  const getReportContext = () =>
+    messages
+      .slice(-10)
+      .map((m) => `${m.senderId === currentUserId ? "Reporter" : otherUserName}: ${m.content}`)
+      .join("\n");
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -80,7 +101,7 @@ const ChatThread = () => {
 
   return (
     <AppShell hideNav>
-      <div className="max-w-md mx-auto flex flex-col h-[calc(100vh-5rem)] -mb-24">
+      <div className="max-w-md mx-auto flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px))] -mb-24">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <button
@@ -100,6 +121,16 @@ const ChatThread = () => {
           >
             {otherUserName}
           </h1>
+          {otherUserId && conversationId && (
+            <SafetyMenu
+              className="ml-auto"
+              targetUserId={otherUserId}
+              targetName={otherUserName || "this person"}
+              conversationId={conversationId}
+              getContext={getReportContext}
+              onBlocked={() => navigate("/chat")}
+            />
+          )}
         </div>
 
         {/* Messages */}
@@ -163,7 +194,7 @@ const ChatThread = () => {
         </div>
 
         {/* Input bar */}
-        <div className="flex items-end gap-2 pt-3 pb-2">
+        <div className="flex items-end gap-2 pt-3" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
           <div className="flex-1 bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3">
             <textarea
               value={input}

@@ -33,12 +33,12 @@ export function OnboardingBackground() {
       <img
         src={bird1}
         alt=""
-        className="absolute top-24 left-[25%] w-6 bird-fly pointer-events-none opacity-70"
+        className="absolute top-24 left-[8%] w-6 bird-fly pointer-events-none opacity-70"
       />
       <img
         src={bird2}
         alt=""
-        className="absolute top-40 right-[30%] w-5 bird-fly pointer-events-none opacity-60"
+        className="absolute top-40 right-[10%] w-5 bird-fly pointer-events-none opacity-60"
         style={{ animationDelay: "3s" }}
       />
     </>

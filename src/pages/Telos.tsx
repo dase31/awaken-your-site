@@ -6,6 +6,7 @@ import { useTelosPosts, TelosPost } from "@/hooks/useTelosPosts";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Plus, X, Heart, HandHelping, ArrowRight } from "lucide-react";
+import { SafetyMenu } from "@/components/safety/SafetyMenu";
 
 const SPECIALTY_OPTIONS = [
   "Design", "Writing", "Marketing", "Engineering", "Teaching",
@@ -274,7 +275,7 @@ function CreatePostModal({ onClose, onCreate }: {
 }
 
 // ── Post Card ──
-function PostCard({ post, isOwn, onRespond }: { post: TelosPost; isOwn: boolean; onRespond: () => void }) {
+function PostCard({ post, isOwn, onRespond, onBlocked }: { post: TelosPost; isOwn: boolean; onRespond: () => void; onBlocked: () => void }) {
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
   const isOffer = post.post_type === "offer";
 
@@ -290,14 +291,26 @@ function PostCard({ post, isOwn, onRespond }: { post: TelosPost; isOwn: boolean;
             <p className="text-white/50 text-xs">{timeAgo}</p>
           </div>
         </div>
-        <span className={cn(
-          "px-2 py-0.5 rounded-full text-xs font-medium border",
-          isOffer
-            ? "bg-emerald-500/20 border-emerald-400/30 text-emerald-200"
-            : "bg-amber-500/20 border-amber-400/30 text-amber-200"
-        )}>
-          {isOffer ? <><Heart size={10} className="inline mr-1" />Offering</> : <><HandHelping size={10} className="inline mr-1" />Needs Help</>}
-        </span>
+        <div className="flex items-center gap-1">
+          <span className={cn(
+            "px-2 py-0.5 rounded-full text-xs font-medium border",
+            isOffer
+              ? "bg-emerald-500/20 border-emerald-400/30 text-emerald-200"
+              : "bg-amber-500/20 border-amber-400/30 text-amber-200"
+          )}>
+            {isOffer ? <><Heart size={10} className="inline mr-1" />Offering</> : <><HandHelping size={10} className="inline mr-1" />Needs Help</>}
+          </span>
+          {!isOwn && (
+            <SafetyMenu
+              className="-mr-2 w-8 h-8"
+              targetUserId={post.user_id}
+              targetName={post.author_name || "this person"}
+              telosPostId={post.id}
+              getContext={() => `${post.title}\n${post.description}`}
+              onBlocked={onBlocked}
+            />
+          )}
+        </div>
       </div>
 
       <div>
@@ -334,7 +347,7 @@ function PostCard({ post, isOwn, onRespond }: { post: TelosPost; isOwn: boolean;
 const Telos = () => {
   const navigate = useNavigate();
   const { profile, loading: profileLoading, saveProfile } = useTelosProfile();
-  const { posts, loading: postsLoading, userId, createPost, startTelosChat } = useTelosPosts();
+  const { posts, loading: postsLoading, userId, createPost, startTelosChat, refetch } = useTelosPosts();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filter, setFilter] = useState<"all" | "offer" | "need">("all");
   const [introDone, setIntroDone] = useState(false);
@@ -424,6 +437,7 @@ const Telos = () => {
                 post={post}
                 isOwn={post.user_id === userId}
                 onRespond={() => handleRespond(post)}
+                onBlocked={refetch}
               />
             ))}
           </div>

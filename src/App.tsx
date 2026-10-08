@@ -16,6 +16,10 @@ import Telos from "./pages/Telos";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import UsernameSetup from "./pages/UsernameSetup";
+import SafetyCheck from "./pages/SafetyCheck";
+import EditProfile from "./pages/EditProfile";
+import BlockedUsers from "./pages/BlockedUsers";
+import { TermsPage, PrivacyPage, SupportPage, CrisisPage } from "./pages/PublicPages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +43,13 @@ const App = () => (
           <Route path="/telos" element={<Telos />} />
           <Route path="/login" element={<Login />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/settings/profile" element={<EditProfile />} />
+          <Route path="/settings/blocked" element={<BlockedUsers />} />
+          <Route path="/safety-check" element={<SafetyCheck />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/crisis" element={<CrisisPage />} />
           <Route path="/username-setup" element={<UsernameSetup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
