@@ -20,6 +20,8 @@ interface SafetyMenuProps {
   getContext?: () => string;
   onBlocked?: () => void;
   className?: string;
+  /** "sky" when the button sits straight on the background, "glass" on a card. */
+  tone?: "sky" | "glass";
 }
 
 type View = "closed" | "menu" | "report" | "reported" | "block";
@@ -32,6 +34,7 @@ export function SafetyMenu({
   getContext,
   onBlocked,
   className,
+  tone = "glass",
 }: SafetyMenuProps) {
   const [view, setView] = useState<View>("closed");
   const [reason, setReason] = useState<ReportReason | null>(null);
@@ -80,33 +83,34 @@ export function SafetyMenu({
   };
 
   const row =
-    "w-full flex items-center gap-3 px-5 py-4 text-left text-white text-base hover:bg-white/10 transition-colors";
+    "w-full flex items-center gap-3 px-5 py-4 text-left text-[var(--th-ink)] text-base hover:bg-black/5 transition-colors";
+  const primary =
+    "w-full py-3 rounded-full font-medium text-sm bg-[var(--th-ink)] text-[var(--th-paper)] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed";
+  const quiet = "w-full py-3 text-[var(--th-text-2)] text-sm hover:text-[var(--th-ink)] transition-colors";
 
   const sheet = (
     <div
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-[rgba(28,27,24,0.35)] backdrop-blur-sm p-4"
+      style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))", paddingTop: "max(1rem, env(safe-area-inset-top))" }}
       onClick={close}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="w-full max-w-sm bg-[hsl(200,60%,40%)]/95 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden fade-in-up"
-        style={{ marginBottom: "env(safe-area-inset-bottom)" }}
+        className="th-sheet w-full max-w-sm overflow-hidden fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         {view === "menu" && (
           <>
-            <p className="px-5 pt-5 pb-2 text-white/50 text-xs font-semibold uppercase tracking-widest">
-              {targetName}
-            </p>
+            <p className="th-label px-5 pt-5 pb-2">{targetName}</p>
             <button className={row} onClick={() => setView("report")}>
-              <Flag size={18} className="text-white/70" /> Report
+              <Flag size={18} className="text-[var(--th-text-2)]" /> Report
             </button>
             <button className={row} onClick={() => setView("block")}>
-              <Ban size={18} className="text-white/70" /> Block
+              <Ban size={18} className="text-[var(--th-text-2)]" /> Block
             </button>
             <button
-              className={cn(row, "justify-center text-white/60 border-t border-white/10")}
+              className={cn(row, "justify-center text-[var(--th-text-2)] border-t border-[var(--th-line)]")}
               onClick={close}
             >
               Cancel
@@ -117,8 +121,8 @@ export function SafetyMenu({
         {view === "report" && (
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-serif text-white text-xl">What's going on?</h2>
-              <button onClick={close} aria-label="Close" className="text-white/60 hover:text-white">
+              <h2 className="th-display text-[1.3rem] text-[var(--th-ink)]">What's going on?</h2>
+              <button onClick={close} aria-label="Close" className="text-[var(--th-text-2)] hover:text-[var(--th-ink)]">
                 <X size={20} />
               </button>
             </div>
@@ -128,11 +132,12 @@ export function SafetyMenu({
                 <button
                   key={r.value}
                   onClick={() => setReason(r.value)}
+                  aria-pressed={reason === r.value}
                   className={cn(
-                    "w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors",
+                    "w-full text-left px-4 py-3 rounded-2xl border text-sm transition-colors",
                     reason === r.value
-                      ? "bg-white/25 border-white/50 text-white"
-                      : "bg-white/10 border-white/15 text-white/80 hover:bg-white/15"
+                      ? "bg-[var(--th-ink)] border-[var(--th-ink)] text-[var(--th-paper)]"
+                      : "bg-[var(--th-paper)] border-[var(--th-line)] text-[var(--th-ink)] hover:bg-white"
                   )}
                 >
                   {r.label}
@@ -141,10 +146,10 @@ export function SafetyMenu({
             </div>
 
             {reason === "self_harm" && (
-              <p className="text-white/70 text-xs leading-relaxed mb-4">
+              <p className="text-[var(--th-text-2)] text-xs leading-relaxed mb-4">
                 If you think they might be in danger right now, please contact local emergency
                 services. You can also find{" "}
-                <Link to="/crisis" className="underline underline-offset-2 text-white">
+                <Link to="/crisis" className="underline underline-offset-2 text-[var(--th-ink)]">
                   crisis resources here
                 </Link>
                 .
@@ -156,14 +161,10 @@ export function SafetyMenu({
               onChange={(e) => setDetails(e.target.value.slice(0, 1000))}
               placeholder="Anything else we should know? (optional)"
               rows={3}
-              className="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white text-sm placeholder:text-white/40 resize-none focus:outline-none focus:border-white/40 mb-4"
+              className="th-field resize-none mb-4"
             />
 
-            <button
-              onClick={submitReport}
-              disabled={!reason || busy}
-              className="w-full py-3 rounded-full font-semibold text-sm bg-white/20 border border-white/40 text-white hover:bg-white/30 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <button onClick={submitReport} disabled={!reason || busy} className={primary}>
               {busy ? "Sending…" : "Send report"}
             </button>
           </div>
@@ -171,40 +172,33 @@ export function SafetyMenu({
 
         {view === "reported" && (
           <div className="p-6 text-center">
-            <h2 className="font-serif text-white text-2xl mb-2">Thank you</h2>
-            <p className="text-white/75 text-sm leading-relaxed mb-6">
+            <h2 className="th-display text-[1.5rem] text-[var(--th-ink)] mb-2">Thank you</h2>
+            <p className="text-[var(--th-text-2)] text-sm leading-relaxed mb-6">
               We'll review your report. You can also block {targetName} so you don't hear from
               them or see them again.
             </p>
-            <button
-              onClick={() => setView("block")}
-              className="w-full py-3 rounded-full font-semibold text-sm bg-white/20 border border-white/40 text-white hover:bg-white/30 transition-all mb-2"
-            >
+            <button onClick={() => setView("block")} className={cn(primary, "mb-2")}>
               Block {targetName}
             </button>
-            <button onClick={close} className="w-full py-3 text-white/60 text-sm hover:text-white transition-colors">
-              Not now
-            </button>
+            <button onClick={close} className={quiet}>Not now</button>
           </div>
         )}
 
         {view === "block" && (
           <div className="p-6 text-center">
-            <h2 className="font-serif text-white text-2xl mb-2">Block {targetName}?</h2>
-            <p className="text-white/75 text-sm leading-relaxed mb-6">
+            <h2 className="th-display text-[1.5rem] text-[var(--th-ink)] mb-2">Block {targetName}?</h2>
+            <p className="text-[var(--th-text-2)] text-sm leading-relaxed mb-6">
               You won't be able to message each other, and you won't see each other in matches or
               Telos. They won't be told. You can undo this any time in Settings.
             </p>
             <button
               onClick={confirmBlock}
               disabled={busy}
-              className="w-full py-3 rounded-full font-semibold text-sm bg-red-400/25 border border-red-300/40 text-white hover:bg-red-400/35 transition-all mb-2 disabled:opacity-50"
+              className="w-full py-3 rounded-full font-medium text-sm bg-[#9b4a3c] text-white active:scale-[0.98] transition-all mb-2 disabled:opacity-50"
             >
               {busy ? "Blocking…" : "Block"}
             </button>
-            <button onClick={close} className="w-full py-3 text-white/60 text-sm hover:text-white transition-colors">
-              Cancel
-            </button>
+            <button onClick={close} className={quiet}>Cancel</button>
           </div>
         )}
       </div>
@@ -221,7 +215,9 @@ export function SafetyMenu({
         }}
         aria-label={`Report or block ${targetName}`}
         className={cn(
-          "w-10 h-10 flex items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors",
+          tone === "sky"
+            ? "th-icon-btn"
+            : "w-10 h-10 flex items-center justify-center rounded-full text-[var(--th-text-2)] hover:bg-black/5 transition-colors",
           className
         )}
       >

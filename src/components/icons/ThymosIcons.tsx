@@ -91,3 +91,29 @@ export function TabTelosIcon(props: IconProps) {
     </svg>
   );
 }
+
+/** A small ring with a dot: someone reaching out, for a request for help. */
+export function AskIcon({ color = "currentColor", ...props }: IconProps & { color?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <circle cx="12" cy="12" r="8" stroke={color} strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="2.6" fill={color} />
+    </svg>
+  );
+}
+
+/** A painterly tree for empty states. */
+export function TreeArt(props: IconProps) {
+  return (
+    <svg viewBox="0 0 120 120" fill="none" aria-hidden="true" {...props}>
+      <ellipse cx="60" cy="104" rx="34" ry="6" fill="#767a5c" opacity="0.25" />
+      <path d="M60 104V66" stroke="#6b5c3c" strokeWidth="7" strokeLinecap="round" />
+      <path d="M60 86c-8-2-14-9-13-16" stroke="#6b5c3c" strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M60 78c7-2 12-8 11-14" stroke="#6b5c3c" strokeWidth="4.5" strokeLinecap="round" />
+      <circle cx="60" cy="48" r="26" fill="#909473" />
+      <circle cx="42" cy="58" r="17" fill="#9ba47a" />
+      <circle cx="78" cy="56" r="18" fill="#767a5c" />
+      <circle cx="60" cy="34" r="16" fill="#a8b088" />
+    </svg>
+  );
+}

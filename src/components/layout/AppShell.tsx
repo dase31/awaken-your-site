@@ -13,9 +13,13 @@ interface AppShellProps {
   variant?: "classic" | "ambient";
   /** Ambient only: show a back button on the left of the top row. */
   onBack?: () => void;
+  /** Ambient only: replaces the settings button on the right of the top row. */
+  actions?: ReactNode;
+  /** Ambient only: fill the screen exactly and let the page scroll inside (chat). */
+  fill?: boolean;
 }
 
-export function AppShell({ children, hideNav, variant = "classic", onBack }: AppShellProps) {
+export function AppShell({ children, hideNav, variant = "classic", onBack, actions, fill }: AppShellProps) {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
 
@@ -28,7 +32,7 @@ export function AppShell({ children, hideNav, variant = "classic", onBack }: App
 
   if (variant === "ambient") {
     return (
-      <div className="th-screen">
+      <div className={fill ? "th-screen th-fill" : "th-screen"}>
         {!checking && (
           <>
             <div className="th-ambient" aria-hidden="true" />
@@ -41,13 +45,15 @@ export function AppShell({ children, hideNav, variant = "classic", onBack }: App
               ) : (
                 <span />
               )}
-              <button className="th-icon-btn" onClick={() => navigate("/settings")} aria-label="Settings">
-                <Settings size={18} strokeWidth={1.7} />
-              </button>
+              {actions ?? (
+                <button className="th-icon-btn" onClick={() => navigate("/settings")} aria-label="Settings">
+                  <Settings size={18} strokeWidth={1.7} />
+                </button>
+              )}
             </div>
             <main
-              className="relative z-10 px-4 min-h-[60vh]"
-              style={{ paddingBottom: "calc(max(16px, env(safe-area-inset-bottom)) + 6rem)" }}
+              className={fill ? "relative z-10 px-4 flex-1 min-h-0 flex flex-col" : "relative z-10 px-4 min-h-[60vh]"}
+              style={fill ? undefined : { paddingBottom: "calc(max(16px, env(safe-area-inset-bottom)) + 6rem)" }}
             >
               {children}
             </main>

@@ -1,5 +1,6 @@
 import { Check, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { PersonAvatar } from "@/components/PersonAvatar";
 import type { ConnectionRequest } from "@/hooks/useConnectionRequests";
 
 interface ConnectionRequestCardProps {
@@ -9,17 +10,11 @@ interface ConnectionRequestCardProps {
 }
 
 export function ConnectionRequestCard({ request, onAccept, onReject }: ConnectionRequestCardProps) {
-  const initial = request.senderName.charAt(0).toUpperCase();
   const timeAgo = formatDistanceToNow(new Date(request.createdAt), { addSuffix: true });
 
   return (
     <div className="th-glass-row flex items-center gap-3.5 px-4 py-3.5">
-      <div
-        className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white th-display text-base font-medium"
-        style={{ background: "var(--th-sage)" }}
-      >
-        {initial}
-      </div>
+      <PersonAvatar name={request.senderName} />
 
       <div className="flex-1 min-w-0">
         <p className="text-[0.95rem] font-medium text-[var(--th-ink)] truncate">{request.senderName}</p>

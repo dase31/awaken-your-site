@@ -3,9 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { useTelosProfile } from "@/hooks/useTelosProfile";
 import { useTelosPosts, TelosPost } from "@/hooks/useTelosPosts";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { Plus, X, Heart, HandHelping, ArrowRight } from "lucide-react";
+import { Plus, X, ArrowRight } from "lucide-react";
+import { PageHead } from "@/components/layout/PageHead";
+import { PersonAvatar } from "@/components/PersonAvatar";
+import { SunIcon, AskIcon, TreeArt } from "@/components/icons/ThymosIcons";
 import { SafetyMenu } from "@/components/safety/SafetyMenu";
 
 const SPECIALTY_OPTIONS = [
@@ -20,20 +24,8 @@ const CATEGORY_OPTIONS = [
 ];
 
 // ── Glass Card ──
-function GlassCard({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
-  return (
-    <div
-      onClick={onClick}
-      className={cn(
-        "bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-5 shadow-lg shadow-black/5",
-        "transition-all duration-300",
-        onClick && "cursor-pointer hover:bg-white/25 active:scale-[0.98]",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
+function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cn("th-glass p-5", className)}>{children}</div>;
 }
 
 // ── First-visit Intro ──
@@ -54,37 +46,24 @@ const TELOS_STEPS = [
 
 function TelosIntro({ onContinue }: { onContinue: () => void }) {
   return (
-    <div className="space-y-8 fade-in-up">
-      <div className="text-center">
-        <h1
-          className="font-serif text-white text-3xl mb-3"
-          style={{ textShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
-        >
-          Telos
-        </h1>
-        <p className="text-white/70 text-sm leading-relaxed max-w-[260px] mx-auto">
-          The part of Thymos where you give, not just receive.
-        </p>
-      </div>
+    <div className="fade-in-up">
+      <PageHead title="Telos" sub="The part of Thymos where you give, not just receive." />
 
-      <div className="space-y-3">
+      <div className="space-y-2.5 mb-6">
         {TELOS_STEPS.map((step, i) => (
-          <GlassCard key={step.title} className="flex gap-4 items-start">
-            <span className="font-serif text-white/50 text-lg leading-none pt-0.5 shrink-0">
+          <GlassCard key={step.title} className="flex gap-4 items-start !py-4">
+            <span className="th-display text-[var(--th-umber-light)] text-xl leading-none pt-0.5 shrink-0">
               {i + 1}
             </span>
             <div>
-              <p className="text-white text-base font-medium mb-1">{step.title}</p>
-              <p className="text-white/60 text-sm leading-relaxed">{step.body}</p>
+              <p className="text-[var(--th-ink)] text-[0.95rem] font-medium mb-0.5">{step.title}</p>
+              <p className="text-[var(--th-text-2)] text-sm leading-relaxed">{step.body}</p>
             </div>
           </GlassCard>
         ))}
       </div>
 
-      <button
-        onClick={onContinue}
-        className="w-full py-4 rounded-full font-semibold text-base bg-white/20 backdrop-blur-sm border border-white/40 text-white hover:bg-white/30 active:scale-[0.98] transition-all duration-300"
-      >
+      <button onClick={onContinue} className="th-btn w-full">
         Set up my Telos →
       </button>
     </div>
@@ -108,34 +87,18 @@ function TelosProfileSetup({ onSave }: { onSave: (desc: string, specs: string[])
   };
 
   return (
-    <div className="space-y-6 fade-in-up">
-      <div className="text-center mb-4">
-        <h1
-          className="font-serif text-white text-2xl md:text-3xl mb-2"
-          style={{ textShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
-        >
-          Set up your Telos
-        </h1>
-        <p className="text-white/70 text-sm max-w-xs mx-auto">
-          Share what you can offer the world. Your skills become a force for good.
-        </p>
-      </div>
+    <div className="space-y-3 fade-in-up">
+      <PageHead title="Set up your Telos" sub="Share what you can offer. Your skills become a force for good." />
 
       <GlassCard>
-        <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
-          Your Specialties
-        </h2>
+        <h2 className="th-eyebrow mb-3">Your specialties</h2>
         <div className="flex flex-wrap gap-2">
           {SPECIALTY_OPTIONS.map(s => (
             <button
               key={s}
               onClick={() => toggle(s)}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-sm transition-all duration-200 border",
-                selected.includes(s)
-                  ? "bg-white/30 border-white/50 text-white font-medium"
-                  : "bg-white/10 border-white/20 text-white/70 hover:bg-white/15"
-              )}
+              aria-pressed={selected.includes(s)}
+              className="th-pill !bg-[var(--th-paper)] !border-[var(--th-line)] aria-pressed:!bg-[var(--th-ink)]"
             >
               {s}
             </button>
@@ -144,14 +107,12 @@ function TelosProfileSetup({ onSave }: { onSave: (desc: string, specs: string[])
       </GlassCard>
 
       <GlassCard>
-        <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
-          Brief Description
-        </h2>
+        <h2 className="th-eyebrow mb-3">Brief description</h2>
         <textarea
           value={description}
           onChange={e => setDescription(e.target.value)}
           placeholder="What drives you? How do you want to contribute?"
-          className="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white placeholder:text-white/40 text-sm resize-none focus:outline-none focus:border-white/40 min-h-[80px]"
+          className="th-field resize-none min-h-[80px]"
           rows={3}
         />
       </GlassCard>
@@ -159,12 +120,7 @@ function TelosProfileSetup({ onSave }: { onSave: (desc: string, specs: string[])
       <button
         onClick={handleSave}
         disabled={selected.length === 0 || saving}
-        className={cn(
-          "w-full py-4 rounded-full font-semibold text-base transition-all duration-300",
-          selected.length > 0
-            ? "bg-white/20 backdrop-blur-sm border border-white/40 text-white hover:bg-white/30 active:scale-[0.98]"
-            : "bg-white/10 border border-white/15 text-white/30 cursor-not-allowed"
-        )}
+        className="th-btn w-full !mt-5"
       >
         {saving ? "Saving…" : "Activate Telos"}
       </button>
@@ -191,32 +147,35 @@ function CreatePostModal({ onClose, onCreate }: {
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-[hsl(200,60%,40%)]/95 backdrop-blur-md border border-white/20 rounded-2xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto space-y-4 fade-in-up">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-[rgba(28,27,24,0.35)] backdrop-blur-sm px-4"
+      style={{ paddingTop: "max(1rem, env(safe-area-inset-top))", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="New post"
+      onClick={onClose}
+    >
+      <div
+        className="th-sheet w-full max-w-md max-h-[85dvh] overflow-y-auto p-6 space-y-4 fade-in-up"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
-          <h2 className="font-serif text-white text-lg" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
-            New Post
-          </h2>
-          <button onClick={onClose} className="text-white/60 hover:text-white p-1">
+          <h2 className="th-display text-[1.3rem] text-[var(--th-ink)]">New post</h2>
+          <button onClick={onClose} aria-label="Close" className="text-[var(--th-text-2)] hover:text-[var(--th-ink)] p-1">
             <X size={20} />
           </button>
         </div>
 
-        {/* Type toggle */}
         <div className="flex gap-2">
           {(["offer", "need"] as const).map(t => (
             <button
               key={t}
               onClick={() => setPostType(t)}
-              className={cn(
-                "flex-1 py-2 rounded-xl text-sm font-medium transition-all border",
-                postType === t
-                  ? "bg-white/25 border-white/40 text-white"
-                  : "bg-white/10 border-white/15 text-white/60 hover:bg-white/15"
-              )}
+              aria-pressed={postType === t}
+              className="th-pill flex-1 !py-2.5 !bg-[var(--th-paper)] !border-[var(--th-line)] aria-pressed:!bg-[var(--th-ink)]"
             >
-              {t === "offer" ? "I'm Offering" : "I Need Help"}
+              {t === "offer" ? "I'm offering" : "I need help"}
             </button>
           ))}
         </div>
@@ -225,31 +184,26 @@ function CreatePostModal({ onClose, onCreate }: {
           value={title}
           onChange={e => setTitle(e.target.value)}
           placeholder="What are you offering or need?"
-          className="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white placeholder:text-white/40 text-sm focus:outline-none focus:border-white/40"
+          className="th-field"
         />
 
         <textarea
           value={desc}
           onChange={e => setDesc(e.target.value)}
           placeholder="Describe in more detail…"
-          className="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-white placeholder:text-white/40 text-sm resize-none focus:outline-none focus:border-white/40"
+          className="th-field resize-none"
           rows={3}
         />
 
-        {/* Category */}
         <div>
-          <label className="text-white/70 text-xs uppercase tracking-wide mb-2 block">Category</label>
+          <label className="th-label mb-2 block">Category</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORY_OPTIONS.map(c => (
               <button
                 key={c}
                 onClick={() => setCategory(c)}
-                className={cn(
-                  "px-3 py-1 rounded-full text-xs transition-all border",
-                  category === c
-                    ? "bg-white/25 border-white/40 text-white"
-                    : "bg-white/10 border-white/15 text-white/60"
-                )}
+                aria-pressed={category === c}
+                className="th-pill !text-xs !py-1.5 !px-3 !bg-[var(--th-paper)] !border-[var(--th-line)] aria-pressed:!bg-[var(--th-ink)]"
               >
                 {c}
               </button>
@@ -260,17 +214,13 @@ function CreatePostModal({ onClose, onCreate }: {
         <button
           onClick={handleCreate}
           disabled={!title.trim() || !desc.trim() || saving}
-          className={cn(
-            "w-full py-3 rounded-2xl font-medium text-sm transition-all duration-300",
-            title.trim() && desc.trim()
-              ? "bg-white/20 border border-white/30 text-white hover:bg-white/25 active:scale-[0.98]"
-              : "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed"
-          )}
+          className="th-btn w-full"
         >
           {saving ? "Posting…" : "Post"}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -282,27 +232,28 @@ function PostCard({ post, isOwn, onRespond, onBlocked }: { post: TelosPost; isOw
   return (
     <GlassCard className="space-y-3">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-            <span className="font-serif text-white text-sm">{post.author_name?.charAt(0).toUpperCase()}</span>
-          </div>
-          <div>
-            <p className="text-white text-sm font-medium">{post.author_name}</p>
-            <p className="text-white/50 text-xs">{timeAgo}</p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <PersonAvatar name={post.author_name ?? ""} size={34} />
+          <div className="min-w-0">
+            <p className="text-[var(--th-ink)] text-sm font-medium truncate">{post.author_name}</p>
+            <p className="text-[var(--th-text-3)] text-xs">{timeAgo}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <span className={cn(
-            "px-2 py-0.5 rounded-full text-xs font-medium border",
-            isOffer
-              ? "bg-emerald-500/20 border-emerald-400/30 text-emerald-200"
-              : "bg-amber-500/20 border-amber-400/30 text-amber-200"
-          )}>
-            {isOffer ? <><Heart size={10} className="inline mr-1" />Offering</> : <><HandHelping size={10} className="inline mr-1" />Needs Help</>}
+        <div className="flex items-center gap-1 shrink-0">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+              isOffer
+                ? "bg-[#E4E7DB] text-[var(--th-sage-deep)]"
+                : "bg-[#E9E2D4] text-[var(--th-umber-light)]"
+            )}
+          >
+            {isOffer ? <SunIcon width={12} height={12} color="currentColor" /> : <AskIcon width={12} height={12} />}
+            {isOffer ? "Offering" : "Needs help"}
           </span>
           {!isOwn && (
             <SafetyMenu
-              className="-mr-2 w-8 h-8"
+              className="-mr-2 !w-8 !h-8"
               targetUserId={post.user_id}
               targetName={post.author_name || "this person"}
               telosPostId={post.id}
@@ -314,18 +265,16 @@ function PostCard({ post, isOwn, onRespond, onBlocked }: { post: TelosPost; isOw
       </div>
 
       <div>
-        <h3 className="text-white font-medium text-base mb-1" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.15)" }}>
-          {post.title}
-        </h3>
-        <p className="text-white/70 text-sm">{post.description}</p>
+        <h3 className="text-[var(--th-ink)] font-medium text-base mb-1">{post.title}</h3>
+        <p className="text-[var(--th-text-2)] text-sm leading-relaxed">{post.description}</p>
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-white/50 text-xs bg-white/10 px-2 py-0.5 rounded-full">{post.category}</span>
+        <span className="text-[var(--th-text-2)] text-xs bg-black/5 px-2.5 py-1 rounded-full">{post.category}</span>
         {!isOwn && (
           <button
             onClick={onRespond}
-            className="flex items-center gap-1 text-white/80 text-sm font-medium hover:text-white transition-colors"
+            className="flex items-center gap-1 text-[var(--th-ink)] text-sm font-medium"
           >
             Respond <ArrowRight size={14} />
           </button>
@@ -333,9 +282,9 @@ function PostCard({ post, isOwn, onRespond, onBlocked }: { post: TelosPost; isOw
       </div>
 
       {post.author_specialties && post.author_specialties.length > 0 && (
-        <div className="flex flex-wrap gap-1 pt-1 border-t border-white/10">
+        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[var(--th-line)]">
           {post.author_specialties.map(s => (
-            <span key={s} className="text-white/50 text-xs bg-white/5 px-2 py-0.5 rounded-full">{s}</span>
+            <span key={s} className="text-[var(--th-text-3)] text-xs bg-black/[0.04] px-2 py-0.5 rounded-full">{s}</span>
           ))}
         </div>
       )}
@@ -361,9 +310,9 @@ const Telos = () => {
 
   if (profileLoading) {
     return (
-      <AppShell>
-        <div className="max-w-md mx-auto space-y-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-24 bg-white/10 rounded-2xl animate-pulse" />)}
+      <AppShell variant="ambient">
+        <div className="max-w-md mx-auto space-y-2.5 pt-4">
+          {[1, 2, 3].map(i => <div key={i} className="th-glass-row h-24 animate-pulse" />)}
         </div>
       </AppShell>
     );
@@ -372,7 +321,7 @@ const Telos = () => {
   // No telos profile yet — explain Telos first, then show setup
   if (!profile) {
     return (
-      <AppShell>
+      <AppShell variant="ambient">
         <div className="max-w-md mx-auto">
           {introDone ? (
             <TelosProfileSetup onSave={saveProfile} />
@@ -385,52 +334,41 @@ const Telos = () => {
   }
 
   return (
-    <AppShell>
-      <div className="max-w-md mx-auto space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1
-              className="font-serif text-white text-2xl"
-              style={{ textShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
+    <AppShell variant="ambient">
+      <div className="max-w-md mx-auto">
+        <PageHead
+          title="Telos"
+          sub="Purpose in action — offer something, or ask."
+          right={
+            <button
+              onClick={() => setShowCreateModal(true)}
+              aria-label="New post"
+              className="th-icon-btn shrink-0"
             >
-              Telos
-            </h1>
-            <p className="text-white/60 text-sm">Purpose in action</p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white hover:bg-white/25 transition-all active:scale-95"
-          >
-            <Plus size={20} />
-          </button>
-        </div>
+              <Plus size={20} />
+            </button>
+          }
+        />
 
-        {/* Filter tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 px-1 pb-4">
           {(["all", "offer", "need"] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-medium transition-all border",
-                filter === f
-                  ? "bg-white/25 border-white/40 text-white"
-                  : "bg-white/10 border-white/15 text-white/60 hover:bg-white/15"
-              )}
+              aria-pressed={filter === f}
+              className="th-pill"
             >
               {f === "all" ? "All" : f === "offer" ? "Offerings" : "Requests"}
             </button>
           ))}
         </div>
 
-        {/* Posts feed */}
         {postsLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white/10 rounded-2xl animate-pulse" />)}
+          <div className="space-y-2.5">
+            {[1, 2, 3].map(i => <div key={i} className="th-glass h-32 animate-pulse" />)}
           </div>
         ) : filteredPosts.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {filteredPosts.map(post => (
               <PostCard
                 key={post.id}
@@ -442,16 +380,17 @@ const Telos = () => {
             ))}
           </div>
         ) : (
-          <GlassCard className="text-center py-10">
-            <p className="font-serif text-white/70 text-lg mb-2" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+          <GlassCard className="text-center !px-7 !pt-9 !pb-8">
+            <TreeArt className="w-[92px] h-[92px] mx-auto mb-4" />
+            <h3 className="th-display text-[1.2rem] font-medium text-[var(--th-ink)] mb-2">
               {filter === "all" ? "No posts yet" : filter === "offer" ? "No offerings yet" : "No requests yet"}
-            </p>
-            <p className="text-white/50 text-sm mb-4">
-              Be the first to contribute — share what you can offer or ask for help.
+            </h3>
+            <p className="text-[var(--th-text-2)] text-[0.86rem] leading-relaxed mb-5">
+              Be the first to contribute — share what you can offer, or ask for help.
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="text-white/80 text-sm font-medium hover:text-white transition-colors"
+              className="inline-block text-[0.86rem] font-semibold text-[var(--th-ink)] bg-[var(--th-paper)] border border-[var(--th-line)] px-[18px] py-[9px] rounded-full"
             >
               Create a post →
             </button>

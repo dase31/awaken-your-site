@@ -3,19 +3,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Send } from "lucide-react";
+import { Send } from "lucide-react";
+import { PersonAvatar } from "@/components/PersonAvatar";
 import { cn } from "@/lib/utils";
-import { format, isToday, isYesterday } from "date-fns";
+import { format, isToday, isValid, isYesterday } from "date-fns";
 import { SafetyMenu } from "@/components/safety/SafetyMenu";
 import { toast } from "sonner";
 
+// A message with a missing or malformed timestamp should render without one,
+// not throw and take the whole screen down.
 function formatMessageTime(dateStr: string) {
   const date = new Date(dateStr);
-  return format(date, "h:mm a");
+  return isValid(date) ? format(date, "h:mm a") : "";
 }
 
 function formatDateSeparator(dateStr: string) {
   const date = new Date(dateStr);
+  if (!isValid(date)) return "";
   if (isToday(date)) return "Today";
   if (isYesterday(date)) return "Yesterday";
   return format(date, "MMM d, yyyy");
@@ -100,52 +104,45 @@ const ChatThread = () => {
   let lastDate = "";
 
   return (
-    <AppShell hideNav>
-      <div className="max-w-md mx-auto flex flex-col h-[calc(100dvh-5rem-env(safe-area-inset-top,0px))] -mb-24">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => navigate("/chat")}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 hover:bg-white/15 transition-all"
-          >
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
-            <span className="font-serif text-white text-lg">
-              {otherUserName.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <h1
-            className="font-serif text-white text-xl"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-          >
+    <AppShell
+      variant="ambient"
+      hideNav
+      fill
+      onBack={() => navigate("/chat")}
+      actions={
+        otherUserId && conversationId ? (
+          <SafetyMenu
+            tone="sky"
+            targetUserId={otherUserId}
+            targetName={otherUserName || "this person"}
+            conversationId={conversationId}
+            getContext={getReportContext}
+            onBlocked={() => navigate("/chat")}
+          />
+        ) : (
+          <span />
+        )
+      }
+    >
+      <div className="max-w-md w-full mx-auto flex flex-col flex-1 min-h-0">
+        {/* Who you're talking to */}
+        <div className="flex items-center gap-3 px-2 pt-3 pb-4">
+          <PersonAvatar name={otherUserName} size={44} />
+          <h1 className="th-display th-on-sky text-[1.5rem] font-normal leading-tight break-words">
             {otherUserName}
           </h1>
-          {otherUserId && conversationId && (
-            <SafetyMenu
-              className="ml-auto"
-              targetUserId={otherUserId}
-              targetName={otherUserName || "this person"}
-              conversationId={conversationId}
-              getContext={getReportContext}
-              onBlocked={() => navigate("/chat")}
-            />
-          )}
         </div>
 
         {/* Messages */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-2 pr-1 pb-2"
-        >
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto space-y-2 pb-2">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-white/50 text-sm">Loading messages…</p>
+              <p className="th-on-sky text-sm">Loading messages…</p>
             </div>
           ) : messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-white/50 text-sm text-center">
-                Say hello 👋
+              <p className="th-glass-row px-5 py-3 text-[0.9rem] text-[var(--th-text-2)] text-center">
+                Say hello.
               </p>
             </div>
           ) : (
@@ -160,9 +157,9 @@ const ChatThread = () => {
 
               return (
                 <div key={msg.id}>
-                  {showDate && (
+                  {showDate && msgDate && (
                     <div className="flex justify-center my-4">
-                      <span className="text-white/40 text-xs bg-white/10 rounded-full px-3 py-1">
+                      <span className="th-glass-row !rounded-full text-[var(--th-text-2)] text-xs px-3 py-1">
                         {msgDate}
                       </span>
                     </div>
@@ -170,19 +167,19 @@ const ChatThread = () => {
                   <div className={cn("flex", isMine ? "justify-end" : "justify-start")}>
                     <div
                       className={cn(
-                        "max-w-[80%] px-4 py-2.5 backdrop-blur-sm border",
+                        "max-w-[80%] px-4 py-2.5",
                         isMine
-                          ? "bg-white/25 border-white/30 rounded-2xl rounded-br-md"
-                          : "bg-white/12 border-white/15 rounded-2xl rounded-bl-md"
+                          ? "bg-[var(--th-ink)] text-[var(--th-paper)] rounded-2xl rounded-br-md"
+                          : "th-glass-row !rounded-2xl !rounded-bl-md text-[var(--th-ink)]"
                       )}
                     >
-                      <p className="text-white text-sm leading-relaxed whitespace-pre-wrap">
-                        {msg.content}
-                      </p>
-                      <p className={cn(
-                        "text-[10px] mt-1",
-                        isMine ? "text-white/50 text-right" : "text-white/40"
-                      )}>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      <p
+                        className={cn(
+                          "text-[10px] mt-1",
+                          isMine ? "text-[rgba(252,251,247,0.6)] text-right" : "text-[var(--th-text-3)]"
+                        )}
+                      >
                         {formatMessageTime(msg.createdAt)}
                       </p>
                     </div>
@@ -194,29 +191,28 @@ const ChatThread = () => {
         </div>
 
         {/* Input bar */}
-        <div className="flex items-end gap-2 pt-3" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-          <div className="flex-1 bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3">
+        <div
+          className="flex items-end gap-2 pt-3"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="th-glass-row !rounded-[22px] flex-1 px-4 py-3">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type a message…"
               rows={1}
-              className="w-full bg-transparent text-white text-sm placeholder:text-white/40 resize-none outline-none max-h-24"
-              style={{ caretColor: "white" }}
+              aria-label="Message"
+              className="w-full bg-transparent text-[var(--th-ink)] text-sm placeholder:text-[var(--th-text-3)] resize-none outline-none max-h-24"
             />
           </div>
           <button
             onClick={handleSend}
             disabled={!input.trim()}
-            className={cn(
-              "w-11 h-11 flex items-center justify-center rounded-full shrink-0",
-              "bg-white/25 border border-white/30 backdrop-blur-sm",
-              "hover:bg-white/35 transition-all duration-200",
-              "disabled:opacity-40 disabled:hover:bg-white/25"
-            )}
+            aria-label="Send"
+            className="w-11 h-11 flex items-center justify-center rounded-full shrink-0 bg-[var(--th-ink)] text-[var(--th-paper)] transition-opacity disabled:opacity-40"
           >
-            <Send size={18} className="text-white" />
+            <Send size={18} />
           </button>
         </div>
       </div>

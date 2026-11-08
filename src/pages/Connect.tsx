@@ -1,8 +1,11 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { PageHead } from "@/components/layout/PageHead";
+import { PersonAvatar } from "@/components/PersonAvatar";
+import { CircleIcon } from "@/components/icons/ThymosIcons";
 import { useConnectionRequests } from "@/hooks/useConnectionRequests";
 import { ConnectionRequestCard } from "@/components/connections/ConnectionRequestCard";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, MessageCircle, Users, Sparkles, Clock } from "lucide-react";
+import { ChevronDown, Clock } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 
@@ -15,55 +18,44 @@ export default function Connect() {
   const hasContent = incoming.length > 0 || accepted.length > 0 || sentPending.length > 0;
 
   return (
-    <AppShell>
-      <div className="px-6 pt-6 pb-24 space-y-6">
-        <h1
-          className="font-serif text-2xl text-white text-center"
-          style={{ textShadow: "0 2px 15px rgba(0,0,0,0.15)" }}
-        >
-          Your Circle
-        </h1>
+    <AppShell variant="ambient">
+      <div className="max-w-md mx-auto">
+        <PageHead title="Your circle" sub="People you check in with." />
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-white/40 border-t-white rounded-full animate-spin" />
           </div>
         ) : !hasContent ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-16 space-y-4">
-            <p className="text-white/20 text-5xl tracking-[0.5em] select-none">◦ ◦ ◦</p>
-            <p
-              className="font-serif text-white/80 text-xl text-center"
-              style={{ textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
-            >
+          <div className="th-glass text-center px-7 py-9">
+            <div className="w-16 h-16 rounded-full bg-[#E2E9F1] flex items-center justify-center mx-auto mb-4">
+              <CircleIcon width={30} height={30} />
+            </div>
+            <p className="th-display text-[1.2rem] font-medium text-[var(--th-ink)] mb-2">
               Your circle is empty
             </p>
-            <p className="text-white/50 text-sm text-center max-w-[220px] leading-relaxed">
+            <p className="text-[0.86rem] leading-relaxed text-[var(--th-text-2)] mb-5 max-w-[240px] mx-auto">
               Find someone who shares what you're going through
             </p>
-            <button
-              onClick={() => navigate("/match")}
-              className="mt-2 bg-white/15 backdrop-blur-sm border border-white/30 text-white font-semibold px-8 py-3 rounded-full hover:bg-white/25 active:scale-[0.98] transition-all duration-300"
-            >
+            <button onClick={() => navigate("/match")} className="th-btn">
               Find a match
             </button>
           </div>
         ) : (
-          <>
-            {/* Pending Requests */}
+          <div className="space-y-6">
             {incoming.length > 0 && (
               <Collapsible open={pendingOpen} onOpenChange={setPendingOpen}>
-                <CollapsibleTrigger className="flex items-center gap-2 w-full mb-3">
-                  <span className="text-white/80 text-sm font-medium">Pending Requests</span>
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">
+                <CollapsibleTrigger className="flex items-center gap-2 w-full mb-2.5 px-2">
+                  <span className="th-label !text-[var(--th-text-2)]">Pending requests</span>
+                  <span className="px-2 py-0.5 rounded-full bg-[var(--th-ink)] text-[var(--th-paper)] text-[0.7rem] font-medium">
                     {incoming.length}
                   </span>
                   <ChevronDown
                     size={14}
-                    className={`text-white/50 ml-auto transition-transform ${pendingOpen ? "rotate-180" : ""}`}
+                    className={`text-[var(--th-text-2)] ml-auto transition-transform ${pendingOpen ? "rotate-180" : ""}`}
                   />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-3">
+                <CollapsibleContent className="space-y-2.5">
                   {incoming.map((req) => (
                     <ConnectionRequestCard
                       key={req.id}
@@ -76,82 +68,52 @@ export default function Connect() {
               </Collapsible>
             )}
 
-            {/* Sent Requests */}
             {sentPending.length > 0 && (
-              <div className="space-y-3">
-                <span className="text-white/80 text-sm font-medium">Sent Requests</span>
-                {sentPending.map((req) => {
-                  const initial = req.receiverName.charAt(0).toUpperCase();
-                  return (
-                    <div
-                      key={req.id}
-                      className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl"
-                    >
-                      <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-                        <span className="font-serif text-white text-lg">{initial}</span>
-                      </div>
-                      <p
-                        className="font-serif text-white text-base flex-1 truncate"
-                        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-                      >
-                        {req.receiverName}
-                      </p>
-                      <span className="flex items-center gap-1.5 text-white/40 text-xs">
-                        <Clock size={12} />
-                        Waiting
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="space-y-2.5">
+                <p className="th-label !text-[var(--th-text-2)] px-2">Sent requests</p>
+                {sentPending.map((req) => (
+                  <div key={req.id} className="th-glass-row flex items-center gap-3.5 px-4 py-3.5">
+                    <PersonAvatar name={req.receiverName} />
+                    <p className="text-[0.95rem] font-medium text-[var(--th-ink)] flex-1 truncate">
+                      {req.receiverName}
+                    </p>
+                    <span className="flex items-center gap-1.5 text-[var(--th-text-3)] text-xs">
+                      <Clock size={12} />
+                      Waiting
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Active Connections */}
             {accepted.length > 0 && (
-              <div className="space-y-3">
-                <span className="text-white/80 text-sm font-medium">Your Connections</span>
-                {accepted.map((conn) => {
-                  const initial = conn.displayName.charAt(0).toUpperCase();
-                  return (
-                    <div
-                      key={conn.otherId}
-                      className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl"
-                    >
-                      <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-                        <span className="font-serif text-white text-lg">{initial}</span>
-                      </div>
-                      <p
-                        className="font-serif text-white text-base flex-1 truncate"
-                        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+              <div className="space-y-2.5">
+                <p className="th-label !text-[var(--th-text-2)] px-2">Your connections</p>
+                {accepted.map((conn) => (
+                  <div key={conn.otherId} className="th-glass-row flex items-center gap-3.5 px-4 py-3.5">
+                    <PersonAvatar name={conn.displayName} />
+                    <p className="text-[0.95rem] font-medium text-[var(--th-ink)] flex-1 truncate">
+                      {conn.displayName}
+                    </p>
+                    {conn.conversationId ? (
+                      <button
+                        onClick={() => navigate(`/chat/${conn.conversationId}`)}
+                        className="text-[0.78rem] font-medium bg-[var(--th-ink)] text-[var(--th-paper)] px-3.5 py-1.5 rounded-full shrink-0 active:scale-95 transition-transform"
                       >
-                        {conn.displayName}
-                      </p>
-                      {conn.conversationId ? (
-                        <button
-                          onClick={() => navigate(`/chat/${conn.conversationId}`)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 border border-white/20 text-white/80 text-sm hover:bg-white/25 transition-all"
-                        >
-                          <MessageCircle size={14} />
-                          Chat
-                        </button>
-                      ) : (
-                        <span className="text-white/40 text-xs">No chat yet</span>
-                      )}
-                    </div>
-                  );
-                })}
+                        Chat
+                      </button>
+                    ) : (
+                      <span className="text-[var(--th-text-3)] text-xs">No chat yet</span>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Find Someone New */}
-            <button
-              onClick={() => navigate("/match")}
-              className="w-full flex items-center justify-center gap-2 p-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white/80 hover:bg-white/20 hover:text-white transition-all"
-            >
-              <Sparkles size={16} />
-              <span className="font-medium text-sm">Find a new match →</span>
+            <button onClick={() => navigate("/match")} className="th-ghost-row">
+              Find a new match →
             </button>
-          </>
+          </div>
         )}
       </div>
     </AppShell>
