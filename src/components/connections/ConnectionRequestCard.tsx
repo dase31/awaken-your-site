@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { Check, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { ConnectionRequest } from "@/hooks/useConnectionRequests";
@@ -14,41 +13,33 @@ export function ConnectionRequestCard({ request, onAccept, onReject }: Connectio
   const timeAgo = formatDistanceToNow(new Date(request.createdAt), { addSuffix: true });
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-4 p-4",
-        "bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl"
-      )}
-    >
-      {/* Avatar */}
-      <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-        <span className="font-serif text-white text-lg">{initial}</span>
+    <div className="th-glass-row flex items-center gap-3.5 px-4 py-3.5">
+      <div
+        className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white th-display text-base font-medium"
+        style={{ background: "var(--th-sage)" }}
+      >
+        {initial}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
-        <p
-          className="font-serif text-white text-base truncate"
-          style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-        >
-          {request.senderName}
-        </p>
-        <p className="text-white/50 text-xs">{timeAgo}</p>
+        <p className="text-[0.95rem] font-medium text-[var(--th-ink)] truncate">{request.senderName}</p>
+        <p className="text-[0.72rem] text-[var(--th-text-3)]">{timeAgo}</p>
       </div>
 
-      {/* Actions */}
       <div className="flex gap-2 shrink-0">
         <button
           onClick={() => onAccept(request.id)}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/20 border border-white/30 hover:bg-white/30 transition-all"
+          aria-label={`Accept ${request.senderName}`}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--th-ink)] text-[var(--th-paper)] active:scale-95 transition-transform"
         >
-          <Check size={16} className="text-white" />
+          <Check size={16} />
         </button>
         <button
           onClick={() => onReject(request.id)}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 border border-white/15 hover:bg-white/20 transition-all"
+          aria-label={`Decline ${request.senderName}`}
+          className="w-9 h-9 flex items-center justify-center rounded-full border border-[var(--th-line)] text-[var(--th-text-2)] active:scale-95 transition-transform"
         >
-          <X size={16} className="text-white/60" />
+          <X size={16} />
         </button>
       </div>
     </div>

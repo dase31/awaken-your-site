@@ -6,8 +6,8 @@ import { useConnectionRequests } from "@/hooks/useConnectionRequests";
 import { useReflections } from "@/hooks/useReflections";
 import { ConnectionRequestCard } from "@/components/connections/ConnectionRequestCard";
 import { ReflectionModal } from "@/components/reflections/ReflectionModal";
-import { cn } from "@/lib/utils";
-import { Users, BookOpen, HeartHandshake, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { CircleIcon, BookIcon, SunIcon } from "@/components/icons/ThymosIcons";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -31,50 +31,36 @@ function getDailyPrompt(): string {
   return dailyPrompts[dayOfYear % dailyPrompts.length];
 }
 
-interface GlassCardProps {
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-}
-
-function GlassCard({ children, className, onClick }: GlassCardProps) {
-  return (
-    <div
-      onClick={onClick}
-      className={cn(
-        "bg-white/12 backdrop-blur-xl border border-white/20 rounded-2xl p-5",
-        "transition-all duration-300",
-        onClick && "cursor-pointer hover:bg-white/16 active:scale-[0.98]",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-// A much lighter alternative to GlassCard — icon, one line, an arrow.
-// For actions that don't need to compete visually with the reflection card.
-function ActionRow({
+// A quick-link row: soft tinted circle, title, one line of context, chevron.
+function QuickLink({
   icon,
-  label,
-  trailing,
+  tint,
+  title,
+  sub,
   onClick,
 }: {
   icon: React.ReactNode;
-  label: string;
-  trailing?: string;
+  tint: string;
+  title: string;
+  sub: string;
   onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 py-1 text-left group"
+      className="th-glass-row w-full flex items-center gap-3.5 px-4 py-3.5 text-left active:scale-[0.99] transition-transform"
     >
-      <span className="text-white/50">{icon}</span>
-      <span className="text-white/85 text-base font-medium flex-1">{label}</span>
-      {trailing && <span className="text-white/40 text-sm">{trailing}</span>}
-      <ChevronRight size={16} className="text-white/30 group-hover:text-white/50 transition-colors" />
+      <span
+        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+        style={{ background: tint }}
+      >
+        {icon}
+      </span>
+      <span className="flex-1 min-w-0">
+        <span className="block text-[0.95rem] font-medium text-[var(--th-ink)]">{title}</span>
+        <span className="block text-[0.78rem] text-[var(--th-text-3)] mt-px">{sub}</span>
+      </span>
+      <ChevronRight size={16} className="text-[var(--th-text-3)] shrink-0" />
     </button>
   );
 }
@@ -87,7 +73,15 @@ const Home = () => {
   const dailyPrompt = getDailyPrompt();
 
   const { incoming, loading: connectionsLoading, respondToRequest } = useConnectionRequests();
-  const { saveReflection } = useReflections();
+  const { reflections, saveReflection } = useReflections();
+
+  const now = new Date();
+  const thisMonth = reflections.filter((r) => {
+    const d = new Date(r.createdAt);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+  const journalSub =
+    thisMonth === 0 ? "Start with today's prompt" : `${thisMonth} reflection${thisMonth === 1 ? "" : "s"} this month`;
 
   useEffect(() => {
     const loadUserName = async () => {
@@ -108,64 +102,64 @@ const Home = () => {
   }, []);
 
   return (
-    <AppShell>
-      <div className="max-w-md mx-auto space-y-6 min-h-[calc(100dvh-14rem)] flex flex-col justify-center">
-        {/* Welcome Header */}
-        <div className="text-center mb-8">
-          <h1
-            className="font-serif text-white text-2xl md:text-3xl"
-            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
-          >
-            {greeting}, {userName}
+    <AppShell variant="ambient">
+      <div className="max-w-md mx-auto pt-6">
+        {/* Greeting sits straight on the sky */}
+        <div className="px-2 pt-4 pb-9">
+          <p className="th-on-sky text-[0.82rem] tracking-[0.04em] opacity-90 mb-1">{greeting}</p>
+          <h1 className="th-display th-on-sky text-[2rem] font-normal leading-tight">
+            Hi, {userName}
           </h1>
         </div>
 
-        {/* Daily Reflection Card — hero card */}
-        <GlassCard
+        {/* Daily reflection */}
+        <button
           onClick={() => setShowReflectionModal(true)}
-          className="!bg-white/25 !border-white/40 !p-6"
+          className="th-glass block w-full text-left px-[22px] pt-7 pb-5 active:scale-[0.99] transition-transform"
         >
-          <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
-            Today's Reflection
-          </h2>
-          <p
-            className="font-serif text-white text-2xl leading-snug mb-5"
-            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
-          >
-            "{dailyPrompt}"
-          </p>
-          <span className="text-white/70 text-sm font-medium hover:text-white transition-colors">
-            Tap to reflect →
+          <span className="block text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[var(--th-umber-light)] mb-2.5">
+            Today's reflection
           </span>
-        </GlassCard>
+          <span className="th-display block italic text-[1.2rem] leading-[1.35] text-[var(--th-ink)] mb-3.5">
+            "{dailyPrompt}"
+          </span>
+          <span className="text-[0.85rem] font-medium text-[var(--th-ink)]">Tap to reflect →</span>
+        </button>
 
-        {/* Secondary actions — light rows, not competing with the reflection card */}
-        <div className="space-y-1 px-1">
+        <p className="relative z-10 text-[0.72rem] uppercase tracking-[0.1em] text-[var(--th-text-2)] mt-8 mb-2.5 px-2">
+          Quick links
+        </p>
+        <div className="flex flex-col gap-2.5">
           {connectionsLoading ? (
-            <div className="h-6 bg-white/10 rounded-md animate-pulse" />
+            <div className="th-glass-row h-[68px] animate-pulse" />
           ) : (
-            <ActionRow
-              icon={<Users size={18} />}
-              label="Connections"
-              trailing={incoming.length > 0 ? `${incoming.length} new` : "No new requests"}
+            <QuickLink
+              icon={<CircleIcon width={22} height={22} />}
+              tint="#E2E9F1"
+              title="Connections"
+              sub={incoming.length > 0 ? `${incoming.length} new request${incoming.length === 1 ? "" : "s"}` : "No new requests"}
               onClick={() => navigate("/connect")}
             />
           )}
-          <ActionRow
-            icon={<BookOpen size={18} />}
-            label="Journal"
+          <QuickLink
+            icon={<BookIcon width={22} height={22} />}
+            tint="#E9E2D4"
+            title="Journal"
+            sub={journalSub}
             onClick={() => navigate("/reflections")}
           />
-          <ActionRow
-            icon={<HeartHandshake size={18} />}
-            label="Find support"
+          <QuickLink
+            icon={<SunIcon width={22} height={22} />}
+            tint="#E4E7DB"
+            title="Find support"
+            sub="Get matched with a peer"
             onClick={() => navigate("/match")}
           />
         </div>
 
-        {/* Incoming requests still need real estate to actually act on */}
+        {/* Incoming requests still need room to be acted on */}
         {!connectionsLoading && incoming.length > 0 && (
-          <div className="space-y-3">
+          <div className="mt-6 space-y-2.5">
             {incoming.map(req => (
               <ConnectionRequestCard
                 key={req.id}

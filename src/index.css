@@ -320,3 +320,165 @@
     transform: translateY(-10px);
   }
 }
+
+/* ───────────────────────────────────────────────────────────────
+   Thymos visual language: ambient sky + frosted glass.
+   Tokens and primitives from the redesign brief. Screens opt in with
+   <AppShell variant="ambient">; the "th-" prefix keeps these apart
+   from the shadcn tokens above.
+   ─────────────────────────────────────────────────────────────── */
+:root {
+  --th-cream: #F7F5F1;
+  --th-paper: #FCFBF7;
+  --th-ink: #1C1B18;
+  --th-text-2: #59564F;
+  --th-text-3: #77756F;
+  --th-sky: #7693BB;
+  --th-sky-deep: #5c7ba3;
+  --th-sage: #909473;
+  --th-sage-deep: #767a5c;
+  --th-umber: #413521;
+  --th-umber-light: #7a6a4a;
+  --th-line: rgba(28, 27, 24, 0.1);
+  --th-radius-pill: 999px;
+  --th-radius-card: 24px;
+}
+
+.th-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--th-cream);
+  color: var(--th-ink);
+}
+
+/* Fixed behind the screen's content; content scrolls over it. The scale
+   hides the transparent edges a blur would otherwise leave. */
+.th-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(to bottom, rgba(247, 245, 241, 0.2), rgba(247, 245, 241, 0.6)),
+    url("./assets/sky-ambient.jpg");
+  background-size: cover;
+  background-position: center 30%;
+  filter: blur(22px) saturate(1.08);
+  transform: scale(1.14);
+  pointer-events: none;
+}
+
+.th-glass {
+  position: relative;
+  z-index: 1;
+  background: rgba(252, 251, 247, 0.82);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border-radius: 24px;
+  box-shadow: 0 20px 40px -18px rgba(28, 27, 24, 0.25), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+/* Lighter glass for list rows and secondary surfaces. */
+.th-glass-row {
+  position: relative;
+  z-index: 1;
+  background: rgba(252, 251, 247, 0.78);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  border-radius: 18px;
+}
+
+.th-brand-mark {
+  position: absolute;
+  top: max(22px, env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 21;
+  text-align: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 300;
+  font-size: 0.95rem;
+  letter-spacing: 0.26em;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 2px 14px rgba(10, 20, 35, 0.35);
+  pointer-events: none;
+}
+
+/* The row under the wordmark: back button on the left, actions on the right. */
+.th-topbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: calc(max(22px, env(safe-area-inset-top)) + 2.1rem) 20px 0;
+  box-sizing: content-box;
+}
+
+.th-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.th-display {
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.025em;
+}
+
+.th-on-sky {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(10, 20, 35, 0.25), 0 2px 14px rgba(10, 20, 35, 0.35);
+}
+
+.th-tabbar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: calc(100% - 32px);
+  max-width: 26rem;
+  z-index: 50;
+  display: flex;
+  padding: 8px;
+  background: rgba(252, 251, 247, 0.88);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 26px;
+  box-shadow: 0 12px 30px -14px rgba(28, 27, 24, 0.3);
+}
+
+.th-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 7px;
+  border-radius: 18px;
+  color: var(--th-text-3);
+  transition: background 0.2s, color 0.2s;
+}
+.th-tab[aria-current="page"] {
+  background: var(--th-ink);
+  color: var(--th-paper);
+}
+.th-tab span {
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .th-tab { transition: none; }
+}

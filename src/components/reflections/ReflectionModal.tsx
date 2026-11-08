@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ReflectionModalProps {
   prompt: string;
@@ -20,60 +20,57 @@ export function ReflectionModal({ prompt, onSave, onClose }: ReflectionModalProp
     if (success) onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+  // Portaled to <body> so it sits above the tab bar instead of inside the page's layer.
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+      style={{
+        paddingTop: "max(1rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Today's reflection"
+    >
+      <div
+        className="absolute inset-0 bg-[rgba(28,27,24,0.35)] backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md bg-white/15 backdrop-blur-md border border-white/25 rounded-3xl p-6 shadow-2xl">
-        {/* Close */}
+      <div className="th-glass relative w-full max-w-md p-6 !rounded-[28px] !bg-[rgba(252,251,247,0.92)]">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-all"
+          aria-label="Close"
+          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full border border-[var(--th-line)] text-[var(--th-text-2)]"
         >
-          <X size={16} className="text-white/70" />
+          <X size={16} />
         </button>
 
-        {/* Prompt */}
-        <h2 className="text-white/70 text-sm uppercase tracking-wide mb-3 font-medium">
-          Today's Reflection
-        </h2>
-        <p
-          className="font-serif text-white text-lg italic mb-6"
-          style={{ textShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
-        >
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-[var(--th-umber-light)] mb-2.5">
+          Today's reflection
+        </p>
+        <p className="th-display italic text-[1.2rem] leading-[1.35] text-[var(--th-ink)] mb-5 pr-8">
           "{prompt}"
         </p>
 
-        {/* Input */}
         <textarea
           value={response}
           onChange={(e) => setResponse(e.target.value)}
           placeholder="Write your thoughts…"
           rows={5}
-          className={cn(
-            "w-full bg-white/10 border border-white/15 rounded-2xl px-4 py-3",
-            "text-white text-sm placeholder:text-white/35 resize-none outline-none",
-            "focus:border-white/30 transition-colors"
-          )}
-          style={{ caretColor: "white" }}
           autoFocus
+          className="w-full bg-[var(--th-paper)] border border-[var(--th-line)] rounded-2xl px-4 py-3 text-[0.9rem] text-[var(--th-ink)] placeholder:text-[var(--th-text-3)] resize-none outline-none focus:border-[rgba(28,27,24,0.3)] transition-colors"
         />
 
-        {/* Save */}
         <button
           onClick={handleSave}
           disabled={!response.trim() || saving}
-          className={cn(
-            "w-full mt-4 py-3 rounded-2xl font-serif text-base transition-all duration-300",
-            "bg-white/20 border border-white/30 text-white",
-            "hover:bg-white/25 disabled:opacity-40 disabled:hover:bg-white/20"
-          )}
+          className="w-full mt-4 py-3 rounded-full bg-[var(--th-ink)] text-[var(--th-paper)] font-medium text-[0.92rem] transition-opacity disabled:opacity-40"
         >
-          {saving ? "Saving…" : "Save Reflection"}
+          {saving ? "Saving…" : "Save reflection"}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

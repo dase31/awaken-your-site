@@ -1,6 +1,7 @@
 import { Home, MessageCircle, Users, Target } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { TabHomeIcon, TabChatIcon, TabConnectIcon, TabTelosIcon } from "@/components/icons/ThymosIcons";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -35,10 +36,35 @@ function NavItem({ icon, label, isActive, onClick, disabled }: NavItemProps) {
   );
 }
 
-export function BottomNav() {
+const tabs = [
+  { icon: <TabHomeIcon width={20} height={20} />, label: "Home", route: "/home" },
+  { icon: <TabChatIcon width={20} height={20} />, label: "Chat", route: "/chat" },
+  { icon: <TabConnectIcon width={20} height={20} />, label: "Connect", route: "/connect" },
+  { icon: <TabTelosIcon width={20} height={20} />, label: "Telos", route: "/telos" },
+];
+
+export function BottomNav({ ambient = false }: { ambient?: boolean }) {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
+
+  if (ambient) {
+    return (
+      <nav className="th-tabbar" aria-label="Main">
+        {tabs.map((tab) => (
+          <button
+            key={tab.route}
+            className="th-tab"
+            aria-current={currentPath === tab.route ? "page" : undefined}
+            onClick={() => navigate(tab.route)}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+    );
+  }
 
   const navItems = [
     { icon: <Home size={20} />, label: "Home", route: "/home", disabled: false },
