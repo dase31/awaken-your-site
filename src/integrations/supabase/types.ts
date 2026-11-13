@@ -442,6 +442,63 @@ export type Database = {
           },
         ]
       }
+      push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          email_enabled: boolean
+          matching_paused: boolean
+          max_active_connections: number | null
+          notifications_decided_at: string | null
+          push_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email_enabled?: boolean
+          matching_paused?: boolean
+          max_active_connections?: number | null
+          notifications_decided_at?: string | null
+          push_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email_enabled?: boolean
+          matching_paused?: boolean
+          max_active_connections?: number | null
+          notifications_decided_at?: string | null
+          push_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_safety: {
         Row: {
           answer: string
@@ -538,6 +595,14 @@ export type Database = {
       is_conversation_participant: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
+      }
+      register_push_token: {
+        Args: { p_token: string; p_platform?: string }
+        Returns: undefined
+      }
+      unregister_push_token: {
+        Args: { p_token: string }
+        Returns: undefined
       }
       my_block_exclusions: {
         Args: Record<PropertyKey, never>

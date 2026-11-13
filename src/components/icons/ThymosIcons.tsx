@@ -117,3 +117,23 @@ export function TreeArt(props: IconProps) {
     </svg>
   );
 }
+
+/** A dot with two soft ripples: someone reaching out to you. Used for notifications. */
+export function RippleIcon({ color = "#5c7ba3", ...props }: IconProps & { color?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <circle cx="12" cy="12" r="3.2" fill={color} />
+      <path d="M6.6 6.6a7.6 7.6 0 0 0 0 10.8M17.4 6.6a7.6 7.6 0 0 1 0 10.8" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M3.6 3.6a11.8 11.8 0 0 0 0 16.8M20.4 3.6a11.8 11.8 0 0 1 0 16.8" stroke={color} strokeWidth="1.6" strokeLinecap="round" opacity="0.45" />
+    </svg>
+  );
+}
+
+/** A small moon: matching is paused. */
+export function RestIcon({ color = "#7a6a4a", ...props }: IconProps & { color?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z" fill={color} />
+    </svg>
+  );
+}

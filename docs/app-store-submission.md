@@ -56,6 +56,7 @@ All data is linked to the user; **none is used for tracking**; no third-party ad
 | Name (display name) / User ID | Account, profile |
 | Other user content (messages, journal*, Telos posts, profile answers) | App functionality (matching, chat) |
 | Sensitive info (struggles & goals the user selects) | App functionality (matching) |
+| Device ID (the push token, only if the user turns on app notifications) | App functionality (notifications) |
 
 \*Journal reflections are stored on the device only.
 
@@ -96,6 +97,6 @@ To remove a user: delete them in Authentication → Users (cascades). Then `upda
 ## 6. Known limitations
 
 - **Profiles are readable by any signed-in user** (`profiles` SELECT policy is `USING (true)`). Fields are display name, username, capacity, quote. Not a blocker for review, but worth tightening before growth.
-- **Push notifications** are not implemented. Guideline 4.2 (minimum functionality) can be raised for web-wrapped apps; the native splash/status-bar/keyboard integration, account deletion, and UGC controls are what we lean on. If rejected for 4.2, push for new messages is the first addition.
+- **Push notifications** are implemented (new request, accepted request, new message; never message text) and are opt-in. Setup steps are in `docs/notifications-setup.md`. The Push Notifications capability must be enabled for the app ID, otherwise registration fails silently.
 - Terms and Privacy text is a good-faith draft — have a lawyer read it before launch.
 - The iOS native build has not been compiled on this machine (see step 8).

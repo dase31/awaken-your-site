@@ -117,7 +117,8 @@ const UsernameSetup = () => {
     }
 
     const next = session.user.user_metadata?.telos_first ? "/telos" : "/match";
-    navigate(`/safety-check?next=${next}`);
+    // Notification choice first, then the private safety question.
+    navigate(`/notifications-setup?next=${next}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

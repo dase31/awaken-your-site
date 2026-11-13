@@ -11,7 +11,7 @@ export const SITE_URL = "https://www.thymos.world";
 // App Review and anyone filing a report will use it.
 export const SUPPORT_EMAIL = "support@thymos.world";
 
-export const LEGAL_LAST_UPDATED = "8 October 2026";
+export const LEGAL_LAST_UPDATED = "13 November 2026";
 
 // Minimum age to use the app.
 export const MIN_AGE = 18;

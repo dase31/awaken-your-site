@@ -134,6 +134,11 @@ export function useConnectionRequests() {
       .insert({ sender_id: user.id, receiver_id: receiverId });
 
     if (error) {
+      // The database refuses requests to someone who has paused or is full.
+      if (error.message?.includes("not_accepting_connections")) {
+        toast.info("They're not taking new connections right now. Try finding someone else.");
+        return false;
+      }
       console.error("Error sending connection request:", error);
       toast.error("Failed to send connection request");
       return false;

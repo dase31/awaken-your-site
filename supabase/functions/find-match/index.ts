@@ -16,6 +16,28 @@ interface MatchResult {
   quote_text: string | null;
 }
 
+// How many open connections each person has: conversations they're in plus
+// requests still waiting on them. Used to honour "limit my connections".
+async function openConnectionCounts(
+  // deno-lint-ignore no-explicit-any
+  supabase: { from: (table: string) => any },
+  userIds: string[],
+): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  userIds.forEach((id) => (counts[id] = 0));
+  if (userIds.length === 0) return counts;
+
+  const [asOne, asTwo, pending] = await Promise.all([
+    supabase.from("conversations").select("user_one").eq("conversation_type", "connection").in("user_one", userIds),
+    supabase.from("conversations").select("user_two").eq("conversation_type", "connection").in("user_two", userIds),
+    supabase.from("connection_requests").select("receiver_id").eq("status", "pending").in("receiver_id", userIds),
+  ]);
+  (asOne.data || []).forEach((r: { user_one: string }) => counts[r.user_one]++);
+  (asTwo.data || []).forEach((r: { user_two: string }) => counts[r.user_two]++);
+  (pending.data || []).forEach((r: { receiver_id: string }) => counts[r.receiver_id]++);
+  return counts;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,6 +55,30 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "user_id is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Respect the requester's own settings first: if they've paused matching
+    // or are already at their limit, don't hand them someone new.
+    const { data: mySettings } = await supabase
+      .from("user_settings")
+      .select("matching_paused, max_active_connections")
+      .eq("user_id", user_id)
+      .maybeSingle();
+
+    if (mySettings?.matching_paused) {
+      return new Response(
+        JSON.stringify({ match: null, reason: "paused" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (mySettings?.max_active_connections != null) {
+      const mine = await openConnectionCounts(supabase, [user_id]);
+      if (mine[user_id] >= mySettings.max_active_connections) {
+        return new Response(
+          JSON.stringify({ match: null, reason: "at_limit" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Get current user's tags and capacity
@@ -83,8 +129,35 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Drop anyone who has paused matching or is at their own connection limit.
+    const { data: theirSettings } = await supabase
+      .from("user_settings")
+      .select("user_id, matching_paused, max_active_connections")
+      .in("user_id", otherProfiles.map((p) => p.id));
+
+    const settingsById = new Map((theirSettings || []).map((r) => [r.user_id, r]));
+    const limited = (theirSettings || [])
+      .filter((r) => !r.matching_paused && r.max_active_connections != null)
+      .map((r) => r.user_id);
+    const openCounts = await openConnectionCounts(supabase, limited);
+
+    const availableProfiles = otherProfiles.filter((p) => {
+      const st = settingsById.get(p.id);
+      if (!st) return true;
+      if (st.matching_paused) return false;
+      if (st.max_active_connections != null && (openCounts[p.id] ?? 0) >= st.max_active_connections) return false;
+      return true;
+    });
+
+    if (availableProfiles.length === 0) {
+      return new Response(
+        JSON.stringify({ match: null, reason: "no_other_users" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get all tags for potential matches
-    const otherUserIds = otherProfiles.map((p) => p.id);
+    const otherUserIds = availableProfiles.map((p) => p.id);
     
     const [allStruggles, allGoals, allIntents] = await Promise.all([
       supabase
@@ -161,7 +234,7 @@ Deno.serve(async (req) => {
     // Calculate scores for each potential match
     const matches: MatchResult[] = [];
 
-    for (const profile of otherProfiles) {
+    for (const profile of availableProfiles) {
       const tags = userTagsMap[profile.id];
       if (!tags) continue;
 

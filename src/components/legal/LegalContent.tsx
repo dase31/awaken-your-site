@@ -106,6 +106,15 @@ export function TermsContent() {
         </p>
       </Section>
 
+      <Section heading="Notifications and your availability">
+        <p>
+          If you turn notifications on, we'll tell you by app notification and email when someone wants to
+          connect, accepts your request, or messages you. You can turn these off, pause matching, or limit
+          how many connections you have at any time in Settings. While matching is paused, or once you're
+          at your limit, other members can't send you new requests.
+        </p>
+      </Section>
+
       <Section heading="Your content">
         <p>
           What you write stays yours. To run the service you give us permission to store it and show it
@@ -186,6 +195,12 @@ export function PrivacyContent() {
               and reports you file.
             </>,
             <>
+              <strong className="text-legal">Notification and matching settings:</strong> whether you
+              turned on app or email notifications, whether you paused matching, and any limit you set on
+              connections. If you turn on app notifications we also store your phone's push token, so we
+              can reach your device.
+            </>,
+            <>
               <strong className="text-legal">A private safety question:</strong> whether you're having
               thoughts of harming yourself. Your answer is visible only to you. It is never shown to
               other members and never affects who you're matched with.
@@ -207,6 +222,7 @@ export function PrivacyContent() {
             "to deliver your messages and run Telos",
             "to keep people safe: handling reports and blocks, and preventing abuse",
             "to send you the emails you ask for, like sign-in codes",
+            "to tell you when someone wants to connect, accepts your request, or messages you, if you turn notifications on",
           ]}
         />
         <p>
@@ -235,13 +251,25 @@ export function PrivacyContent() {
           items={[
             "Supabase — database, sign-in, and real-time messaging, with data stored in the European Union (Ireland)",
             "Vercel — hosting the website",
-            "Resend — delivering sign-in emails",
+            "Resend — delivering sign-in and notification emails",
+            "Apple Push Notification service — delivering app notifications to your phone, if you turn them on",
           ]}
         />
         <p>
           Some of these providers may process data outside your country, under standard contractual
           clauses or equivalent safeguards where the law requires them. We don't use advertising or
           analytics trackers.
+        </p>
+      </Section>
+
+      <Section heading="Notifications">
+        <p>
+          Notifications are off until you say yes, and you can change your mind any time in Settings. They
+          tell you that something happened, such as a new request or message, and never include what a
+          message says. If you turn on app notifications, your phone's push token is shared with Apple so
+          it can deliver them; turning them off, signing out, or deleting your account removes it from our
+          records. Email notifications go to the address you signed up with and include a way to turn them
+          off.
         </p>
       </Section>
 

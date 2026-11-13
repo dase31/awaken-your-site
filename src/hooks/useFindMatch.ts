@@ -16,6 +16,8 @@ interface UseFindMatchReturn {
   match: MatchResult | null;
   isLoading: boolean;
   error: string | null;
+  // Why there was no match: "paused" and "at_limit" come from their own settings.
+  reason: string | null;
   findMatch: (userId: string, excludeIds?: string[]) => Promise<MatchResult | null>;
   findAnotherMatch: () => Promise<MatchResult | null>;
 }
@@ -24,12 +26,14 @@ export function useFindMatch(): UseFindMatchReturn {
   const [match, setMatch] = useState<MatchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reason, setReason] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [excludedIds, setExcludedIds] = useState<string[]>([]);
 
   const findMatch = useCallback(async (userId: string, excludeIds: string[] = []): Promise<MatchResult | null> => {
     setIsLoading(true);
     setError(null);
+    setReason(null);
     setCurrentUserId(userId);
 
     try {
@@ -44,6 +48,7 @@ export function useFindMatch(): UseFindMatchReturn {
 
       const result = data?.match || null;
       setMatch(result);
+      setReason(result ? null : data?.reason ?? null);
       
       if (result) {
         setExcludedIds((prev) => [...prev, result.match_user_id]);
@@ -72,6 +77,7 @@ export function useFindMatch(): UseFindMatchReturn {
     match,
     isLoading,
     error,
+    reason,
     findMatch,
     findAnotherMatch,
   };

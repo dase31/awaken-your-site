@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHead } from "@/components/layout/PageHead";
+import { ThSwitch } from "@/components/ThSwitch";
+import { ThemeTag } from "@/components/onboarding/ThemeTag";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { enablePush, pushAvailable, unregisterThisDevice } from "@/lib/push";
 import { toast } from "sonner";
 import { ChevronRight } from "lucide-react";
 import { SUPPORT_EMAIL } from "@/lib/config";
@@ -20,6 +24,37 @@ function SettingsRow({ label, onClick }: { label: string; onClick: () => void })
   );
 }
 
+function SwitchRow({
+  title,
+  sub,
+  checked,
+  onChange,
+  disabled,
+}: {
+  title: string;
+  sub?: string;
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-5 py-4">
+      <div className="min-w-0">
+        <p className="text-base text-[color:var(--th-ink)]">{title}</p>
+        {sub && <p className="th-sub mt-0.5 text-[0.8rem] leading-snug">{sub}</p>}
+      </div>
+      <ThSwitch checked={checked} onChange={onChange} label={title} disabled={disabled} />
+    </div>
+  );
+}
+
+const LIMIT_CHOICES: { label: string; value: number | null }[] = [
+  { label: "No limit", value: null },
+  { label: "1", value: 1 },
+  { label: "3", value: 3 },
+  { label: "5", value: 5 },
+];
+
 const Settings = () => {
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
@@ -29,6 +64,30 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const { settings, loading: settingsLoading, update: updateSettings } = useUserSettings();
+  const native = pushAvailable();
+
+  const save = async (patch: Parameters<typeof updateSettings>[0]) => {
+    const ok = await updateSettings(patch);
+    if (!ok) toast.error("Couldn't save that. Please try again.");
+    return ok;
+  };
+
+  const togglePush = async (next: boolean) => {
+    if (next) {
+      const result = await enablePush();
+      if (result !== "granted") {
+        toast.info("Notifications are off for Thymos on this phone. Turn them on in iOS Settings.");
+        return;
+      }
+    } else {
+      await unregisterThisDevice();
+    }
+    await save({ pushEnabled: next, notificationsDecidedAt: settings.notificationsDecidedAt ?? new Date().toISOString() });
+  };
+
+  const toggleEmail = (next: boolean) =>
+    save({ emailEnabled: next, notificationsDecidedAt: settings.notificationsDecidedAt ?? new Date().toISOString() });
 
   useEffect(() => {
     const load = async () => {
@@ -66,6 +125,8 @@ const Settings = () => {
   };
 
   const handleLogout = async () => {
+    // This phone shouldn't keep getting the previous person's notifications.
+    await unregisterThisDevice();
     await supabase.auth.signOut();
     navigate("/");
   };
@@ -134,6 +195,53 @@ const Settings = () => {
               {username ? `@${username}` : <span className="italic text-[color:var(--th-text-3)]">not set</span>}
             </p>
           </div>
+        </div>
+
+        {/* Matching */}
+        <div className={group}>
+          <SwitchRow
+            title="Pause matching"
+            sub="No new matches or requests while you rest. Your conversations stay open."
+            checked={settings.matchingPaused}
+            disabled={settingsLoading}
+            onChange={(next) => save({ matchingPaused: next })}
+          />
+          <div className="px-5 py-4">
+            <p className="text-base text-[color:var(--th-ink)]">Limit my connections</p>
+            <p className="th-sub mb-3 mt-0.5 text-[0.8rem] leading-snug">
+              Once you have this many open conversations or waiting requests, you won't be matched with anyone new.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {LIMIT_CHOICES.map((c) => (
+                <ThemeTag
+                  key={c.label}
+                  label={c.label}
+                  isSelected={settings.maxActiveConnections === c.value}
+                  onClick={() => save({ maxActiveConnections: c.value })}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Notifications */}
+        <div className={group}>
+          {native && (
+            <SwitchRow
+              title="App notifications"
+              sub="When someone connects, accepts, or messages you."
+              checked={settings.pushEnabled}
+              disabled={settingsLoading}
+              onChange={togglePush}
+            />
+          )}
+          <SwitchRow
+            title="Email notifications"
+            sub="The same, by email. Never what was said."
+            checked={settings.emailEnabled}
+            disabled={settingsLoading}
+            onChange={toggleEmail}
+          />
         </div>
 
         {/* Your profile and safety */}

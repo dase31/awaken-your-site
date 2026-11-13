@@ -7,7 +7,10 @@ import { useReflections } from "@/hooks/useReflections";
 import { ConnectionRequestCard } from "@/components/connections/ConnectionRequestCard";
 import { ReflectionModal } from "@/components/reflections/ReflectionModal";
 import { ChevronRight } from "lucide-react";
-import { CircleIcon, BookIcon, SunIcon } from "@/components/icons/ThymosIcons";
+import { CircleIcon, BookIcon, SunIcon, RippleIcon } from "@/components/icons/ThymosIcons";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { acceptNotifications, declineNotifications } from "@/lib/push";
+import { toast } from "sonner";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -74,6 +77,14 @@ const Home = () => {
 
   const { incoming, loading: connectionsLoading, respondToRequest } = useConnectionRequests();
   const { reflections, saveReflection } = useReflections();
+  const { settings, loading: settingsLoading, update: updateSettings } = useUserSettings();
+  const askAboutNotifications = !settingsLoading && !settings.notificationsDecidedAt;
+
+  const turnOnNotifications = async () => {
+    const { denied, saved } = await acceptNotifications(updateSettings);
+    if (denied) toast.info("Notifications are off for Thymos on this phone. You can change that in iOS Settings.");
+    if (!saved) toast.error("Couldn't save that. Please try again.");
+  };
 
   const now = new Date();
   const thisMonth = reflections.filter((r) => {
@@ -126,6 +137,34 @@ const Home = () => {
           <span className="text-[0.85rem] font-medium text-[var(--th-ink)]">Tap to reflect →</span>
         </button>
 
+        {/* Asked once; "Not now" is remembered and it stays in Settings */}
+        {askAboutNotifications && (
+          <div className="th-glass mt-3 p-5">
+            <div className="flex items-start gap-3.5">
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                style={{ background: "#E2E9F1" }}
+              >
+                <RippleIcon width={22} height={22} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[0.95rem] font-medium text-[var(--th-ink)]">Know when someone reaches out</p>
+                <p className="mt-0.5 text-[0.8rem] leading-snug text-[var(--th-text-2)]">
+                  We'll tell you when someone connects or messages you. Never what was said.
+                </p>
+                <div className="mt-3 flex items-center gap-4">
+                  <button type="button" className="th-btn px-5 py-2 text-[0.85rem]" onClick={turnOnNotifications}>
+                    Turn on
+                  </button>
+                  <button type="button" className="th-text-link" onClick={() => declineNotifications(updateSettings)}>
+                    Not now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <p className="relative z-10 text-[0.72rem] uppercase tracking-[0.1em] text-[var(--th-text-2)] mt-8 mb-2.5 px-2">
           Quick links
         </p>
@@ -152,7 +191,7 @@ const Home = () => {
             icon={<SunIcon width={22} height={22} />}
             tint="#E4E7DB"
             title="Find support"
-            sub="Get matched with a peer"
+            sub={settings.matchingPaused ? "Matching is paused" : "Get matched with a peer"}
             onClick={() => navigate("/match")}
           />
         </div>

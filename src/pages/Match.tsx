@@ -32,7 +32,7 @@ const Match = () => {
   const [safetyChecked, setSafetyChecked] = useState(false);
   const [safetyHold, setSafetyHold] = useState(false);
 
-  const { findMatch, findAnotherMatch, isLoading: isLoadingAnother } = useFindMatch();
+  const { findMatch, findAnotherMatch, reason, isLoading: isLoadingAnother } = useFindMatch();
   const { sendRequest } = useConnectionRequests();
 
   // Load user session if not passed via state
@@ -157,7 +157,14 @@ const Match = () => {
         />
       )}
 
-      {!showLoading && !safetyHold && !currentMatch && <EmptyMatchState />}
+      {!showLoading && !safetyHold && !currentMatch && (
+        <EmptyMatchState
+          reason={reason}
+          onResume={() => {
+            setInitialLoading(true);
+          }}
+        />
+      )}
     </OnboardingFrame>
   );
 };
