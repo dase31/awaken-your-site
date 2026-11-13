@@ -18,7 +18,7 @@ export default function Connect() {
   const hasContent = incoming.length > 0 || accepted.length > 0 || sentPending.length > 0;
 
   return (
-    <AppShell variant="ambient">
+    <AppShell>
       <div className="max-w-md mx-auto">
         <PageHead title="Your circle" sub="People you check in with." />
 

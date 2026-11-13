@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageHead } from "@/components/layout/PageHead";
+import { PersonAvatar } from "@/components/PersonAvatar";
 import { fetchMyBlockedIds, unblockUser } from "@/lib/blocks";
 
 interface BlockedPerson {
@@ -39,45 +40,23 @@ const BlockedUsers = () => {
   };
 
   return (
-    <AppShell>
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => navigate("/settings")}
-            aria-label="Back to settings"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 hover:bg-white/15 transition-all"
-          >
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <h1
-            className="font-serif text-white text-2xl"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-          >
-            Blocked people
-          </h1>
-        </div>
+    <AppShell onBack={() => navigate("/settings")} actions={<span />}>
+      <div className="mx-auto max-w-md">
+        <PageHead title="Blocked people" sub="They can't see you or message you." />
 
         {loading ? (
-          <div className="h-16 bg-white/10 rounded-2xl animate-pulse" />
+          <div className="th-glass-row h-16 animate-pulse motion-reduce:animate-none" />
         ) : people.length === 0 ? (
-          <p className="text-white/60 text-base text-center py-12">
-            You haven't blocked anyone.
-          </p>
+          <div className="th-glass px-6 py-10 text-center">
+            <p className="th-display text-[1.15rem]">You haven't blocked anyone.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {people.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl"
-              >
-                <div className="w-11 h-11 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-                  <span className="font-serif text-white text-lg">{p.name.charAt(0).toUpperCase()}</span>
-                </div>
-                <p className="font-serif text-white text-base flex-1 truncate">{p.name}</p>
-                <button
-                  onClick={() => handleUnblock(p.id)}
-                  className="text-white/80 text-sm px-4 py-1.5 rounded-full border border-white/30 hover:bg-white/15 transition-colors"
-                >
+              <div key={p.id} className="th-glass flex items-center gap-4 p-4">
+                <PersonAvatar name={p.name} size={44} />
+                <p className="th-display min-w-0 flex-1 truncate text-base">{p.name}</p>
+                <button type="button" onClick={() => handleUnblock(p.id)} className="th-pill th-chip">
                   Unblock
                 </button>
               </div>

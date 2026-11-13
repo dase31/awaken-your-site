@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { PersonAvatar } from "@/components/PersonAvatar";
 
 interface MatchIntroProps {
   userName: string;
@@ -75,65 +75,37 @@ export function MatchIntro({
   );
 
   return (
-    <div className="fade-in-up text-center px-6 max-w-md w-full">
-      <h1
-        className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-6"
-        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-      >
+    <div className="th-card-lg fade-in-up">
+      <PersonAvatar name={matchName} size={64} className="mx-auto mb-4" />
+      <h1 className="th-h1 mb-5 text-[1.6rem]">
         {userName}, meet {matchName}
       </h1>
 
       {matchQuote ? (
         <>
-          <p
-            className="font-serif italic text-foreground text-xl md:text-2xl leading-relaxed mb-2"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-          >
+          <p className="th-h1 mb-2 text-[1.25rem] italic leading-relaxed" style={{ fontWeight: 400, letterSpacing: "-0.01em" }}>
             "{matchQuote}"
           </p>
-          <p className="font-serif text-foreground/50 text-sm mb-8">
-            — in {matchName}'s words
-          </p>
+          <p className="th-sub mb-7 text-[0.82rem]">— in {matchName}'s words</p>
         </>
       ) : (
-        <p
-          className="font-serif text-foreground/80 text-lg md:text-xl leading-relaxed mb-10"
-          style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-        >
+        <p className="th-h1 mb-8 text-[1.15rem] italic leading-relaxed" style={{ fontWeight: 400, letterSpacing: "-0.01em" }}>
           "{connectionSentence}"
         </p>
       )}
 
-      <button
-        onClick={onConnect}
-        className={cn(
-          "px-8 py-3 rounded-full font-serif text-lg transition-all duration-300",
-          "bg-white/20 border border-white/50 text-primary",
-          "hover:bg-white/30 hover:scale-[1.02] focus:outline-none"
-        )}
-        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-      >
+      <button type="button" onClick={onConnect} className="th-btn">
         Connect
       </button>
 
-      <button
-        onClick={onFindAnother}
-        disabled={isLoadingAnother}
-        className={cn(
-          "block mx-auto mt-6 font-serif text-base transition-all duration-300",
-          "text-foreground/50 hover:text-foreground/80",
-          isLoadingAnother && "opacity-50 cursor-not-allowed"
-        )}
-      >
-        {isLoadingAnother ? "Finding..." : "Find another connection"}
-      </button>
-
-      <button
-        onClick={onConnectLater}
-        className="block mx-auto mt-4 font-serif text-sm text-foreground/40 hover:text-foreground/60 transition-all duration-300"
-      >
-        I'll connect later
-      </button>
+      <div className="mt-5 flex flex-col items-center gap-3">
+        <button type="button" onClick={onFindAnother} disabled={isLoadingAnother} className="th-text-link disabled:opacity-50">
+          {isLoadingAnother ? "Finding..." : "Find another connection"}
+        </button>
+        <button type="button" onClick={onConnectLater} className="th-text-link">
+          I'll connect later
+        </button>
+      </div>
     </div>
   );
 }

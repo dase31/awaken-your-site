@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageHead } from "@/components/layout/PageHead";
 import { ThemeTag } from "@/components/onboarding/ThemeTag";
 import {
   PRESET_STRUGGLES,
@@ -154,31 +154,21 @@ const EditProfile = () => {
     }
   };
 
+  const sectionTitle = "th-label mb-1";
+
   return (
-    <AppShell>
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => navigate("/settings")}
-            aria-label="Back to settings"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/20 hover:bg-white/15 transition-all"
-          >
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <h1
-            className="font-serif text-white text-2xl"
-            style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-          >
-            What you've shared
-          </h1>
-        </div>
+    <AppShell onBack={() => navigate("/settings")} actions={<span />}>
+      <div className="mx-auto max-w-md">
+        <PageHead title="What you've shared" sub="What matching uses to find your people." />
 
         {loading ? (
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => <div key={i} className="h-28 bg-white/10 rounded-2xl animate-pulse" />)}
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="th-glass h-28 animate-pulse motion-reduce:animate-none" />
+            ))}
           </div>
         ) : (
-          <div className="space-y-8 pb-4">
+          <div className="space-y-4 pb-2">
             {CATEGORIES.map((c) => {
               // Anything stored that isn't a preset (older or custom tags) still
               // shows up, so it can be removed.
@@ -186,11 +176,9 @@ const EditProfile = () => {
                 (v) => !c.presets.some((p) => (c.byLabel ? p : tagId(p)) === v)
               );
               return (
-                <section key={c.key}>
-                  <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">
-                    {c.title}
-                  </h2>
-                  {c.hint && <p className="text-white/45 text-xs mb-3">{c.hint}</p>}
+                <section key={c.key} className="th-glass p-5">
+                  <h2 className={sectionTitle}>{c.title}</h2>
+                  {c.hint && <p className="th-sub mb-3 text-xs">{c.hint}</p>}
                   <div className={`flex flex-wrap gap-2 ${c.hint ? "" : "mt-3"}`}>
                     {c.presets.map((p) => {
                       const value = c.byLabel ? p : tagId(p);
@@ -216,10 +204,8 @@ const EditProfile = () => {
               );
             })}
 
-            <section>
-              <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">
-                How much room you have for someone else
-              </h2>
+            <section className="th-glass p-5">
+              <h2 className={`${sectionTitle} mb-3`}>How much room you have for someone else</h2>
               <div className="flex flex-wrap gap-2">
                 {CAPACITY_LEVELS.map((l) => (
                   <ThemeTag
@@ -232,28 +218,23 @@ const EditProfile = () => {
               </div>
             </section>
 
-            <section>
-              <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">
-                One thing you wish someone understood
-              </h2>
-              <p className="text-white/45 text-xs mb-3">Shown to people you're matched with.</p>
+            <section className="th-glass p-5">
+              <h2 className={sectionTitle}>One thing you wish someone understood</h2>
+              <p className="th-sub mb-3 text-xs">Shown to people you're matched with.</p>
               <textarea
                 value={quote}
                 onChange={(e) => setQuote(e.target.value.slice(0, QUOTE_MAX_LENGTH))}
                 rows={4}
                 placeholder="Optional"
-                className="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-3 text-white text-base font-serif placeholder:text-white/30 focus:outline-none focus:border-white/40 resize-none"
+                aria-label="One thing you wish someone understood"
+                className="th-field resize-none"
               />
-              <p className="text-white/30 text-xs mt-1 text-right">
+              <p className="mt-1 text-right text-xs text-[color:var(--th-text-3)]">
                 {quote.length}/{QUOTE_MAX_LENGTH}
               </p>
             </section>
 
-            <button
-              onClick={save}
-              disabled={!dirty || saving}
-              className="w-full py-4 rounded-full font-semibold text-base bg-white/20 backdrop-blur-sm border border-white/40 text-white hover:bg-white/30 active:scale-[0.98] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <button type="button" onClick={save} disabled={!dirty || saving} className="th-btn w-full py-4">
               {saving ? "Saving…" : "Save changes"}
             </button>
           </div>

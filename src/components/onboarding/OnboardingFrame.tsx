@@ -9,6 +9,8 @@ interface OnboardingFrameProps {
   onBack?: () => void;
   /** Hides the dots/back row entirely (landing). */
   hideChrome?: boolean;
+  /** Wider column for long reading (legal, support). */
+  wide?: boolean;
   children: ReactNode;
 }
 
@@ -17,7 +19,7 @@ interface OnboardingFrameProps {
  * are fixed to the screen and crossfade; the THYMOS wordmark sits centred on
  * its own row at the top; back and progress sit on the row beneath it.
  */
-export function OnboardingFrame({ photo = false, progress, onBack, hideChrome, children }: OnboardingFrameProps) {
+export function OnboardingFrame({ photo = false, progress, onBack, hideChrome, wide, children }: OnboardingFrameProps) {
   return (
     <div className="relative flex flex-col overflow-x-hidden bg-[#F7F5F1] min-h-screen min-h-[100dvh]">
       <div className="th-hero" style={{ opacity: photo ? 1 : 0 }} aria-hidden="true" />
@@ -63,7 +65,7 @@ export function OnboardingFrame({ photo = false, progress, onBack, hideChrome, c
           paddingBottom: "max(28px, env(safe-area-inset-bottom))",
         }}
       >
-        <div className="my-auto mx-auto w-full max-w-md">{children}</div>
+        <div className={`my-auto mx-auto w-full ${wide ? "max-w-xl" : "max-w-md"}`}>{children}</div>
       </main>
     </div>
   );

@@ -105,7 +105,7 @@ const ChatThread = () => {
 
   return (
     <AppShell
-      variant="ambient"
+     
       hideNav
       fill
       onBack={() => navigate("/chat")}

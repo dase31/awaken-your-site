@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingSubmit } from "@/hooks/useOnboardingSubmit";
-import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
+import { OnboardingFrame } from "@/components/onboarding/OnboardingFrame";
 import { LoadingState } from "@/components/onboarding/LoadingState";
-import ThymosLogo from "@/components/ThymosLogo";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 import { needsSafetyCheck } from "@/lib/safety";
@@ -97,38 +96,23 @@ const AuthCallback = () => {
   }, [navigate, saveOnboardingData]);
 
   return (
-    <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
-      <ThymosLogo />
-      <OnboardingBackground />
+    <OnboardingFrame hideChrome>
+      {status === "loading" && <LoadingState message="Setting up your space..." />}
 
-      <div className="relative z-10 text-center px-6 max-w-md w-full fade-in-up">
-        {status === "loading" && (
-          <LoadingState message="Setting up your space..." />
-        )}
+      {status === "success" && (
+        <div className="th-card-lg fade-in-up">
+          <h1 className="th-h1 text-[1.7rem]">Welcome aboard</h1>
+          <p className="th-sub mt-2">Redirecting you now...</p>
+        </div>
+      )}
 
-        {status === "success" && (
-          <>
-            <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4">
-              Welcome aboard
-            </h1>
-            <p className="text-foreground/60 text-lg font-serif">
-              Redirecting you now...
-            </p>
-          </>
-        )}
-
-        {status === "error" && (
-          <>
-            <h1 className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4">
-              Something went wrong
-            </h1>
-            <p className="text-foreground/60 text-lg font-serif">
-              Redirecting to start over...
-            </p>
-          </>
-        )}
-      </div>
-    </div>
+      {status === "error" && (
+        <div className="th-card-lg fade-in-up">
+          <h1 className="th-h1 text-[1.7rem]">Something went wrong</h1>
+          <p className="th-sub mt-2">Redirecting to start over...</p>
+        </div>
+      )}
+    </OnboardingFrame>
   );
 };
 

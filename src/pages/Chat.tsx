@@ -51,7 +51,7 @@ const Chat = () => {
   const { conversations, loading } = useConversations();
 
   return (
-    <AppShell variant="ambient">
+    <AppShell>
       <div className="max-w-md mx-auto">
         <PageHead title="Messages" sub="Your quiet one-on-ones." />
 

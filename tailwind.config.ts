@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+        serif: ['Fraunces', 'Georgia', 'serif'],
         display: ['Fraunces', 'Georgia', 'serif'],
       },
       colors: {
@@ -62,19 +62,6 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
-        },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          hover: "hsl(var(--gold-hover))",
-        },
-        navy: {
-          DEFAULT: "hsl(var(--navy))",
-          light: "hsl(var(--navy-light))",
-        },
-        sky: {
-          start: "hsl(var(--sky-gradient-start))",
-          mid: "hsl(var(--sky-gradient-mid))",
-          end: "hsl(var(--sky-gradient-end))",
         },
       },
       borderRadius: {

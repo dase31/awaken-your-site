@@ -1,34 +1,22 @@
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { CircleIcon } from "@/components/icons/ThymosIcons";
 
 export function EmptyMatchState() {
   const navigate = useNavigate();
 
   return (
-    <div className="fade-in-up text-center px-6 max-w-md w-full">
-      <h1
-        className="font-serif text-foreground text-3xl md:text-4xl leading-relaxed mb-4"
-        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
+    <div className="th-card-lg fade-in-up">
+      <div
+        className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full"
+        style={{ background: "#E2E9F1" }}
       >
-        You're among the first
-      </h1>
-
-      <p
-        className="font-serif text-foreground/70 text-lg md:text-xl leading-relaxed mb-8"
-        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-      >
+        <CircleIcon width={28} height={28} />
+      </div>
+      <h1 className="th-h1 text-[1.6rem]">You're among the first</h1>
+      <p className="th-sub mb-6 mt-2">
         We're building your network. We'll let you know when someone resonates.
       </p>
-
-      <button
-        onClick={() => navigate("/home")}
-        className={cn(
-          "px-8 py-3 rounded-full font-serif text-lg transition-all duration-300",
-          "bg-white/20 border border-white/50 text-primary",
-          "hover:bg-white/30 hover:scale-[1.02] focus:outline-none"
-        )}
-        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.15)" }}
-      >
+      <button type="button" onClick={() => navigate("/home")} className="th-btn">
         Continue to Home
       </button>
     </div>

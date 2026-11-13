@@ -3,56 +3,47 @@
 @tailwind utilities;
 
 @layer base {
+  /* shadcn tokens mapped onto the Thymos palette so toasts, dialogs and any
+     stock component match the brand: cream ground, paper surfaces, ink. */
   :root {
-    --background: 200 70% 55%;
-    --foreground: 0 0% 100%;
+    --background: 43 24% 95%;
+    --foreground: 45 9% 10%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 20%;
+    --card: 45 38% 98%;
+    --card-foreground: 45 9% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 20%;
+    --popover: 45 38% 98%;
+    --popover-foreground: 45 9% 10%;
 
-    --primary: 45 95% 60%;
-    --primary-foreground: 220 20% 15%;
+    --primary: 45 9% 10%;
+    --primary-foreground: 45 38% 98%;
 
-    --secondary: 200 60% 45%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 40 18% 90%;
+    --secondary-foreground: 45 9% 10%;
 
-    --muted: 200 30% 85%;
-    --muted-foreground: 200 15% 40%;
+    --muted: 40 15% 90%;
+    --muted-foreground: 48 3% 45%;
 
-    --accent: 200 80% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 215 28% 90%;
+    --accent-foreground: 45 9% 10%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 9 44% 42%;
+    --destructive-foreground: 45 38% 98%;
 
-    --border: 200 30% 80%;
-    --input: 200 30% 90%;
-    --ring: 45 95% 60%;
+    --border: 40 10% 87%;
+    --input: 40 10% 87%;
+    --ring: 215 33% 59%;
 
     --radius: 1rem;
 
-    /* Custom tokens */
-    --sky-gradient-start: 199 89% 70%;
-    --sky-gradient-mid: 200 85% 60%;
-    --sky-gradient-end: 200 75% 48%;
-    
-    --gold: 45 95% 60%;
-    --gold-hover: 45 95% 55%;
-    
-    --navy: 220 40% 13%;
-    --navy-light: 220 30% 25%;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 45 38% 98%;
+    --sidebar-foreground: 45 9% 10%;
+    --sidebar-primary: 45 9% 10%;
+    --sidebar-primary-foreground: 45 38% 98%;
+    --sidebar-accent: 40 18% 90%;
+    --sidebar-accent-foreground: 45 9% 10%;
+    --sidebar-border: 40 10% 87%;
+    --sidebar-ring: 215 33% 59%;
   }
 
   .dark {
@@ -112,106 +103,16 @@
   }
 
   body {
-    @apply bg-sky-gradient text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
 @layer components {
-  .bg-sky-gradient {
-    background: linear-gradient(
-      180deg,
-      hsl(199, 89%, 70%) 0%,
-      hsl(200, 85%, 60%) 40%,
-      hsl(200, 75%, 48%) 100%
-    );
-  }
-
-  .font-serif-display {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-  }
-
-  .text-hero {
-    @apply text-white font-bold font-serif-display;
-    text-shadow: 0 2px 24px rgba(0, 60, 120, 0.25), 0 1px 4px rgba(0, 40, 80, 0.15);
-  }
-
-  .text-hero-sub {
-    @apply text-white font-serif;
-    text-shadow: 0 1px 12px rgba(0, 60, 120, 0.2);
-  }
-
-  .btn-gold {
-    @apply bg-white/15 backdrop-blur-sm text-white font-semibold rounded-full px-10 py-4
-           border border-white/30 hover:bg-white/25 transition-all duration-300
-           shadow-none hover:shadow-lg hover:shadow-black/10 active:scale-[0.98]
-           text-xl tracking-widest;
-  }
-
-  .card-pricing {
-    @apply bg-white/95 backdrop-blur-sm rounded-2xl p-6 
-           border-2 border-transparent transition-all duration-300;
-  }
-
-  .card-pricing-selected {
-    @apply border-gold shadow-xl;
-  }
-
-  .card-pricing-default {
-    @apply bg-sky-muted hover:bg-white/90;
-  }
-
-  .bg-sky-muted {
-    background: hsl(200, 60%, 75%);
-  }
-
-  .text-navy {
-    color: hsl(var(--navy));
-  }
-
-  .bg-gold {
-    background-color: hsl(var(--gold));
-  }
-
-  .bg-gold-hover {
-    background-color: hsl(var(--gold-hover));
-  }
-
-  .hover\:bg-gold-hover:hover {
-    background-color: hsl(var(--gold-hover));
-  }
-
-  .border-gold {
-    border-color: hsl(var(--gold));
-  }
-
-  .cloud-float {
-    animation: float 20s ease-in-out infinite;
-  }
-
-  .cloud-float-slow {
-    animation: float 30s ease-in-out infinite;
-  }
-
-  .cloud-float-fast {
-    animation: float 15s ease-in-out infinite;
-  }
-
-  .bird-fly {
-    animation: fly 12s ease-in-out infinite;
-  }
-
   .fade-in-up {
     animation: fadeInUp 0.8s ease-out forwards;
-  }
-
-  .scroll-marquee {
-    animation: marquee 30s linear infinite;
-  }
-
-  .scroll-marquee:hover {
-    animation-play-state: paused;
   }
 
   .stagger-fade-in {
@@ -227,55 +128,9 @@
     animation: fadeInUp 0.5s ease-out forwards;
   }
 
-  /* Ethereal input styling */
-  .ethereal-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-
-  .ethereal-input:focus {
-    outline: none;
-    caret-color: white;
-  }
-
-  /* Delayed hint fade-in */
-  .hint-fade-in {
-    opacity: 0;
-    animation: hintFadeIn 0.5s ease-out 2s forwards;
-  }
-
   /* Safe area padding for mobile devices */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0);
-  }
-}
-
-@keyframes hintFadeIn {
-  to {
-    opacity: 0.5;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) translateX(0);
-  }
-  25% {
-    transform: translateY(-15px) translateX(10px);
-  }
-  50% {
-    transform: translateY(-5px) translateX(-5px);
-  }
-  75% {
-    transform: translateY(-20px) translateX(5px);
-  }
-}
-
-@keyframes fly {
-  0%, 100% {
-    transform: translateX(0) translateY(0);
-  }
-  50% {
-    transform: translateX(30px) translateY(-10px);
   }
 }
 
@@ -287,15 +142,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
   }
 }
 
@@ -324,7 +170,7 @@
 /* ───────────────────────────────────────────────────────────────
    Thymos visual language: ambient sky + frosted glass.
    Tokens and primitives from the redesign brief. Screens opt in with
-   <AppShell variant="ambient">; the "th-" prefix keeps these apart
+   <AppShell>; the "th-" prefix keeps these apart
    from the shadcn tokens above.
    ─────────────────────────────────────────────────────────────── */
 :root {

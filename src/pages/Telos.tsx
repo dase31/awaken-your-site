@@ -310,7 +310,7 @@ const Telos = () => {
 
   if (profileLoading) {
     return (
-      <AppShell variant="ambient">
+      <AppShell>
         <div className="max-w-md mx-auto space-y-2.5 pt-4">
           {[1, 2, 3].map(i => <div key={i} className="th-glass-row h-24 animate-pulse" />)}
         </div>
@@ -321,7 +321,7 @@ const Telos = () => {
   // No telos profile yet — explain Telos first, then show setup
   if (!profile) {
     return (
-      <AppShell variant="ambient">
+      <AppShell>
         <div className="max-w-md mx-auto">
           {introDone ? (
             <TelosProfileSetup onSave={saveProfile} />
@@ -334,7 +334,7 @@ const Telos = () => {
   }
 
   return (
-    <AppShell variant="ambient">
+    <AppShell>
       <div className="max-w-md mx-auto">
         <PageHead
           title="Telos"

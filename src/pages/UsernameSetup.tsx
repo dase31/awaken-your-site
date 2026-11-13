@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
-import ThymosLogo from "@/components/ThymosLogo";
+import { OnboardingFrame } from "@/components/onboarding/OnboardingFrame";
 
 // ── Constraints ────────────────────────────────────────────────
 const MIN = 3;
@@ -127,68 +126,50 @@ const UsernameSetup = () => {
 
   // Status indicator colour
   const indicatorColor =
-    status === "available" ? "text-emerald-300" :
-    status === "taken"     ? "text-red-300" :
-    status === "invalid"   ? "text-amber-300" :
-    status === "checking"  ? "text-white/40" :
-    "transparent";
+    status === "available" ? "text-[color:var(--th-sage-deep)]" :
+    status === "taken"     ? "text-[#9b4a3c]" :
+    status === "invalid"   ? "text-[color:var(--th-umber-light)]" :
+    "text-[color:var(--th-text-3)]";
 
   return (
-    <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
-      <ThymosLogo />
-      <OnboardingBackground />
-
-      <div className="relative z-10 w-full max-w-sm px-8 text-center fade-in-up">
-        <h1
-          className="font-serif text-white text-3xl md:text-4xl mb-2"
-          style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
-        >
-          Choose a username.
-        </h1>
-        <p className="text-white/50 text-sm mb-12 leading-relaxed">
-          This is how others will find you.<br />
+    <OnboardingFrame hideChrome>
+      <div className="th-card-lg fade-in-up">
+        <h1 className="th-h1 text-[1.7rem]">Choose a username.</h1>
+        <p className="th-sub mb-6 mt-2 leading-relaxed">
+          This is how others will find you.
+          <br />
           3–20 characters · letters, numbers, _
         </p>
 
-        <div className="space-y-2">
-          <div className="relative">
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 text-white/30 text-xl select-none">@</span>
-            <input
-              type="text"
-              value={value}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              maxLength={MAX}
-              placeholder="yourname"
-              autoFocus
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              className="w-full bg-transparent border-b border-white/30 text-white text-xl text-center pl-5 placeholder:text-white/25 py-3 focus:outline-none focus:border-white/70 transition-colors caret-white"
-            />
-          </div>
-
-          {/* Inline feedback */}
-          <div className={`text-sm h-5 transition-all duration-200 ${indicatorColor}`}>
-            {status === "checking" ? "Checking…" : message}
-          </div>
-
-          <p className="hint-fade-in text-white/35 text-xs pt-1">press enter ↵</p>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 select-none text-lg text-[color:var(--th-text-3)]">@</span>
+          <input
+            type="text"
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            maxLength={MAX}
+            placeholder="yourname"
+            aria-label="Username"
+            autoFocus
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            className="th-field th-field-pill pl-9"
+            style={{ fontStyle: "normal" }}
+          />
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={status !== "available" || saving}
-          className={`mt-10 w-full py-3.5 rounded-full font-semibold text-base transition-all duration-300 ${
-            status === "available"
-              ? "bg-white/20 backdrop-blur-sm border border-white/40 text-white hover:bg-white/30 active:scale-[0.98]"
-              : "bg-white/8 border border-white/10 text-white/25 cursor-not-allowed"
-          }`}
-        >
+        {/* Inline feedback */}
+        <div className={`mb-5 mt-3 h-5 text-sm transition-colors duration-200 ${indicatorColor}`} aria-live="polite">
+          {status === "checking" ? "Checking…" : message}
+        </div>
+
+        <button type="button" className="th-btn" onClick={handleSubmit} disabled={status !== "available" || saving}>
           {saving ? "Saving…" : "Confirm username"}
         </button>
       </div>
-    </div>
+    </OnboardingFrame>
   );
 };
 

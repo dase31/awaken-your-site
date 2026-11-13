@@ -102,7 +102,7 @@ const Home = () => {
   }, []);
 
   return (
-    <AppShell variant="ambient">
+    <AppShell>
       <div className="max-w-md mx-auto pt-6">
         {/* Greeting sits straight on the sky */}
         <div className="px-2 pt-4 pb-9">

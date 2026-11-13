@@ -3,12 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useFindMatch, MatchResult } from "@/hooks/useFindMatch";
 import { useConnectionRequests } from "@/hooks/useConnectionRequests";
-import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
+import { OnboardingFrame } from "@/components/onboarding/OnboardingFrame";
 import { LoadingState } from "@/components/onboarding/LoadingState";
 import { MatchIntro } from "@/components/matches/MatchIntro";
 import { getSafetyState, saveSafetyAnswer } from "@/lib/safety";
 import { EmptyMatchState } from "@/components/matches/EmptyMatchState";
-import ThymosLogo from "@/components/ThymosLogo";
 import { toast } from "sonner";
 
 interface LocationState {
@@ -119,70 +118,47 @@ const Match = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
-      <ThymosLogo />
-      <OnboardingBackground />
-
-      <div className="relative z-10 flex flex-col items-center justify-center w-full">
-        {safetyHold && (
-          <div className="fade-in-up text-center px-6 max-w-md w-full">
-            <h1
-              className="font-serif text-white text-3xl mb-4"
-              style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
-            >
-              Take care of you first
-            </h1>
-            <p className="text-white/70 text-base leading-relaxed mb-8">
-              You told us things are heavy right now. Talking to someone who's trained to help
-              can make a real difference, and it's free.
-            </p>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate("/crisis")}
-                className="w-full bg-white/20 backdrop-blur-sm border border-white/40 text-white text-base py-3.5 rounded-full hover:bg-white/30 active:scale-[0.98] transition-all"
-              >
-                See support options
-              </button>
-              <button
-                onClick={resumeMatching}
-                className="w-full text-white/60 text-sm py-3 hover:text-white transition-colors"
-              >
-                I'm okay — find me someone
-              </button>
-              <button
-                onClick={() => navigate("/home")}
-                className="w-full text-white/40 text-xs py-2 hover:text-white/70 transition-colors"
-              >
-                Back home
-              </button>
-            </div>
+    <OnboardingFrame hideChrome>
+      {safetyHold && (
+        <div className="th-card-lg fade-in-up">
+          <h1 className="th-h1 text-[1.7rem]">Take care of you first</h1>
+          <p className="th-sub mb-6 mt-3">
+            You told us things are heavy right now. Talking to someone who's trained to help
+            can make a real difference, and it's free.
+          </p>
+          <div className="flex flex-col items-center gap-3">
+            <button type="button" onClick={() => navigate("/crisis")} className="th-btn">
+              See support options
+            </button>
+            <button type="button" onClick={resumeMatching} className="th-text-link">
+              I'm okay — find me someone
+            </button>
+            <button type="button" onClick={() => navigate("/home")} className="th-text-link">
+              Back home
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {showLoading && (
-          <LoadingState message="Finding someone who gets it..." />
-        )}
+      {showLoading && <LoadingState message="Finding someone who gets it..." />}
 
-        {!showLoading && !safetyHold && currentMatch && (
-          <MatchIntro
-            userName={userName}
-            matchName={currentMatch.display_name}
-            sharedStruggles={currentMatch.shared_struggles}
-            sharedGoals={currentMatch.shared_goals}
-            sharedIntents={currentMatch.shared_intents}
-            matchQuote={currentMatch.quote_text}
-            onConnect={handleConnect}
-            onFindAnother={handleFindAnother}
-            onConnectLater={handleConnectLater}
-            isLoadingAnother={isLoadingAnother}
-          />
-        )}
+      {!showLoading && !safetyHold && currentMatch && (
+        <MatchIntro
+          userName={userName}
+          matchName={currentMatch.display_name}
+          sharedStruggles={currentMatch.shared_struggles}
+          sharedGoals={currentMatch.shared_goals}
+          sharedIntents={currentMatch.shared_intents}
+          matchQuote={currentMatch.quote_text}
+          onConnect={handleConnect}
+          onFindAnother={handleFindAnother}
+          onConnectLater={handleConnectLater}
+          isLoadingAnother={isLoadingAnother}
+        />
+      )}
 
-        {!showLoading && !safetyHold && !currentMatch && (
-          <EmptyMatchState />
-        )}
-      </div>
-    </div>
+      {!showLoading && !safetyHold && !currentMatch && <EmptyMatchState />}
+    </OnboardingFrame>
   );
 };
 

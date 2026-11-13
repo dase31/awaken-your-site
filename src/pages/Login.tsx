@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { OnboardingBackground } from "@/components/onboarding/OnboardingBackground";
-import ThymosLogo from "@/components/ThymosLogo";
+import { OnboardingFrame } from "@/components/onboarding/OnboardingFrame";
+import { SunIcon } from "@/components/icons/ThymosIcons";
 import { CodeEntry } from "@/components/auth/CodeEntry";
 import { authRedirectUrl } from "@/lib/platform";
 import { toast } from "sonner";
@@ -62,168 +62,118 @@ const Login = () => {
     if (e.key === "Enter") handleSubmit();
   };
 
+  // Back goes one step up: out of a sub-step to the email form, or home.
+  const onBack = step === "email" ? () => navigate("/") : () => setStep("email");
+
   return (
-    <div className="min-h-screen bg-sky-gradient flex items-center justify-center relative overflow-hidden">
-      <ThymosLogo />
-      <OnboardingBackground />
-
-      <div className="relative z-10 w-full max-w-sm px-8 text-center fade-in-up">
-
+    <OnboardingFrame onBack={onBack}>
+      <div className="th-card-lg fade-in-up">
         {step === "email" && (
           <>
-            <h1
-              className="font-serif text-white text-3xl md:text-4xl mb-2"
-              style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
-            >
-              Welcome back.
-            </h1>
-            <p className="text-white/50 text-sm mb-12">
-              We'll send a link to your inbox.
-            </p>
+            <h1 className="th-h1 text-[1.7rem]">Welcome back.</h1>
+            <p className="th-sub mb-6 mt-2">We'll send a link to your inbox.</p>
 
-            <form onSubmit={handleSubmit} className="space-y-2">
+            <form onSubmit={handleSubmit}>
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Your email"
+                aria-label="Your email"
+                autoComplete="email"
                 autoFocus
-                className="w-full bg-transparent border-b border-white/30 text-white text-xl text-center placeholder:text-white/30 py-3 focus:outline-none focus:border-white/70 transition-colors ethereal-input caret-white"
+                className="th-field th-field-pill mb-4"
               />
-              <p className="hint-fade-in text-white/40 text-xs pt-1">press enter ↵</p>
+              <button type="submit" className="th-btn" disabled={loading || !email.trim()}>
+                {loading ? "Sending…" : "Send me a link →"}
+              </button>
             </form>
-            <button
-              onClick={() => setStep("password")}
-              className="mt-10 text-white/40 text-xs hover:text-white/60 transition-colors"
-            >
-              Use a password instead
+            <button type="button" onClick={() => setStep("password")} className="th-text-link mt-6">
+              Have a password? Sign in
             </button>
           </>
         )}
 
         {step === "sent" && (
-          <div className="fade-in-up">
-            <p className="text-white/40 text-4xl mb-6">✦</p>
-            <h1
-              className="font-serif text-white text-3xl mb-3"
-              style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
+          <>
+            <div
+              className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full"
+              style={{ background: "#E3EAF1" }}
             >
-              Check your inbox.
-            </h1>
-            <p className="text-white/55 text-sm leading-relaxed max-w-xs mx-auto">
-              We sent a sign-in link to <span className="text-white/80">{email}</span>.
-              It expires in 60 minutes.
+              <SunIcon color="#C98F4A" width={28} height={28} />
+            </div>
+            <h1 className="th-h1 text-[1.7rem]">Check your inbox.</h1>
+            <p className="th-sub mx-auto mt-2 max-w-xs">
+              We sent a sign-in link to{" "}
+              <span className="font-medium text-[color:var(--th-ink)]">{email}</span>. It expires in 60 minutes.
             </p>
-            <CodeEntry email={email.trim()} />
-          </div>
+            <CodeEntry email={email.trim()} tone="glass" />
+          </>
         )}
 
         {step === "password" && (
           <>
-            <h1
-              className="font-serif text-white text-3xl mb-8"
-              style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
-            >
-              Sign in with a password
-            </h1>
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <h1 className="th-h1 mb-6 text-[1.7rem]">Sign in with a password</h1>
+            <form onSubmit={handlePasswordSubmit} className="space-y-3">
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
+                aria-label="Email"
                 autoComplete="username"
-                className="w-full bg-transparent border-b border-white/30 text-white text-lg text-center placeholder:text-white/30 py-2 focus:outline-none focus:border-white/70 transition-colors caret-white"
+                className="th-field th-field-pill"
               />
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
+                aria-label="Password"
                 autoComplete="current-password"
-                className="w-full bg-transparent border-b border-white/30 text-white text-lg text-center placeholder:text-white/30 py-2 focus:outline-none focus:border-white/70 transition-colors caret-white"
+                className="th-field th-field-pill"
               />
-              <button
-                type="submit"
-                disabled={loading || !email.trim() || !password}
-                className="mt-4 bg-white/15 backdrop-blur-sm border border-white/30 text-white font-semibold px-10 py-3 rounded-full hover:bg-white/25 active:scale-[0.98] transition-all disabled:opacity-40"
-              >
+              <button type="submit" className="th-btn mt-2" disabled={loading || !email.trim() || !password}>
                 {loading ? "Signing in…" : "Sign in"}
               </button>
             </form>
-            <button
-              onClick={() => setStep("email")}
-              className="mt-8 text-white/40 text-xs hover:text-white/60 transition-colors"
-            >
-              ← Back
-            </button>
           </>
         )}
 
         {step === "rate_limited" && (
-          <div className="fade-in-up">
-            <h1 className="font-serif text-white text-3xl mb-3" style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}>
-              Slow down a moment.
-            </h1>
-            <p className="text-white/55 text-sm mb-8 leading-relaxed">
-              Too many attempts. Wait a minute and try again.
-            </p>
-            <button
-              onClick={() => setStep("email")}
-              className="text-white/70 text-sm hover:text-white transition-colors"
-            >
+          <>
+            <h1 className="th-h1 text-[1.7rem]">Slow down a moment.</h1>
+            <p className="th-sub mb-6 mt-2">Too many attempts. Wait a minute and try again.</p>
+            <button type="button" className="th-btn" onClick={() => setStep("email")}>
               Try again
             </button>
-          </div>
+          </>
         )}
 
         {step === "error" && (
-          <div className="fade-in-up">
-            <h1
-              className="font-serif text-white text-3xl mb-3"
-              style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
-            >
-              No account found.
-            </h1>
-            <p className="text-white/55 text-sm mb-8">
-              That email isn't registered yet.
-            </p>
-            <div className="flex flex-col gap-3">
+          <>
+            <h1 className="th-h1 text-[1.7rem]">No account found.</h1>
+            <p className="th-sub mb-6 mt-2">That email isn't registered yet.</p>
+            <div className="flex flex-col items-center gap-3">
               <button
-                onClick={() => { setStep("email"); setEmail(""); }}
-                className="text-white/70 text-sm hover:text-white transition-colors"
+                type="button"
+                className="th-btn"
+                onClick={() => {
+                  setStep("email");
+                  setEmail("");
+                }}
               >
                 Try a different email
               </button>
-              <button
-                onClick={() => navigate("/onboarding")}
-                className="text-white/50 text-sm hover:text-white/70 transition-colors"
-              >
+              <button type="button" className="th-text-link" onClick={() => navigate("/onboarding")}>
                 Create an account instead →
               </button>
             </div>
-          </div>
-        )}
-
-        {step === "email" && (
-          <div className="mt-12 flex flex-col items-center gap-3">
-            <button
-              onClick={() => setStep("password")}
-              className="text-white/30 text-xs hover:text-white/50 transition-colors"
-            >
-              Have a password? Sign in
-            </button>
-            <button
-              onClick={() => navigate("/")}
-              className="text-white/30 text-xs hover:text-white/50 transition-colors"
-            >
-              ← Back
-            </button>
-          </div>
+          </>
         )}
       </div>
-    </div>
+    </OnboardingFrame>
   );
 };
 

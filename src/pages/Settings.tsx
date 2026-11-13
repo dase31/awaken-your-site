@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageHead } from "@/components/layout/PageHead";
 import { toast } from "sonner";
 import { ChevronRight } from "lucide-react";
 import { SUPPORT_EMAIL } from "@/lib/config";
@@ -9,11 +10,12 @@ import { SUPPORT_EMAIL } from "@/lib/config";
 function SettingsRow({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="w-full flex items-center justify-between px-5 py-4 text-left text-white text-base hover:bg-white/10 transition-colors"
+      className="flex w-full items-center justify-between px-5 py-4 text-left text-base text-[color:var(--th-ink)] transition-colors hover:bg-white/50"
     >
       {label}
-      <ChevronRight size={16} className="text-white/35" />
+      <ChevronRight size={16} className="text-[color:var(--th-text-3)]" />
     </button>
   );
 }
@@ -85,71 +87,63 @@ const Settings = () => {
     navigate("/", { replace: true });
   };
 
-  return (
-    <AppShell>
-      <div className="max-w-sm mx-auto pt-4 pb-8">
-        <h2
-          className="font-serif text-white text-3xl mb-10 text-center"
-          style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
-        >
-          Settings
-        </h2>
+  const group = "th-glass mb-4 divide-y divide-[color:var(--th-line)] overflow-hidden";
 
-        {/* Profile section */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden mb-4">
-          {/* Display name */}
-          <div className="px-5 py-4 border-b border-white/10">
-            <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-1">Name</p>
+  return (
+    <AppShell onBack={() => navigate("/home")} actions={<span />}>
+      <div className="mx-auto max-w-sm pb-4">
+        <PageHead title="Settings" />
+
+        {/* Profile */}
+        <div className={group}>
+          <div className="px-5 py-4">
+            <p className="th-label mb-1">Name</p>
             {editingName ? (
               <div className="flex items-center gap-2">
                 <input
                   autoFocus
                   value={nameValue}
-                  onChange={e => setNameValue(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") handleSaveName(); if (e.key === "Escape") setEditingName(false); }}
-                  className="flex-1 bg-transparent text-white text-base border-b border-white/40 focus:outline-none focus:border-white/80 py-0.5 transition-colors"
+                  aria-label="Name"
+                  onChange={(e) => setNameValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveName();
+                    if (e.key === "Escape") setEditingName(false);
+                  }}
+                  className="th-field flex-1 py-2"
                 />
-                <button
-                  onClick={handleSaveName}
-                  disabled={saving}
-                  className="text-white/60 text-sm hover:text-white transition-colors"
-                >
+                <button type="button" onClick={handleSaveName} disabled={saving} className="th-btn px-4 py-2 text-sm">
                   {saving ? "…" : "Save"}
                 </button>
-                <button onClick={() => setEditingName(false)} className="text-white/40 text-sm hover:text-white/60 transition-colors">
+                <button type="button" onClick={() => setEditingName(false)} className="th-text-link">
                   Cancel
                 </button>
               </div>
             ) : (
               <div className="flex items-center justify-between">
-                <p className="text-white text-base">{displayName}</p>
-                <button
-                  onClick={() => setEditingName(true)}
-                  className="text-white/40 text-xs hover:text-white/70 transition-colors"
-                >
+                <p className="text-base">{displayName}</p>
+                <button type="button" onClick={() => setEditingName(true)} className="th-text-link">
                   Edit
                 </button>
               </div>
             )}
           </div>
 
-          {/* Username */}
           <div className="px-5 py-4">
-            <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-1">Username</p>
-            <p className="text-white/70 text-base">
-              {username ? `@${username}` : <span className="text-white/30 italic">not set</span>}
+            <p className="th-label mb-1">Username</p>
+            <p className="text-base text-[color:var(--th-text-2)]">
+              {username ? `@${username}` : <span className="italic text-[color:var(--th-text-3)]">not set</span>}
             </p>
           </div>
         </div>
 
         {/* Your profile and safety */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden mb-4 divide-y divide-white/10">
+        <div className={group}>
           <SettingsRow label="Edit what you've shared" onClick={() => navigate("/settings/profile")} />
           <SettingsRow label="Blocked people" onClick={() => navigate("/settings/blocked")} />
         </div>
 
         {/* Help and policies */}
-        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden mb-4 divide-y divide-white/10">
+        <div className={group}>
           <SettingsRow label="Need support right now?" onClick={() => navigate("/crisis")} />
           <SettingsRow label="Help and contact" onClick={() => navigate("/support")} />
           <SettingsRow label="Terms of Use" onClick={() => navigate("/terms")} />
@@ -158,8 +152,9 @@ const Settings = () => {
 
         {/* Logout */}
         <button
+          type="button"
           onClick={handleLogout}
-          className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-4 text-white text-base text-left hover:bg-white/15 transition-colors mb-4"
+          className="th-glass mb-4 w-full px-5 py-4 text-left text-base transition-colors hover:bg-white/90"
         >
           Sign out
         </button>
@@ -167,27 +162,26 @@ const Settings = () => {
         {/* Delete account */}
         {!showDeleteConfirm ? (
           <button
+            type="button"
             onClick={() => setShowDeleteConfirm(true)}
-            className="w-full px-5 py-3 text-white/30 text-sm hover:text-red-300 transition-colors text-center"
+            className="th-on-sky w-full px-5 py-3 text-center text-sm opacity-90 hover:opacity-100"
           >
             Delete account
           </button>
         ) : (
-          <div className="bg-white/5 border border-red-400/20 rounded-2xl px-5 py-4 text-center">
-            <p className="text-white/70 text-sm mb-4 leading-relaxed">
+          <div className="th-glass px-5 py-5 text-center">
+            <p className="th-sub mb-4 leading-relaxed">
               This permanently deletes your account and all your data. There's no undo.
             </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="text-white/50 text-sm hover:text-white/70 transition-colors px-4 py-2"
-              >
+            <div className="flex items-center justify-center gap-3">
+              <button type="button" onClick={() => setShowDeleteConfirm(false)} className="th-text-link px-4 py-2">
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleDeleteAccount}
                 disabled={deleting}
-                className="bg-red-400/20 border border-red-400/30 text-red-300 text-sm px-4 py-2 rounded-full hover:bg-red-400/30 transition-colors"
+                className="rounded-full bg-[#9b4a3c] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {deleting ? "Deleting…" : "Yes, delete"}
               </button>
