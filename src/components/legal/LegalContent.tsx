@@ -6,14 +6,14 @@ import { APP_NAME, LEGAL_LAST_UPDATED, MIN_AGE, SUPPORT_EMAIL } from "@/lib/conf
 
 function Doc({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <article className="text-white">
+    <article className="text-legal">
       <h1
-        className="font-serif text-4xl mb-2"
+        className="font-display text-4xl mb-2"
         style={{ textShadow: "0 2px 16px rgba(0,60,120,0.2)" }}
       >
         {title}
       </h1>
-      <p className="text-white/50 text-sm mb-10">Last updated {LEGAL_LAST_UPDATED}</p>
+      <p className="text-legal/50 text-sm mb-10">Last updated {LEGAL_LAST_UPDATED}</p>
       <div className="space-y-8">{children}</div>
     </article>
   );
@@ -22,15 +22,15 @@ function Doc({ title, children }: { title: string; children: React.ReactNode }) 
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="font-serif text-2xl mb-3 text-white">{heading}</h2>
-      <div className="space-y-3 text-white/80 text-[15px] leading-relaxed">{children}</div>
+      <h2 className="font-display text-2xl mb-3 text-legal">{heading}</h2>
+      <div className="space-y-3 text-legal/80 text-[15px] leading-relaxed">{children}</div>
     </section>
   );
 }
 
 function List({ items }: { items: React.ReactNode[] }) {
   return (
-    <ul className="space-y-2 pl-5 list-disc marker:text-white/40">
+    <ul className="space-y-2 pl-5 list-disc marker:text-legal/40">
       {items.map((item, i) => (
         <li key={i}>{item}</li>
       ))}
@@ -39,7 +39,7 @@ function List({ items }: { items: React.ReactNode[] }) {
 }
 
 const Mail = () => (
-  <a className="underline underline-offset-2 hover:text-white" href={`mailto:${SUPPORT_EMAIL}`}>
+  <a className="underline underline-offset-2 hover:text-legal" href={`mailto:${SUPPORT_EMAIL}`}>
     {SUPPORT_EMAIL}
   </a>
 );
@@ -56,7 +56,7 @@ export function TermsContent() {
         </p>
         <p>
           If you are in crisis or in danger, don't wait for a reply here. Contact your local emergency
-          number, or see our <Link className="underline underline-offset-2 hover:text-white" to="/crisis">crisis resources</Link>.
+          number, or see our <Link className="underline underline-offset-2 hover:text-legal" to="/crisis">crisis resources</Link>.
         </p>
       </Section>
 
@@ -170,28 +170,28 @@ export function PrivacyContent() {
         <List
           items={[
             <>
-              <strong className="text-white">Account:</strong> your email address, the name you choose, and
+              <strong className="text-legal">Account:</strong> your email address, the name you choose, and
               your username.
             </>,
             <>
-              <strong className="text-white">What you share to be matched:</strong> the struggles and goals
+              <strong className="text-legal">What you share to be matched:</strong> the struggles and goals
               you pick, the kind of connection you want, what you can offer and how much capacity you have
               right now, an optional short note about what you wish someone understood, and any extra
               words you type. This can reveal sensitive information about your mental health and
               wellbeing. You choose what to share, and most of it is optional.
             </>,
             <>
-              <strong className="text-white">What you do in the app:</strong> messages, connection
+              <strong className="text-legal">What you do in the app:</strong> messages, connection
               requests, private journal reflections, Telos posts and specialties, people you block,
               and reports you file.
             </>,
             <>
-              <strong className="text-white">A private safety question:</strong> whether you're having
+              <strong className="text-legal">A private safety question:</strong> whether you're having
               thoughts of harming yourself. Your answer is visible only to you. It is never shown to
               other members and never affects who you're matched with.
             </>,
             <>
-              <strong className="text-white">Technical data:</strong> basic information such as IP address
+              <strong className="text-legal">Technical data:</strong> basic information such as IP address
               and device type, kept in our hosting and database providers' logs for security and
               reliability.
             </>,
@@ -301,7 +301,7 @@ export function SupportContent() {
           danger, please reach out to someone who can help immediately.
         </p>
         <p>
-          <Link className="underline underline-offset-2 hover:text-white" to="/crisis">
+          <Link className="underline underline-offset-2 hover:text-legal" to="/crisis">
             Crisis resources
           </Link>
         </p>
@@ -309,28 +309,28 @@ export function SupportContent() {
 
       <Section heading="Common questions">
         <p>
-          <strong className="text-white">I can't sign in.</strong> Use the 6-digit code from the sign-in
+          <strong className="text-legal">I can't sign in.</strong> Use the 6-digit code from the sign-in
           email instead of the link. If nothing arrives, check spam, then ask for a new one.
         </p>
         <p>
-          <strong className="text-white">How do I report or block someone?</strong> Open the conversation
+          <strong className="text-legal">How do I report or block someone?</strong> Open the conversation
           and tap the menu at the top right. You can also manage blocked people from Settings.
         </p>
         <p>
-          <strong className="text-white">How do I delete my account?</strong> Settings → Delete account.
+          <strong className="text-legal">How do I delete my account?</strong> Settings → Delete account.
           It removes your profile, messages, reflections, and connections.
         </p>
         <p>
-          <strong className="text-white">How do I change what I shared?</strong> Settings → Edit what
+          <strong className="text-legal">How do I change what I shared?</strong> Settings → Edit what
           you've shared.
         </p>
       </Section>
 
       <Section heading="Our policies">
         <p>
-          <Link className="underline underline-offset-2 hover:text-white" to="/terms">Terms of Use</Link>
+          <Link className="underline underline-offset-2 hover:text-legal" to="/terms">Terms of Use</Link>
           {" · "}
-          <Link className="underline underline-offset-2 hover:text-white" to="/privacy">Privacy Policy</Link>
+          <Link className="underline underline-offset-2 hover:text-legal" to="/privacy">Privacy Policy</Link>
         </p>
       </Section>
     </Doc>

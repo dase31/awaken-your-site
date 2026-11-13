@@ -19,6 +19,7 @@ export default {
         display: ['Fraunces', 'Georgia', 'serif'],
       },
       colors: {
+        legal: "rgb(var(--legal-rgb) / <alpha-value>)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

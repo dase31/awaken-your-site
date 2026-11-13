@@ -582,3 +582,133 @@
   flex-direction: column;
   overflow: hidden;
 }
+
+/* Legal copy is written for the blue classic screens (white text); the
+   paper variant flips it to ink for glass sheets. */
+:root { --legal-rgb: 255 255 255; }
+.th-legal-paper { --legal-rgb: 28 27 24; }
+
+/* ───────────── Onboarding frame ─────────────
+   One photo, two intensities: the landing and the Greek-soul intro show it
+   at full clarity; every step after that steps down to the blurred ambient
+   sky. Both layers are fixed to the screen root and crossfade. */
+.th-hero {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(to bottom, rgba(10, 20, 35, 0.14), rgba(10, 20, 35, 0.3)),
+    url("./assets/sky-hero.jpg");
+  background-size: cover;
+  background-position: center 20%;
+  pointer-events: none;
+  transition: opacity 0.7s ease;
+}
+.th-layer-fade { transition: opacity 0.7s ease; }
+
+.th-progress { flex: 1; display: flex; gap: 5px; }
+.th-progress i {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow: 0 0 0 1px rgba(10, 20, 35, 0.08);
+  transition: background 0.3s;
+}
+.th-progress i.done { background: #fff; box-shadow: 0 1px 6px rgba(10, 20, 35, 0.3); }
+
+/* The big glass card each question lives in. */
+.th-card-lg {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: rgba(252, 251, 247, 0.88);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  border-radius: 32px;
+  padding: 32px 22px;
+  text-align: center;
+  color: var(--th-ink);
+  box-shadow: 0 24px 48px -24px rgba(28, 27, 24, 0.3), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+.th-h1 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+.th-sub {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--th-text-2);
+}
+
+.th-chip {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 9px 16px;
+  border: 1.5px solid var(--th-line);
+}
+.th-chip[aria-pressed="true"] { border-color: var(--th-ink); }
+
+.th-text-link {
+  font-size: 0.85rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--th-text-3);
+}
+.th-text-link:hover { color: var(--th-text-2); }
+
+.th-field-pill {
+  text-align: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  border-radius: 999px;
+  padding: 14px 20px;
+  border: 1.5px solid var(--th-line);
+}
+
+/* "Here's what I'm hearing…": words you can tap to change. */
+.th-summary-word {
+  color: var(--th-umber-light);
+  font-style: normal;
+  font-weight: 500;
+  text-decoration: underline dotted rgba(122, 106, 74, 0.5);
+  text-underline-offset: 4px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+.th-summary-word:hover { text-decoration-color: var(--th-umber-light); }
+
+/* Concept reveal lines (Greek-soul intro) fade in one after another. */
+.th-reveal { opacity: 0; animation: thReveal 0.8s ease forwards; }
+@keyframes thReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .th-reveal { animation-duration: 0.01s; }
+  .th-hero, .th-layer-fade { transition: none; }
+}
+
+/* Big tappable answer inside a glass card (the Thymos / Telos fork). */
+.th-choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1.5px solid var(--th-line);
+  transition: border-color 0.2s, transform 0.1s;
+}
+.th-choice:hover { border-color: rgba(28, 27, 24, 0.3); }
+.th-choice:active { transform: scale(0.99); }

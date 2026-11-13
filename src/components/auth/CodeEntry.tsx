@@ -10,12 +10,15 @@ interface CodeEntryProps {
   email: string;
   // Called instead of the default "go to /auth/callback" when provided.
   onVerified?: () => void;
+  /** "sky" for the classic blue screens, "glass" for ink-on-paper cards. */
+  tone?: "sky" | "glass";
 }
 
 // Sign in with the 6-digit code from the same email as the magic link.
 // This is the primary path inside the native app (a link would open Safari,
 // not the app) and also fixes mail apps that "pre-open" links and burn them.
-export function CodeEntry({ email, onVerified }: CodeEntryProps) {
+export function CodeEntry({ email, onVerified, tone = "sky" }: CodeEntryProps) {
+  const glass = tone === "glass";
   const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -69,7 +72,7 @@ export function CodeEntry({ email, onVerified }: CodeEntryProps) {
 
   return (
     <div className="mt-8">
-      <p className="text-white/50 text-sm mb-3">Or enter the 6-digit code from the email</p>
+      <p className={glass ? "th-sub mb-3" : "text-white/50 text-sm mb-3"}>Or enter the 6-digit code from the email</p>
       <input
         ref={inputRef}
         value={code}
@@ -80,13 +83,21 @@ export function CodeEntry({ email, onVerified }: CodeEntryProps) {
         maxLength={CODE_LENGTH}
         disabled={verifying}
         aria-label="6-digit sign-in code"
-        className="w-full max-w-[220px] mx-auto block bg-white/10 border border-white/25 rounded-2xl text-center text-white text-3xl tracking-[0.4em] py-3 pl-[0.4em] placeholder:text-white/25 focus:outline-none focus:border-white/60 transition-colors disabled:opacity-60"
+        className={
+          glass
+            ? "th-field mx-auto max-w-[220px] text-center text-3xl tracking-[0.4em] py-3 pl-[0.4em] disabled:opacity-60"
+            : "w-full max-w-[220px] mx-auto block bg-white/10 border border-white/25 rounded-2xl text-center text-white text-3xl tracking-[0.4em] py-3 pl-[0.4em] placeholder:text-white/25 focus:outline-none focus:border-white/60 transition-colors disabled:opacity-60"
+        }
       />
       <button
         type="button"
         onClick={resend}
         disabled={cooldown > 0}
-        className="mt-4 text-white/45 text-xs hover:text-white/70 disabled:hover:text-white/45 transition-colors"
+        className={
+          glass
+            ? "th-text-link mt-4 text-xs disabled:opacity-60"
+            : "mt-4 text-white/45 text-xs hover:text-white/70 disabled:hover:text-white/45 transition-colors"
+        }
       >
         {cooldown > 0 ? `Resend email in ${cooldown}s` : "Resend email"}
       </button>
