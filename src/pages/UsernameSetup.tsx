@@ -79,7 +79,7 @@ const UsernameSetup = () => {
     setMessage("");
     debounceRef.current = setTimeout(async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("id")
         .eq("username", raw.toLowerCase())
         .maybeSingle();

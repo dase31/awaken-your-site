@@ -34,6 +34,9 @@ const SUPPORT_EMAIL = "support@thymos.world";
 // Don't ping someone again about the same thing inside these windows.
 const PUSH_WINDOW_MIN = 5;
 const EMAIL_WINDOW_MIN = 60;
+// Hard ceilings per recipient per hour.
+const MAX_PUSH_PER_HOUR = 20;
+const MAX_EMAIL_PER_HOUR = 5;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -252,10 +255,25 @@ Deno.serve(async (req) => {
     const log = (channel: "push" | "email") =>
       supabase.from("notification_log").insert({ user_id: recipient, kind, ref, channel });
 
+    // Overall ceilings per person, whatever the cause, so nobody's inbox or
+    // phone can be flooded (and our email bill can't be run up).
+    const countSince = async (channel: "push" | "email", minutes: number) => {
+      const since = new Date(Date.now() - minutes * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from("notification_log")
+        .select("id", { head: true, count: "exact" })
+        .eq("user_id", recipient)
+        .eq("channel", channel)
+        .gte("created_at", since);
+      return count ?? 0;
+    };
+    const pushCapped = (await countSince("push", 60)) >= MAX_PUSH_PER_HOUR;
+    const emailCapped = (await countSince("email", 60)) >= MAX_EMAIL_PER_HOUR;
+
     let pushed = false;
     let emailed = false;
 
-    if (settings.push_enabled && !(await recentlySent("push", PUSH_WINDOW_MIN))) {
+    if (settings.push_enabled && !pushCapped && !(await recentlySent("push", PUSH_WINDOW_MIN))) {
       const { data: tokens } = await supabase.from("push_tokens").select("id, token").eq("user_id", recipient);
       for (const t of tokens ?? []) {
         const result = await sendApns(t.token, message, ref);
@@ -268,7 +286,7 @@ Deno.serve(async (req) => {
     // A message that already reached their phone doesn't also need an email;
     // requests and acceptances are rarer and worth both.
     const skipEmail = kind === "message" && pushed;
-    if (settings.email_enabled && !skipEmail && !(await recentlySent("email", EMAIL_WINDOW_MIN))) {
+    if (settings.email_enabled && !skipEmail && !emailCapped && !(await recentlySent("email", EMAIL_WINDOW_MIN))) {
       const { data: userRes } = await supabase.auth.admin.getUserById(recipient);
       const to = userRes?.user?.email;
       if (to && (await sendEmail(to, message))) {

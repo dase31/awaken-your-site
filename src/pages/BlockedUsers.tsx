@@ -24,7 +24,7 @@ const BlockedUsers = () => {
       setLoading(false);
       return;
     }
-    const { data } = await supabase.from("profiles").select("id, display_name").in("id", ids);
+    const { data } = await supabase.from("public_profiles").select("id, display_name").in("id", ids);
     const names = new Map((data ?? []).map((p) => [p.id, p.display_name]));
     setPeople(ids.map((id) => ({ id, name: names.get(id) ?? "Unknown" })));
     setLoading(false);

@@ -36,7 +36,7 @@ export function useConversations() {
     const otherUserIds = visible.map(c => c.user_one === user.id ? c.user_two : c.user_one);
     
     const { data: profiles } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("id, display_name")
       .in("id", otherUserIds);
 

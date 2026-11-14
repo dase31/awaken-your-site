@@ -99,7 +99,7 @@ export function usePushRouting() {
         await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
           const route = action.notification.data?.route;
           // Only ever open in-app screens.
-          if (typeof route === "string" && route.startsWith("/") && !route.startsWith("//")) navigate(route);
+          if (typeof route === "string" && /^\/[A-Za-z0-9/_-]*$/.test(route)) navigate(route);
         }),
       );
 

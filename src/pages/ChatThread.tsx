@@ -53,7 +53,7 @@ const ChatThread = () => {
       setOtherUserId(otherId);
 
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("display_name")
         .eq("id", otherId)
         .maybeSingle();

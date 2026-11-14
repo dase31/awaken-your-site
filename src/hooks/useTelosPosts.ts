@@ -38,7 +38,7 @@ export function useTelosPosts() {
     // Fetch author names and specialties
     const userIds = [...new Set(visiblePosts.map(p => p.user_id))];
     const [{ data: profiles }, { data: specs }] = await Promise.all([
-      supabase.from("profiles").select("id, display_name").in("id", userIds),
+      supabase.from("public_profiles").select("id, display_name").in("id", userIds),
       supabase.from("telos_specialties").select("user_id, specialty").in("user_id", userIds),
     ]);
 

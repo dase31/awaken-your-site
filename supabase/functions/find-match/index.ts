@@ -48,14 +48,28 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { user_id, exclude_ids = [] } = await req.json();
+    // Who is asking comes from their sign-in token, never from the request
+    // body. (The platform JWT check is off for this function, so it's done
+    // here: no valid session, no matches.)
+    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    const { data: authData, error: authError } = token
+      ? await supabase.auth.getUser(token)
+      : { data: { user: null }, error: new Error("missing token") };
 
-    if (!user_id) {
+    if (authError || !authData.user) {
       return new Response(
-        JSON.stringify({ error: "user_id is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Sign in required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const user_id = authData.user.id;
+
+    // Only well-formed ids go into the filter below.
+    const body = await req.json().catch(() => ({}));
+    const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const exclude_ids: string[] = Array.isArray(body?.exclude_ids)
+      ? body.exclude_ids.filter((id: unknown): id is string => typeof id === "string" && UUID.test(id)).slice(0, 500)
+      : [];
 
     // Respect the requester's own settings first: if they've paused matching
     // or are already at their limit, don't hand them someone new.

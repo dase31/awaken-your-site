@@ -43,7 +43,7 @@ export function useConnectionRequests() {
     userIds.delete(user.id);
 
     const { data: profiles } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("id, display_name")
       .in("id", Array.from(userIds));
 
