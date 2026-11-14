@@ -1,8 +1,5 @@
 -- Security hardening, from the pre-launch audit.
---   1. profiles was readable by every signed-in user, including the free text
---      people wrote about what they're going through. Now: your own row only,
---      plus a narrow public_profiles view (id, name, username) for showing
---      people to each other.
+--   (Private profiles is its own migration: 20261114000001_private_profiles.sql.)
 --   2. Anyone could open a conversation with anyone, skipping requests,
 --      pause and limits. Now a conversation needs an accepted request (or, for
 --      Telos, a post by the person being contacted).
@@ -11,26 +8,9 @@
 --   4. Conversations never moved to the top when a message arrived, because
 --      the timestamp trigger ran as the caller and RLS blocked it.
 --   5. Abuse limits: requests per person per day.
+--   6. Function hygiene flagged by the Supabase security advisor.
 --
 -- Safe to run more than once.
-
--- ─────────────────────────────────────────────────────────────
--- 1. profiles: own row only, plus a narrow public view
--- ─────────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "Authenticated users can view all profiles" ON public.profiles;
-DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
-CREATE POLICY "Users can view own profile" ON public.profiles
-  FOR SELECT TO authenticated USING (auth.uid() = id);
-
--- What other people may see of you: who you are, nothing you've written about
--- yourself. Runs with the owner's rights on purpose (that's what lets it read
--- other rows), so keep the column list short.
-CREATE OR REPLACE VIEW public.public_profiles
-  WITH (security_invoker = false) AS
-  SELECT id, display_name, username FROM public.profiles;
-
-REVOKE ALL ON public.public_profiles FROM PUBLIC, anon;
-GRANT SELECT ON public.public_profiles TO authenticated;
 
 -- ─────────────────────────────────────────────────────────────
 -- 2. Conversations need consent
@@ -136,3 +116,23 @@ DROP TRIGGER IF EXISTS limit_request_rate_on_insert ON public.connection_request
 CREATE TRIGGER limit_request_rate_on_insert
   BEFORE INSERT ON public.connection_requests
   FOR EACH ROW EXECUTE FUNCTION public.limit_request_rate();
+
+-- ─────────────────────────────────────────────────────────────
+-- 6. Function hygiene (Supabase security advisor)
+-- ─────────────────────────────────────────────────────────────
+ALTER FUNCTION public.contains_hate_slur(text)            SET search_path = public;
+ALTER FUNCTION public.reject_objectionable_message()      SET search_path = public;
+ALTER FUNCTION public.reject_objectionable_post()         SET search_path = public;
+
+-- Policies call this as the signed-in user; a signed-out visitor never should.
+REVOKE ALL ON FUNCTION public.is_conversation_participant(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_conversation_participant(uuid, uuid) TO authenticated, service_role;
+
+-- Supabase installs this helper in new projects; nobody should call it over the API.
+DO $$
+BEGIN
+  IF to_regprocedure('public.rls_auto_enable()') IS NOT NULL THEN
+    REVOKE ALL ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;
+  END IF;
+END
+$$;

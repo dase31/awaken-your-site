@@ -78,9 +78,17 @@ Status: ✅ ok · 🔧 found and fixed in code (needs deploy) · ⚠️ needs yo
 - ⚠️ **Data API:** Supabase → Settings → API: only `public` exposed.
 - Known design limits: no per-user cap on messages or Telos posts; no remote crash logging.
 
-## To apply
+## Applied to the live project (THYMOS Wrk, 2026-11-14, via the Supabase connector)
 
-1. SQL Editor: run `20261113000000_notifications_and_matching_limits.sql` (if not already), then `20261114000000_security_hardening.sql`. Both are safe to re-run.
-2. Deploy: `supabase functions deploy find-match` and `notify`.
-3. Release the app and site code that reads `public_profiles`. **Do 1 and 3 together:** the old app code reads other people's names from `profiles`, which stops working once step 1 runs; the new code reads the view, which exists only after step 1.
-4. The **You** items above.
+- ✅ `20261114000000_security_hardening.sql`: conversations need consent, requests can't be rewritten, conversations sort again, 25 requests/day limit, function fixes.
+- ✅ `20261114000002_trigger_function_grants.sql`: trigger functions no longer callable over the API.
+- ✅ `find-match` v2 deployed: refuses callers without a valid session (tested: 401 with no token and with a junk token).
+- ✅ Confirmed on the live project: all 16 tables have RLS; no stray `extract-themes` function; only `find-match` was deployed before this.
+- Security advisor now shows only: five helper functions signed-in users must be able to call (policies and the app use them; each checks the caller itself), and "leaked password protection disabled" (a Pro-plan feature; only the App Review demo account uses a password, so use a long random one).
+
+## Still to apply
+
+1. **`20261114000001_private_profiles.sql`: together with pushing the app code.** It stops other people reading each other's profiles. Old app builds read other people's names from `profiles` and show "Unknown" once it's applied, which is why it waits for the release. Live data right now is two test profiles, so exposure today is small, but apply it before real users arrive.
+2. **Notifications**: `20261113000000_notifications_and_matching_limits.sql`, deploy `notify`, set its secrets (`docs/notifications-setup.md`). The app code already handles the table being missing, but Home, Settings and the opt-in screen need it.
+3. **Vercel**: add the three `VITE_` variables before pushing (see item 4 above).
+4. **Dashboard-only items** (the connector can't reach auth settings): sign-in code expiry, auth rate limits, redirect URL allow-list, session lifetime.
