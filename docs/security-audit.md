@@ -86,9 +86,12 @@ Status: ✅ ok · 🔧 found and fixed in code (needs deploy) · ⚠️ needs yo
 - ✅ Confirmed on the live project: all 16 tables have RLS; no stray `extract-themes` function; only `find-match` was deployed before this.
 - Security advisor now shows only: five helper functions signed-in users must be able to call (policies and the app use them; each checks the caller itself), and "leaked password protection disabled" (a Pro-plan feature; only the App Review demo account uses a password, so use a long random one).
 
-## Still to apply
+- ✅ **2026-11-14 (later):** `notifications_and_matching_limits` (settings, push tokens, request guard, notification triggers, `pg_net`), `notify_trigger_grants`, and `private_profiles` applied to the live project.
+- Tested on the live database inside a transaction that is forced to roll back (no data left behind): other people can't read your profile or settings; signed-out visitors see nothing; a conversation can't be opened without an accepted request (or a Telos post); a request can't be rewritten or un-answered; paused and full people can't be sent requests; a message moves its conversation up; a phone's push token moves to its new owner; the notification triggers queue events.
+- Supabase's checker now also lists: `public_profiles` as a "security definer view" (deliberate: it must read other people's rows to show names, and exposes only id, name and username), two service-only tables with no policies (deliberate), and the two push-token functions signed-in users call (deliberate). A cleaner long-term design moves the private profile columns into their own owner-only table, which would remove that first warning.
 
-1. **`20261114000001_private_profiles.sql`: together with pushing the app code.** It stops other people reading each other's profiles. Old app builds read other people's names from `profiles` and show "Unknown" once it's applied, which is why it waits for the release. Live data right now is two test profiles, so exposure today is small, but apply it before real users arrive.
-2. **Notifications**: `20261113000000_notifications_and_matching_limits.sql`, deploy `notify`, set its secrets (`docs/notifications-setup.md`). The app code already handles the table being missing, but Home, Settings and the opt-in screen need it.
-3. **Vercel**: add the three `VITE_` variables before pushing (see item 4 above).
-4. **Dashboard-only items** (the connector can't reach auth settings): sign-in code expiry, auth rate limits, redirect URL allow-list, session lifetime.
+## Still to do
+
+1. **Vercel:** add the three `VITE_` variables, then push the app code. The live site's old build now shows "Unknown" for other people's names until the new build is deployed.
+2. **`notify` function:** deploy it and set its secrets (`docs/notifications-setup.md`). Until then the database queues events but no email or push is sent.
+3. **Dashboard-only items** (the connector can't reach auth settings): sign-in code expiry, auth rate limits, redirect URL allow-list, session lifetime.
