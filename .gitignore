@@ -38,5 +38,7 @@ dist-ssr
 AuthKey_*
 .env.*
 !.env.example
+# Only public values (the Supabase URL and publishable key) live in this one, so the build works without dashboard settings.
+!.env.production
 supabase/.temp/
 supabase/.branches/
